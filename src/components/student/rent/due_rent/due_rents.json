@@ -1,0 +1,8 @@
+[
+  { "id": 1, "monthYear": "June 2024", "monthlyRent": 2000, "externalRent": 200, "advanceRent": 500, "dueRent": 2200, "totalDue": 2700, "lastPayment": { "date": "2024-06-05", "amount": 1000 }, "paid": false },
+  { "id": 2, "monthYear": "May 2024", "monthlyRent": 2000, "externalRent": 100, "advanceRent": 0, "dueRent": 1500, "totalDue": 1600, "lastPayment": { "date": "2024-05-10", "amount": 1600 }, "paid": true },
+  { "id": 3, "monthYear": "April 2024", "monthlyRent": 2000, "externalRent": 150, "advanceRent": 0, "dueRent": 2000, "totalDue": 2150, "lastPayment": { "date": "2024-04-15", "amount": 2150 }, "paid": true },
+  { "id": 4, "monthYear": "March 2024", "monthlyRent": 2000, "externalRent": 0, "advanceRent": 0, "dueRent": 2000, "totalDue": 2000, "lastPayment": { "date": "2024-03-20", "amount": 1000 }, "paid": false },
+  { "id": 5, "monthYear": "February 2024", "monthlyRent": 2000, "externalRent": 50, "advanceRent": 0, "dueRent": 500, "totalDue": 550, "lastPayment": { "date": "2024-02-25", "amount": 550 }, "paid": true },
+  { "id": 6, "monthYear": "January 2024", "monthlyRent": 2000, "externalRent": 0, "advanceRent": 0, "dueRent": 2000, "totalDue": 2000, "lastPayment": { "date": "2024-01-30", "amount": 0 }, "paid": false }
+] 

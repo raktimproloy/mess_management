@@ -1,0 +1,14 @@
+[
+  { "id": 1, "name": "John Doe", "category": 1, "paidAmount": 3200, "beforePaidDue": 3200, "due": 0, "advanceDue": 0, "payFor": "regular", "paymentType": "online", "rentMonth": "June 2024", "paidDate": "2024-06-05", "status": "approve" },
+  { "id": 2, "name": "Jane Smith", "category": 2, "paidAmount": 1500, "beforePaidDue": 2000, "due": 1500, "advanceDue": 0, "payFor": "regular", "paymentType": "on hand", "rentMonth": "June 2024", "paidDate": "2024-06-06", "status": "pending" },
+  { "id": 3, "name": "Alice Brown", "category": 3, "paidAmount": 1200, "beforePaidDue": 1200, "due": 0, "advanceDue": 0, "payFor": "advance", "paymentType": "online", "rentMonth": "July 2024", "paidDate": "2024-06-10", "status": "approve" },
+  { "id": 4, "name": "Bob White", "category": 1, "paidAmount": 2000, "beforePaidDue": 3200, "due": 1200, "advanceDue": 0, "payFor": "regular", "paymentType": "on hand", "rentMonth": "June 2024", "paidDate": "2024-06-08", "status": "pending" },
+  { "id": 5, "name": "Charlie Black", "category": 2, "paidAmount": 3450, "beforePaidDue": 3450, "due": 0, "advanceDue": 0, "payFor": "regular", "paymentType": "online", "rentMonth": "June 2024", "paidDate": "2024-06-09", "status": "approve" },
+  { "id": 6, "name": "Diana Green", "category": 3, "paidAmount": 950, "beforePaidDue": 3350, "due": 2400, "advanceDue": 0, "payFor": "advance", "paymentType": "on hand", "rentMonth": "July 2024", "paidDate": "2024-06-11", "status": "pending" },
+  { "id": 7, "name": "Evan Blue", "category": 1, "paidAmount": 3100, "beforePaidDue": 3100, "due": 0, "advanceDue": 0, "payFor": "regular", "paymentType": "online", "rentMonth": "June 2024", "paidDate": "2024-06-12", "status": "approve" },
+  { "id": 8, "name": "Fiona Red", "category": 2, "paidAmount": 1050, "beforePaidDue": 3450, "due": 2400, "advanceDue": 0, "payFor": "advance", "paymentType": "on hand", "rentMonth": "July 2024", "paidDate": "2024-06-13", "status": "pending" },
+  { "id": 9, "name": "George Yellow", "category": 3, "paidAmount": 3550, "beforePaidDue": 3550, "due": 0, "advanceDue": 0, "payFor": "regular", "paymentType": "online", "rentMonth": "June 2024", "paidDate": "2024-06-14", "status": "approve" },
+  { "id": 10, "name": "Hannah Purple", "category": 1, "paidAmount": 1500, "beforePaidDue": 3050, "due": 1550, "advanceDue": 0, "payFor": "regular", "paymentType": "on hand", "rentMonth": "June 2024", "paidDate": "2024-06-15", "status": "pending" },
+  { "id": 11, "name": "Ian Orange", "category": 2, "paidAmount": 3350, "beforePaidDue": 3350, "due": 0, "advanceDue": 0, "payFor": "regular", "paymentType": "online", "rentMonth": "June 2024", "paidDate": "2024-06-16", "status": "approve" },
+  { "id": 12, "name": "Julia Pink", "category": 3, "paidAmount": 950, "beforePaidDue": 3250, "due": 2300, "advanceDue": 0, "payFor": "advance", "paymentType": "on hand", "rentMonth": "July 2024", "paidDate": "2024-06-17", "status": "pending" }
+] 
