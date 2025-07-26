@@ -1,22 +1,7 @@
-import { promises as fs } from 'fs';
-import path from 'path';
-import { verifyAdminAuth, verifyToken, getStudentData } from '../../../lib/auth';
+import { PrismaClient } from '@prisma/client';
+import { verifyToken } from '../../../lib/auth';
 
-const studentsPath = path.join(process.cwd(), 'public/database/students.json');
-
-async function readStudents() {
-  try {
-    const data = await fs.readFile(studentsPath, 'utf-8');
-    return JSON.parse(data);
-  } catch (err) {
-    if (err.code === 'ENOENT') return [];
-    throw err;
-  }
-}
-
-async function writeStudents(students) {
-  await fs.writeFile(studentsPath, JSON.stringify(students, null, 2));
-}
+const prisma = new PrismaClient();
 
 // GET: List students (admin: all, student: self)
 export async function GET(request) {
@@ -25,13 +10,40 @@ export async function GET(request) {
     if (!authHeader) return new Response(JSON.stringify({ message: 'Unauthorized' }), { status: 401 });
     const { success, user } = verifyToken(authHeader.split(' ')[1]);
     if (!success) return new Response(JSON.stringify({ message: 'Invalid token' }), { status: 401 });
-    const students = await readStudents();
+
+    const url = new URL(request.url);
+    const page = parseInt(url.searchParams.get('page') || '1', 10);
+    const pageSize = parseInt(url.searchParams.get('pageSize') || '10', 10);
+    const search = url.searchParams.get('search') || '';
+    const category = url.searchParams.get('category') || '';
+    const status = url.searchParams.get('status') || '';
+    const sort = url.searchParams.get('sort') || 'joiningDate';
+    const order = url.searchParams.get('order') || 'desc';
+
     if (user.role === 'admin') {
-      return new Response(JSON.stringify(students), { status: 200 });
+      const where = {
+        ...(search && {
+          OR: [
+            { name: { contains: search } },
+            { phone: { contains: search } },
+            { smsPhone: { contains: search } },
+          ],
+        }),
+        ...(category ? { categoryId: parseInt(category) } : {}),
+        ...(status ? { status } : {}),
+      };
+      const total = await prisma.student.count({ where });
+      const students = await prisma.student.findMany({
+        where,
+        orderBy: { [sort]: order },
+        skip: (page - 1) * pageSize,
+        take: pageSize,
+      });
+      return new Response(JSON.stringify({ students, total, page, pageSize }), { status: 200 });
     } else if (user.role === 'student') {
-      const student = students.find(s => String(s.id) === String(user.id));
+      const student = await prisma.student.findUnique({ where: { id: user.id } });
       if (!student) return new Response(JSON.stringify({ message: 'Student not found' }), { status: 404 });
-      return new Response(JSON.stringify([student]), { status: 200 });
+      return new Response(JSON.stringify({ students: [student], total: 1, page: 1, pageSize: 1 }), { status: 200 });
     } else {
       return new Response(JSON.stringify({ message: 'Forbidden' }), { status: 403 });
     }
@@ -51,25 +63,25 @@ export async function POST(request) {
     if (!data.name || !data.phone || !data.categoryId || !data.joiningDate) {
       return new Response(JSON.stringify({ message: 'Missing required fields' }), { status: 400 });
     }
-    let students = await readStudents();
-    const maxId = students.reduce((max, s) => (s.id > max ? s.id : max), 0);
-    const newId = maxId + 1;
-    const newStudent = {
-      id: newId,
-      name: data.name,
-      phone: data.phone,
-      smsPhone: data.smsPhone || data.phone,
-      password: data.password || data.phone,
-      profileImage: '',
-      hideRanking: 0,
-      status: data.status || 'living',
-      category: data.categoryId,
-      categoryId: data.categoryId,
-      joiningDate: data.joiningDate,
-      rents: [],
-    };
-    students.push(newStudent);
-    await writeStudents(students);
+    // Check for duplicate phone
+    const existing = await prisma.student.findUnique({ where: { phone: data.phone } });
+    if (existing) {
+      return new Response(JSON.stringify({ message: 'Student with this phone already exists' }), { status: 409 });
+    }
+    const newStudent = await prisma.student.create({
+      data: {
+        name: data.name,
+        phone: data.phone,
+        smsPhone: data.smsPhone || data.phone,
+        password: data.password || data.phone,
+        profileImage: '',
+        hideRanking: 0,
+        status: data.status || 'living',
+        category: parseInt(data.categoryId),
+        categoryId: parseInt(data.categoryId),
+        joiningDate: new Date(data.joiningDate),
+      },
+    });
     return new Response(JSON.stringify({ message: 'Student created', student: newStudent }), { status: 201 });
   } catch (err) {
     return new Response(JSON.stringify({ message: 'Server error', error: err.message }), { status: 500 });

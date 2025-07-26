@@ -1,22 +1,7 @@
-import { promises as fs } from 'fs';
-import path from 'path';
+import { PrismaClient } from '@prisma/client';
 import { verifyToken } from '../../../../lib/auth';
 
-const studentsPath = path.join(process.cwd(), 'public/database/students.json');
-
-async function readStudents() {
-  try {
-    const data = await fs.readFile(studentsPath, 'utf-8');
-    return JSON.parse(data);
-  } catch (err) {
-    if (err.code === 'ENOENT') return [];
-    throw err;
-  }
-}
-
-async function writeStudents(students) {
-  await fs.writeFile(studentsPath, JSON.stringify(students, null, 2));
-}
+const prisma = new PrismaClient();
 
 // GET: Get student by ID (admin: any, student: self)
 export async function GET(request, { params }) {
@@ -26,8 +11,7 @@ export async function GET(request, { params }) {
     if (!authHeader) return new Response(JSON.stringify({ message: 'Unauthorized' }), { status: 401 });
     const { success, user } = verifyToken(authHeader.split(' ')[1]);
     if (!success) return new Response(JSON.stringify({ message: 'Invalid token' }), { status: 401 });
-    const students = await readStudents();
-    const student = students.find(s => String(s.id) === String(id));
+    const student = await prisma.student.findUnique({ where: { id: parseInt(id) } });
     if (!student) return new Response(JSON.stringify({ message: 'Student not found' }), { status: 404 });
     if (user.role === 'admin' || (user.role === 'student' && String(user.id) === String(id))) {
       return new Response(JSON.stringify(student), { status: 200 });
@@ -47,31 +31,37 @@ export async function PUT(request, { params }) {
     if (!authHeader) return new Response(JSON.stringify({ message: 'Unauthorized' }), { status: 401 });
     const { success, user } = verifyToken(authHeader.split(' ')[1]);
     if (!success) return new Response(JSON.stringify({ message: 'Invalid token' }), { status: 401 });
-    let students = await readStudents();
-    const idx = students.findIndex(s => String(s.id) === String(id));
-    if (idx === -1) return new Response(JSON.stringify({ message: 'Student not found' }), { status: 404 });
     const data = await request.json();
+    const student = await prisma.student.findUnique({ where: { id: parseInt(id) } });
+    if (!student) return new Response(JSON.stringify({ message: 'Student not found' }), { status: 404 });
+    let updateData = {};
     if (user.role === 'admin') {
-      students[idx] = { ...students[idx], ...data, id: students[idx].id };
+      updateData = { ...data };
+      delete updateData.id;
+      // If status is being changed from leave to living, update joiningDate
+      if (student.status === 'leave' && data.status === 'living' && data.newJoiningDate) {
+        updateData.joiningDate = new Date(data.newJoiningDate);
+      }
+      delete updateData.newJoiningDate;
     } else if (user.role === 'student' && String(user.id) === String(id)) {
       // Only allow certain fields
       const allowed = ['name', 'smsPhone', 'profileImage', 'hideRanking', 'password'];
       for (const key of Object.keys(data)) {
         if (allowed.includes(key)) {
-          students[idx][key] = data[key];
+          updateData[key] = data[key];
         }
       }
     } else {
       return new Response(JSON.stringify({ message: 'Forbidden' }), { status: 403 });
     }
-    await writeStudents(students);
-    return new Response(JSON.stringify(students[idx]), { status: 200 });
+    const updated = await prisma.student.update({ where: { id: parseInt(id) }, data: updateData });
+    return new Response(JSON.stringify(updated), { status: 200 });
   } catch (err) {
     return new Response(JSON.stringify({ message: 'Server error', error: err.message }), { status: 500 });
   }
 }
 
-// DELETE: Delete student (admin only)
+// DELETE: Set status to 'leave' (soft delete)
 export async function DELETE(request, { params }) {
   try {
     const { id } = params;
@@ -79,12 +69,11 @@ export async function DELETE(request, { params }) {
     if (!authHeader) return new Response(JSON.stringify({ message: 'Unauthorized' }), { status: 401 });
     const { success, user } = verifyToken(authHeader.split(' ')[1]);
     if (!success || user.role !== 'admin') return new Response(JSON.stringify({ message: 'Forbidden' }), { status: 403 });
-    let students = await readStudents();
-    const idx = students.findIndex(s => String(s.id) === String(id));
-    if (idx === -1) return new Response(JSON.stringify({ message: 'Student not found' }), { status: 404 });
-    students.splice(idx, 1);
-    await writeStudents(students);
-    return new Response(JSON.stringify({ message: 'Student deleted' }), { status: 200 });
+    const updated = await prisma.student.update({
+      where: { id: parseInt(id) },
+      data: { status: 'leave', updatedAt: new Date() },
+    });
+    return new Response(JSON.stringify({ message: 'Student set to leave', student: updated }), { status: 200 });
   } catch (err) {
     return new Response(JSON.stringify({ message: 'Server error', error: err.message }), { status: 500 });
   }
