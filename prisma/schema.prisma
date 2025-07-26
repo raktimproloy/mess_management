@@ -1,15 +1,116 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
-  output   = "../src/generated/prisma"
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "mysql"
   url      = env("DATABASE_URL")
+}
+
+model Admin {
+  id       Int    @id @default(autoincrement())
+  name     String
+  phone    String @unique
+  password String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("admins")
+}
+
+model Category {
+  id          Int      @id @default(autoincrement())
+  title       String
+  amount      Float
+  description String
+  status      Int      @default(1)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  students Student[]
+  rents    Rent[]
+
+  @@map("categories")
+}
+
+model Student {
+  id           Int      @id @default(autoincrement())
+  name         String
+  phone        String   @unique
+  smsPhone     String   @map("sms_phone")
+  password     String
+  profileImage String?  @map("profile_image")
+  hideRanking  Int      @default(0) @map("hide_ranking")
+  status       String   @default("living") // living, leave
+  category     Int
+  categoryId   Int      @map("category_id")
+  joiningDate  DateTime @map("joining_date")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relations
+  categoryRef Category? @relation(fields: [categoryId], references: [id])
+  rents       Rent[]
+  rentHistory RentHistory[]
+
+  @@map("students")
+}
+
+model Rent {
+  id             Int      @id @default(autoincrement())
+  monthYear      DateTime @map("month_year")
+  rentAmount     Float    @map("rent_amount")
+  advanceAmount  Float    @default(0) @map("advance_amount")
+  externalAmount Float    @default(0) @map("external_amount")
+  status         String   @default("unpaid") // unpaid, paid, partial
+  rentPaid       Float    @default(0) @map("rent_paid")
+  studentId      Int      @map("student_id")
+  categoryId     Int      @map("category_id")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  // Relations
+  student       Student       @relation(fields: [studentId], references: [id])
+  category      Category      @relation(fields: [categoryId], references: [id])
+  rentHistory   RentHistory[]
+
+  @@map("rents")
+}
+
+model RentHistory {
+  id          Int      @id @default(autoincrement())
+  rentMonth   String   @map("rent_month") // Format: "YYYY-MM"
+  paidDate    DateTime @map("paid_date")
+  studentId   Int      @map("student_id")
+  categoryId  Int      @map("category_id")
+  status      String   @default("unpaid") // unpaid, approved, rejected
+  paymentType String   @map("payment_type") // on hand, online, etc.
+  dueRent     Float    @map("due_rent")
+  dueAdvance  Float    @default(0) @map("due_advance")
+  dueExternal Float    @default(0) @map("due_external")
+  paidRent    Float    @map("paid_rent")
+  paidAdvance Float    @default(0) @map("paid_advance")
+  paidExternal Float   @default(0) @map("paid_external")
+  rentId      Int?     @map("rent_id")
+  details     Json?    // Store additional details as JSON
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  student     Student     @relation(fields: [studentId], references: [id])
+  rent        Rent?       @relation(fields: [rentId], references: [id])
+
+  @@map("rent_history")
+}
+
+model Testing {
+  id    Int    @id @default(autoincrement())
+  value Int
+  createdAt DateTime @default(now())
+
+  @@map("testing")
 }

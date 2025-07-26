@@ -1,30 +1,49 @@
-import { promises as fs } from 'fs';
-import path from 'path';
+import { PrismaClient } from '@prisma/client';
+import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 
+const prisma = new PrismaClient();
 const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret_key_here';
-const adminsPath = path.join(process.cwd(), 'public/database/admins.json');
 
 export async function POST(request) {
   try {
     const { phone, password } = await request.json();
     
     if (!phone || !password) {
-      return new Response(JSON.stringify({ message: "Phone and password are required" }), {
+      return new Response(JSON.stringify({ 
+        success: false,
+        message: "Phone and password are required" 
+      }), {
         status: 400,
         headers: { "Content-Type": "application/json" },
       });
     }
 
-    // Read admins from JSON file
-    const adminsData = await fs.readFile(adminsPath, 'utf-8');
-    const admins = JSON.parse(adminsData);
-    
-    // Find admin with matching credentials
-    const admin = admins.find(admin => admin.phone === phone && admin.password === password);
+    // Find admin by phone number
+    const admin = await prisma.admin.findUnique({
+      where: {
+        phone: phone
+      }
+    });
     
     if (!admin) {
-      return new Response(JSON.stringify({ message: "Invalid phone or password" }), {
+      return new Response(JSON.stringify({ 
+        success: false,
+        message: "Invalid phone or password" 
+      }), {
+        status: 401,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    // Verify password using bcrypt
+    const isPasswordValid = await bcrypt.compare(password, admin.password);
+    
+    if (!isPasswordValid) {
+      return new Response(JSON.stringify({ 
+        success: false,
+        message: "Invalid phone or password" 
+      }), {
         status: 401,
         headers: { "Content-Type": "application/json" },
       });
@@ -42,15 +61,15 @@ export async function POST(request) {
       { expiresIn: '7d' }
     );
 
+    // Return success response (without password)
+    const { password: _, ...adminWithoutPassword } = admin;
+
     return new Response(
       JSON.stringify({
+        success: true,
         message: "Login successful",
         role: "admin",
-        admin: {
-          id: admin.id,
-          name: admin.name,
-          phone: admin.phone
-        },
+        admin: adminWithoutPassword,
         token: token
       }),
       {
@@ -60,7 +79,10 @@ export async function POST(request) {
     );
   } catch (err) {
     console.error('Login error:', err);
-    return new Response(JSON.stringify({ message: "Server error" }), {
+    return new Response(JSON.stringify({ 
+      success: false,
+      message: "Server error" 
+    }), {
       status: 500,
       headers: { "Content-Type": "application/json" },
     });
