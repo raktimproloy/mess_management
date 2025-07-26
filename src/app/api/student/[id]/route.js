@@ -38,6 +38,15 @@ export async function PUT(request, { params }) {
     if (user.role === 'admin') {
       updateData = { ...data };
       delete updateData.id;
+      
+      // Convert categoryId to integer if present
+      if (updateData.categoryId) {
+        updateData.categoryId = parseInt(updateData.categoryId);
+      }
+      if (updateData.category) {
+        updateData.category = parseInt(updateData.category);
+      }
+      
       // If status is being changed from leave to living, update joiningDate
       if (student.status === 'leave' && data.status === 'living' && data.newJoiningDate) {
         updateData.joiningDate = new Date(data.newJoiningDate);

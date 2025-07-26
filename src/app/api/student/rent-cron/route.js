@@ -1,81 +1,270 @@
-import { promises as fs } from 'fs';
-import path from 'path';
+import { PrismaClient } from '@prisma/client';
 
-const studentsPath = path.join(process.cwd(), 'public/database/students.json');
-const categoriesPath = path.join(process.cwd(), 'public/database/categories.json');
-const rentsPath = path.join(process.cwd(), 'public/database/rents.json');
+const prisma = new PrismaClient();
 
 function getMonthYear(date) {
-  const d = new Date(date);
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-}
-
-async function calculateRents({ students, categories, rentsRaw, now }) {
-  const currentMonthYear = getMonthYear(now);
-  const prevMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-  const prevMonthYear = getMonthYear(prevMonth);
-
-  let rents = Array.isArray(rentsRaw) ? rentsRaw : [];
-  let createdRents = [];
-  let updatedStudents = [...students];
-  let nextRentId = rents.length ? Math.max(...rents.map(r => r.id)) + 1 : 1;
-
-  for (const student of students) {
-    if (student.status !== 'living') continue;
-    // Check if rent for this month already exists for this student
-    const alreadyExists = rents.some(r => r.studentId === student.id && getMonthYear(r.month_year) === currentMonthYear);
-    if (alreadyExists) continue;
-    // Get category and amount
-    const category = categories.find(c => c.id === (student.categoryId || student.category));
-    if (!category) continue;
-    const rentAmount = category.amount;
-    // Check previous month due
-    const prevRent = rents.find(r => r.studentId === student.id && getMonthYear(r.month_year) === prevMonthYear);
-    const prevDue = prevRent && prevRent.status === 'due' ? prevRent.rent_amount + (prevRent.external_amount || 0) : 0;
-    // Compose new rent
-    const rent = {
-      id: nextRentId++,
-      month_year: new Date(now.getFullYear(), now.getMonth(), 1),
-      rent_amount: rentAmount + prevDue,
-      advance_amount: 0,
-      external_amount: 0,
-      status: 'unpaid',
-      studentId: student.id,
-    };
-    rents.push(rent);
-    createdRents.push(rent);
-    // Update student.rentsIds
-    if (!student.rentsIds) student.rentsIds = [];
-    student.rentsIds.push(rent.id);
-    // Update in updatedStudents
-    const idx = updatedStudents.findIndex(s => s.id === student.id);
-    if (idx !== -1) updatedStudents[idx] = student;
-  }
-  return { createdRents, updatedStudents, rents };
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
 }
 
 export async function GET(request) {
-  const [students, categories, rentsRaw] = await Promise.all([
-    fs.readFile(studentsPath, 'utf-8').then(JSON.parse),
-    fs.readFile(categoriesPath, 'utf-8').then(JSON.parse),
-    fs.readFile(rentsPath, 'utf-8').then(data => (data ? JSON.parse(data) : []), () => []),
-  ]);
-  const now = new Date();
-  const { createdRents } = await calculateRents({ students, categories, rentsRaw, now });
-  return new Response(JSON.stringify({ message: 'Preview rents to be generated', count: createdRents.length, rents: createdRents }), { status: 200 });
+  try {
+    const now = new Date();
+    const currentMonthYear = getMonthYear(now);
+    const prevMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const prevMonthYear = getMonthYear(prevMonth);
+
+    console.log('--- Rent Cron GET (Preview) Debug ---');
+    console.log('Current Date:', now.toISOString());
+    console.log('Current Month/Year:', currentMonthYear);
+    console.log('Previous Month Start Date:', prevMonth.toISOString());
+    console.log('Previous Month/Year:', prevMonthYear);
+
+    // Get all living students whose joiningDate is in the past
+    const students = await prisma.student.findMany({
+      where: {
+        status: 'living',
+        joiningDate: { lte: now },
+      },
+      include: { categoryRef: true },
+    });
+
+    let previewRents = [];
+    for (const student of students) {
+      console.log(`Processing student: ${student.name} (ID: ${student.id})`);
+
+      // Check if rent for this month already exists using createdAt
+      const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+      const currentMonthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+      
+      const alreadyExists = await prisma.rent.findFirst({
+        where: {
+          studentId: student.id,
+          createdAt: {
+            gte: currentMonthStart,
+            lt: currentMonthEnd,
+          },
+        },
+      });
+      if (alreadyExists) {
+        console.log(`  Rent already exists for current month. Skipping.`);
+        continue;
+      }
+
+      // Get category and amounts
+      const category = student.categoryRef;
+      if (!category) {
+        console.log(`  No category found for student. Skipping.`);
+        continue;
+      }
+      const rentAmount = category.rentAmount;
+      const externalAmount = category.externalAmount || 0;
+
+      // Check previous month's rent for due using createdAt
+      const prevRentQueryStart = new Date(prevMonth.getFullYear(), prevMonth.getMonth(), 1);
+      const prevRentQueryEnd = new Date(prevMonth.getFullYear(), prevMonth.getMonth() + 1, 1);
+
+      console.log(`  Querying for previous month rent for student ${student.id} between ${prevRentQueryStart.toISOString()} and ${prevRentQueryEnd.toISOString()}`);
+
+      const prevRent = await prisma.rent.findFirst({
+        where: {
+          studentId: student.id,
+          createdAt: {
+            gte: prevRentQueryStart,
+            lt: prevRentQueryEnd,
+          },
+        },
+      });
+      
+      let previousDue = 0;
+      let previousDuePaid = 0; // This is initialized to 0 for the new rent record
+      if (prevRent) {
+        console.log(`  Found previous month rent (ID: ${prevRent.id}) for student ${student.id}. Details:`);
+        console.log(`    createdAt: ${prevRent.createdAt.toISOString()}`);
+        console.log(`    rentAmount: ${prevRent.rentAmount}, externalAmount: ${prevRent.externalAmount}`);
+        console.log(`    rentPaid: ${prevRent.rentPaid}, externalPaid: ${prevRent.externalPaid}`);
+        
+        // Calculate unpaid amount from previous month's rent for this student
+        const totalAmount = prevRent.rentAmount + prevRent.externalAmount;
+        const totalPaid = prevRent.rentPaid + (prevRent.externalPaid || 0);
+        previousDue = Math.max(0, totalAmount - totalPaid);
+        
+        console.log(`  Calculated previous due: totalAmount=${totalAmount}, totalPaid=${totalPaid}, previousDue=${previousDue}`);
+      } else {
+        console.log(`  No previous month rent found for student ${student.id}. Previous due remains 0.`);
+      }
+
+      // Compose new rent preview
+      previewRents.push({
+        studentId: student.id,
+        studentName: student.name,
+        categoryId: category.id,
+        categoryTitle: category.title,
+        rentAmount,
+        externalAmount,
+        previousDue,
+        previousDuePaid,
+        advanceAmount: 0,
+        status: 'unpaid',
+        rentPaid: 0,
+        advancePaid: 0,
+        externalPaid: 0,
+        paidDate: null,
+        paidType: null,
+      });
+    }
+    console.log('--- End Rent Cron GET (Preview) Debug ---');
+    return new Response(JSON.stringify({ message: 'Preview rents to be generated', count: previewRents.length, rents: previewRents }), { status: 200 });
+  } catch (err) {
+    console.error('Error in Rent Cron GET (Preview):', err);
+    return new Response(JSON.stringify({ message: 'Server error', error: err.message }), { status: 500 });
+  }
 }
 
 export async function POST(request) {
-  const [students, categories, rentsRaw] = await Promise.all([
-    fs.readFile(studentsPath, 'utf-8').then(JSON.parse),
-    fs.readFile(categoriesPath, 'utf-8').then(JSON.parse),
-    fs.readFile(rentsPath, 'utf-8').then(data => (data ? JSON.parse(data) : []), () => []),
-  ]);
-  const now = new Date();
-  const { createdRents, updatedStudents, rents } = await calculateRents({ students, categories, rentsRaw, now });
-  await Promise.all([
-    fs.writeFile(rentsPath, JSON.stringify(rents, null, 2)),
-    fs.writeFile(studentsPath, JSON.stringify(updatedStudents, null, 2)),
-  ]);
-  return new Response(JSON.stringify({ message: 'Rents generated', count: createdRents.length, rents: createdRents }), { status: 200 });
+  try {
+    const now = new Date();
+    const currentMonthYear = getMonthYear(now);
+    const prevMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const prevMonthYear = getMonthYear(prevMonth);
+
+    console.log('--- Rent Cron POST (Execute) Debug ---');
+    console.log('Starting rent generation for month:', currentMonthYear);
+    console.log('Current Date:', now.toISOString());
+    console.log('Previous Month Start Date:', prevMonth.toISOString());
+
+    // Get all living students whose joiningDate is in the past
+    const students = await prisma.student.findMany({
+      where: {
+        status: 'living',
+        joiningDate: { lte: now },
+      },
+      include: { categoryRef: true },
+    });
+
+    console.log('Found', students.length, 'living students');
+
+    let createdRents = [];
+    for (const student of students) {
+      try {
+        console.log(`Processing student: ${student.name} (ID: ${student.id})`);
+
+        // Check if rent for this month already exists using createdAt
+        const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+        const currentMonthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+        
+        const alreadyExists = await prisma.rent.findFirst({
+          where: {
+            studentId: student.id,
+            createdAt: {
+              gte: currentMonthStart,
+              lt: currentMonthEnd,
+            },
+          },
+        });
+        
+        if (alreadyExists) {
+          console.log(`  Rent already exists for current month. Skipping.`);
+          continue;
+        }
+
+        // Get category and amounts
+        const category = student.categoryRef;
+        if (!category) {
+          console.log(`  No category found for student. Skipping.`);
+          continue;
+        }
+        
+        const rentAmount = category.rentAmount;
+        const externalAmount = category.externalAmount || 0;
+
+        // Check previous month's rent for due using createdAt
+        const prevRentQueryStart = new Date(prevMonth.getFullYear(), prevMonth.getMonth(), 1);
+        const prevRentQueryEnd = new Date(prevMonth.getFullYear(), prevMonth.getMonth() + 1, 1);
+        console.log(`  Querying for previous month rent for student ${student.id} between ${prevRentQueryStart.toISOString()} and ${prevRentQueryEnd.toISOString()}`);
+
+        const prevRent = await prisma.rent.findFirst({
+          where: {
+            studentId: student.id,
+            createdAt: {
+              gte: prevRentQueryStart,
+              lt: prevRentQueryEnd,
+            },
+          },
+        });
+        
+        let previousDue = 0;
+        let previousDuePaid = 0; // This is initialized to 0 for the new rent record
+        if (prevRent) {
+          console.log(`  Found previous month rent (ID: ${prevRent.id}) for student ${student.id}. Details:`);
+          console.log(`    createdAt: ${prevRent.createdAt.toISOString()}`);
+          console.log(`    rentAmount: ${prevRent.rentAmount}, externalAmount: ${prevRent.externalAmount}`);
+          console.log(`    rentPaid: ${prevRent.rentPaid}, externalPaid: ${prevRent.externalPaid}`);
+          
+          // Calculate unpaid amount from previous month's rent for this student
+          const totalAmount = prevRent.rentAmount + prevRent.externalAmount;
+          const totalPaid = prevRent.rentPaid + (prevRent.externalPaid || 0);
+          previousDue = Math.max(0, totalAmount - totalPaid);
+          
+          console.log(`  Calculated previous due: totalAmount=${totalAmount}, totalPaid=${totalPaid}, previousDue=${previousDue}`);
+        } else {
+          console.log(`  No previous month rent found for student ${student.id}. Previous due remains 0.`);
+        }
+
+        console.log(`Creating rent for student ${student.name}: rentAmount=${rentAmount}, externalAmount=${externalAmount}, previousDue=${previousDue}`);
+
+        // Create new rent record (createdAt will be automatically set)
+        const newRent = await prisma.rent.create({
+          data: {
+            studentId: student.id,
+            categoryId: category.id,
+            rentAmount,
+            externalAmount,
+            previousDue,
+            previousDuePaid,
+            advanceAmount: 0,
+            status: 'unpaid',
+            rentPaid: 0,
+            advancePaid: 0,
+            externalPaid: 0,
+            paidDate: null,
+            paidType: null,
+          },
+        });
+
+        console.log(`Created rent ID: ${newRent.id} for student ${student.name}`);
+
+        createdRents.push({
+          ...newRent,
+          studentName: student.name,
+          categoryTitle: category.title
+        });
+
+      } catch (studentError) {
+        console.error(`Error processing student ${student.name} (ID: ${student.id}):`, studentError);
+        // Continue with other students even if one fails
+      }
+    }
+
+    console.log(`Successfully created ${createdRents.length} rent records`);
+    console.log('--- End Rent Cron POST (Execute) Debug ---');
+
+    return new Response(JSON.stringify({ 
+      message: 'Rents generated successfully', 
+      count: createdRents.length, 
+      rents: createdRents 
+    }), { 
+      status: 200,
+      headers: { 'Content-Type': 'application/json' }
+    });
+
+  } catch (err) {
+    console.error('Error in Rent Cron POST (Execute):', err);
+    return new Response(JSON.stringify({ 
+      message: 'Server error', 
+      error: err.message 
+    }), { 
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
 } 

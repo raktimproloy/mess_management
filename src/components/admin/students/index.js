@@ -89,8 +89,6 @@ function StudentModal({ open, onClose, student, mode, categories, onSave }) {
   );
 }
 
-const PAGE_SIZE = 5;
-
 function getRole() {
   if (typeof window === 'undefined') return null;
   const adminData = localStorage.getItem('adminData');
@@ -115,6 +113,8 @@ export default function StudentList() {
   });
   const router = useRouter();
   const [page, setPage] = useState(1);
+  const [pageSize] = useState(5); // Fixed page size
+  const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -125,6 +125,9 @@ export default function StudentList() {
   // Add a state for search input
   const [searchInput, setSearchInput] = useState("");
 
+  // Calculate total pages
+  const totalPages = Math.ceil(total / pageSize);
+
   // Load students from API
   const fetchStudents = async () => {
     setLoading(true);
@@ -132,8 +135,8 @@ export default function StudentList() {
     try {
       const token = getToken();
       const params = new URLSearchParams({
-        page: page,
-        limit: PAGE_SIZE,
+        page: page.toString(),
+        pageSize: pageSize.toString(),
         status: filters.status,
         category: filters.category,
         search: filters.search,
@@ -143,9 +146,8 @@ export default function StudentList() {
       });
       if (!res.ok) throw new Error("Failed to fetch students");
       const data = await res.json();
-      setStudents(data.students);
-      setPage(data.page);
-      setTotalPages(data.totalPages);
+      setStudents(data.students || []);
+      setTotal(data.total || 0);
     } catch (err) {
       setError(err.message || "Error loading students");
       toast.error(err.message || "Error loading students");
@@ -172,19 +174,6 @@ export default function StudentList() {
     fetchStudents();
     fetchCategories();
   }, [page, filters.status, filters.category, filters.search]);
-
-  const [totalPages, setTotalPages] = useState(1);
-
-  // Filtering logic
-  const filteredStudents = useMemo(() => {
-    return students;
-  }, [students]);
-
-  // Pagination logic
-  const paginatedStudents = useMemo(() => {
-    const start = (page - 1) * PAGE_SIZE;
-    return filteredStudents.slice(start, start + PAGE_SIZE);
-  }, [filteredStudents, page]);
 
   // Handlers
   const handleFilterChange = (e) => {
@@ -401,14 +390,14 @@ export default function StudentList() {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-800">
-            {paginatedStudents.length === 0 ? (
+            {students.length === 0 ? (
               <tr>
                 <td colSpan={7} className="px-4 py-6 text-center text-white">
                   {loading ? "Loading students..." : "No students found."}
                 </td>
               </tr>
             ) : (
-              paginatedStudents.map((student) => (
+              students.map((student) => (
                 <tr key={student.id} className="hover:bg-[#18181b]">
                   <td className="px-4 py-2 text-sm text-white">{student.name}</td>
                   <td className="px-4 py-2 text-sm text-white">{student.phone}</td>
@@ -470,36 +459,98 @@ export default function StudentList() {
       </div>
       
       {/* Pagination */}
-      <div className="flex justify-between items-center mt-6">
-        <div className="text-sm text-white">
-          Page {page} of {totalPages} ({filteredStudents.length} students)
-        </div>
-        <div className="flex gap-2">
-          <button
-            onClick={() => handlePageChange(page - 1)}
-            disabled={page === 1}
-            className="px-3 py-1 rounded bg-gray-700 text-white hover:bg-gray-600 disabled:opacity-50"
-          >
-            Previous
-          </button>
-          {Array.from({ length: totalPages }, (_, i) => (
+      {total > 0 && totalPages > 1 && (
+        <div className="flex justify-between items-center mt-6">
+          <div className="text-sm text-white">
+            Page {page} of {totalPages} ({total} students)
+          </div>
+          <div className="flex gap-2">
             <button
-              key={i + 1}
-              onClick={() => handlePageChange(i + 1)}
-              className={`px-3 py-1 rounded ${page === i + 1 ? "bg-blue-600 text-white" : "bg-gray-700 text-white hover:bg-gray-600"}`}
+              onClick={() => handlePageChange(page - 1)}
+              disabled={page === 1}
+              className="px-3 py-1 rounded bg-gray-700 text-white hover:bg-gray-600 disabled:opacity-50"
             >
-              {i + 1}
+              Previous
             </button>
-          ))}
-          <button
-            onClick={() => handlePageChange(page + 1)}
-            disabled={page === totalPages}
-            className="px-3 py-1 rounded bg-gray-700 text-white hover:bg-gray-600 disabled:opacity-50"
-          >
-            Next
-          </button>
+            
+            {/* Show limited page numbers */}
+            {(() => {
+              const pages = [];
+              const maxVisiblePages = 5;
+              let startPage = Math.max(1, page - Math.floor(maxVisiblePages / 2));
+              let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+              
+              // Adjust start page if we're near the end
+              if (endPage - startPage < maxVisiblePages - 1) {
+                startPage = Math.max(1, endPage - maxVisiblePages + 1);
+              }
+              
+              // Add first page and ellipsis if needed
+              if (startPage > 1) {
+                pages.push(
+                  <button
+                    key={1}
+                    onClick={() => handlePageChange(1)}
+                    className="px-3 py-1 rounded bg-gray-700 text-white hover:bg-gray-600"
+                  >
+                    1
+                  </button>
+                );
+                if (startPage > 2) {
+                  pages.push(
+                    <span key="ellipsis1" className="px-2 py-1 text-white">
+                      ...
+                    </span>
+                  );
+                }
+              }
+              
+              // Add visible page numbers
+              for (let i = startPage; i <= endPage; i++) {
+                pages.push(
+                  <button
+                    key={i}
+                    onClick={() => handlePageChange(i)}
+                    className={`px-3 py-1 rounded ${page === i ? "bg-blue-600 text-white" : "bg-gray-700 text-white hover:bg-gray-600"}`}
+                  >
+                    {i}
+                  </button>
+                );
+              }
+              
+              // Add last page and ellipsis if needed
+              if (endPage < totalPages) {
+                if (endPage < totalPages - 1) {
+                  pages.push(
+                    <span key="ellipsis2" className="px-2 py-1 text-white">
+                      ...
+                    </span>
+                  );
+                }
+                pages.push(
+                  <button
+                    key={totalPages}
+                    onClick={() => handlePageChange(totalPages)}
+                    className="px-3 py-1 rounded bg-gray-700 text-white hover:bg-gray-600"
+                  >
+                    {totalPages}
+                  </button>
+                );
+              }
+              
+              return pages;
+            })()}
+            
+            <button
+              onClick={() => handlePageChange(page + 1)}
+              disabled={page === totalPages}
+              className="px-3 py-1 rounded bg-gray-700 text-white hover:bg-gray-600 disabled:opacity-50"
+            >
+              Next
+            </button>
+          </div>
         </div>
-      </div>
+      )}
 
       {modalOpen && selectedStudent && (
         <StudentModal

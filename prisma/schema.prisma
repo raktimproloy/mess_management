@@ -63,12 +63,17 @@ model Student {
 
 model Rent {
   id             Int      @id @default(autoincrement())
-  monthYear      DateTime @map("month_year")
   rentAmount     Float    @map("rent_amount")
   advanceAmount  Float    @default(0) @map("advance_amount")
   externalAmount Float    @default(0) @map("external_amount")
+  previousDue    Float    @default(0) // NEW: previous due
+  previousDuePaid Float   @default(0) // NEW: previous due paid
   status         String   @default("unpaid") // unpaid, paid, partial
   rentPaid       Float    @default(0) @map("rent_paid")
+  advancePaid    Float    @default(0) // NEW: advance paid
+  externalPaid   Float    @default(0) // NEW: external paid
+  paidDate       DateTime? // NEW: paid date
+  paidType       String?  // NEW: paid type (cash, online, etc)
   studentId      Int      @map("student_id")
   categoryId     Int      @map("category_id")
   createdAt      DateTime @default(now())
