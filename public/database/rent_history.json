@@ -1,0 +1,46 @@
+[
+  {
+    "id": 1,
+    "rent_month": "2025-07",
+    "paid_date": "2025-07-25T19:55:59.267Z",
+    "student_id": 3,
+    "category_id": 1,
+    "status": "unpaid",
+    "payment_type": "on hand",
+    "due": {
+      "rent": 1400,
+      "advance": 0,
+      "external": 0
+    },
+    "paid": {
+      "rent": 100,
+      "advance": 0,
+      "external": 0
+    },
+    "details": {
+      "rentId": 2
+    }
+  },
+  {
+    "id": 2,
+    "rent_month": "2025-07",
+    "paid_date": "2025-07-25T19:57:30.168Z",
+    "student_id": 4,
+    "category_id": 2,
+    "status": "approved",
+    "payment_type": "on hand",
+    "due": {
+      "rent": 1150,
+      "advance": 0,
+      "external": 0
+    },
+    "paid": {
+      "rent": 100,
+      "advance": 0,
+      "external": 0
+    },
+    "details": {
+      "rentId": 3
+    }
+  }
+]

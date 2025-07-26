@@ -1,0 +1,32 @@
+[
+  {
+    "id": 1,
+    "month_year": "2025-06-30T18:00:00.000Z",
+    "rent_amount": 1250,
+    "advance_amount": 0,
+    "external_amount": 0,
+    "status": "unpaid",
+    "studentId": 1,
+    "rent_paid": 1000
+  },
+  {
+    "id": 2,
+    "month_year": "2025-06-30T18:00:00.000Z",
+    "rent_amount": 1500,
+    "advance_amount": 0,
+    "external_amount": 0,
+    "status": "unpaid",
+    "studentId": 3,
+    "rent_paid": 100
+  },
+  {
+    "id": 3,
+    "month_year": "2025-06-30T18:00:00.000Z",
+    "rent_amount": 1250,
+    "advance_amount": 0,
+    "external_amount": 0,
+    "status": "unpaid",
+    "studentId": 4,
+    "rent_paid": 100
+  }
+]

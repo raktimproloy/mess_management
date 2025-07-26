@@ -1,8 +1,10 @@
 import StudentLayout from "../../components/layout/studentLayout";
+import StudentProtectedRoute from "../../components/StudentProtectedRoute";
 
-// Placeholder for role check. Replace with real auth logic as needed.
-export default function AdminRootLayout({ children }) {
-  // In a real app, check user role here and redirect if not admin.
-  // For now, always render admin layout.
-  return <StudentLayout>{children}</StudentLayout>;
+export default function StudentRootLayout({ children }) {
+  return (
+    <StudentProtectedRoute>
+      <StudentLayout>{children}</StudentLayout>
+    </StudentProtectedRoute>
+  );
 } 

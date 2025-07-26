@@ -6,26 +6,42 @@ export default function StudentLoginPage() {
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+    setLoading(true);
     try {
-      const res = await fetch("/api/login", {
+      const res = await fetch("/api/student/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ phone, password }),
       });
       const data = await res.json();
+      console.log('Student login response:', data);
+      
       if (!res.ok) throw new Error(data.message || "Login failed");
-      if (data.role === "student") {
+      
+      if (data.role === "student" && data.token) {
+        // Set localStorage
+        localStorage.setItem('studentToken', data.token);
+        localStorage.setItem('studentData', JSON.stringify(data.student));
+        
+        console.log('Student token set in localStorage:', localStorage.getItem('studentToken'));
+        console.log('Student data set in localStorage:', localStorage.getItem('studentData'));
+        
+        // Redirect immediately after setting localStorage
         router.push("/student/dashboard");
       } else {
         setError("Not a student account");
       }
     } catch (err) {
       setError(err.message);
+      console.error('Student login error:', err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -48,6 +64,7 @@ export default function StudentLoginPage() {
             className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-[#18181b] dark:text-white dark:border-gray-600"
             placeholder="Enter your phone number"
             required
+            disabled={loading}
           />
         </div>
         <div className="mb-6">
@@ -59,13 +76,15 @@ export default function StudentLoginPage() {
             className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-[#18181b] dark:text-white dark:border-gray-600"
             placeholder="Enter your password"
             required
+            disabled={loading}
           />
         </div>
         <button
           type="submit"
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-md transition-colors"
+          disabled={loading}
+          className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-semibold py-2 rounded-md transition-colors"
         >
-          Login
+          {loading ? "Logging in..." : "Login"}
         </button>
       </form>
     </div>

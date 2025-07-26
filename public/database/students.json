@@ -1,0 +1,74 @@
+[
+  {
+    "id": 1,
+    "name": "Student 12",
+    "phone": "1234",
+    "smsPhone": "1234",
+    "password": "1234",
+    "profile_image": "",
+    "hide_ranking": 0,
+    "status": "living",
+    "category": 1,
+    "categoryId": 2,
+    "joiningDate": "2025-08-01",
+    "rents": [],
+    "dueRent": "",
+    "rentsIds": [
+      1,
+      1,
+      1
+    ]
+  },
+  {
+    "id": 2,
+    "name": "Student 1",
+    "phone": "1234",
+    "smsPhone": "1234",
+    "password": "$2b$10$aSbD5i3SktZSVQV1chOENOy91/aVhaBLBXouhuFetUHnf7x7nO69q",
+    "profile_image": "",
+    "hide_ranking": 0,
+    "status": "leave",
+    "category": 1,
+    "categoryId": 1,
+    "joiningDate": "2025-08-01",
+    "rents": []
+  },
+  {
+    "id": 3,
+    "name": "Samiul",
+    "phone": "01303644935",
+    "smsPhone": "01303644935",
+    "password": "$2b$10$b7UJgCmGQtmqqxjQC9BWeOD35TVmKhfzPhK6hsdeBYiSgM.Pb6SLy",
+    "profile_image": "",
+    "hide_ranking": 0,
+    "status": "living",
+    "category": 1,
+    "categoryId": 1,
+    "joiningDate": "2025-08-02",
+    "rents": [],
+    "rentsIds": [
+      2,
+      2,
+      2
+    ]
+  },
+  {
+    "id": 4,
+    "name": "Raktim Proloy",
+    "phone": "01303644935",
+    "smsPhone": "01303644935",
+    "password": "$2b$10$6AGkRRTtirMh6O6N93UxF.c2ZduK9vMZ47Ly7J46QBAnIU1D95Zvi",
+    "profile_image": "",
+    "hide_ranking": 0,
+    "status": "living",
+    "category": 2,
+    "categoryId": 2,
+    "joiningDate": "2025-07-01",
+    "rents": [],
+    "rentsIds": [
+      3,
+      3,
+      3
+    ]
+  }
+]

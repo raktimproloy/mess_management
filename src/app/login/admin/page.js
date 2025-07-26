@@ -6,26 +6,43 @@ export default function AdminLoginPage() {
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+    setLoading(true);
+    
     try {
       const res = await fetch("/api/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ phone, password }),
       });
+      
       const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Login failed");
-      if (data.role === "admin") {
+      console.log('Login response:', data);
+      
+      if (!res.ok) {
+        throw new Error(data.message || "Login failed");
+      }
+      
+      if (data.role === "admin" && data.token) {
+        // Store JWT token in localStorage
+        localStorage.setItem('adminToken', data.token);
+        localStorage.setItem('adminData', JSON.stringify(data.admin));
+        
+        console.log('Admin logged in successfully, redirecting to dashboard...');
         router.push("/admin/dashboard");
       } else {
-        setError("Not an admin account");
+        setError("Invalid admin credentials");
       }
     } catch (err) {
       setError(err.message);
+      console.error('Login error:', err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -48,6 +65,7 @@ export default function AdminLoginPage() {
             className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-[#18181b] dark:text-white dark:border-gray-600"
             placeholder="Enter your phone number"
             required
+            disabled={loading}
           />
         </div>
         <div className="mb-6">
@@ -59,13 +77,15 @@ export default function AdminLoginPage() {
             className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-[#18181b] dark:text-white dark:border-gray-600"
             placeholder="Enter your password"
             required
+            disabled={loading}
           />
         </div>
         <button
           type="submit"
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-md transition-colors"
+          disabled={loading}
+          className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-semibold py-2 rounded-md transition-colors"
         >
-          Login
+          {loading ? "Logging in..." : "Login"}
         </button>
       </form>
     </div>
