@@ -33,6 +33,9 @@ export default function AdminLoginPage() {
         localStorage.setItem('adminToken', data.token);
         localStorage.setItem('adminData', JSON.stringify(data.admin));
         
+        console.log('Admin token set in localStorage:', localStorage.getItem('adminToken'));
+        console.log('Admin data set in localStorage:', localStorage.getItem('adminData'));
+        
         console.log('Admin logged in successfully, redirecting to dashboard...');
         router.push("/admin/dashboard");
       } else {

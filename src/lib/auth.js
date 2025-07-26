@@ -3,12 +3,50 @@ import { jwtDecode } from 'jwt-decode';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret_key_here';
 
-// Verify JWT token
+// Verify JWT token and extract user data
 export function verifyToken(token) {
   try {
-    return jwt.verify(token, JWT_SECRET);
+    const decoded = jwt.verify(token, JWT_SECRET);
+    return { success: true, user: decoded };
   } catch (error) {
+    return { success: false, error: 'Invalid token' };
+  }
+}
+
+// Extract token from Authorization header
+export function extractTokenFromHeader(authHeader) {
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
     return null;
+  }
+  return authHeader.substring(7); // Remove 'Bearer ' prefix
+}
+
+// Verify admin authentication
+export function verifyAdminAuth(request) {
+  try {
+    const authHeader = request.headers.get('authorization');
+    if (!authHeader) {
+      return { success: false, error: 'Authorization header missing' };
+    }
+
+    const token = extractTokenFromHeader(authHeader);
+    if (!token) {
+      return { success: false, error: 'Invalid authorization format' };
+    }
+
+    const verification = verifyToken(token);
+    if (!verification.success) {
+      return { success: false, error: verification.error };
+    }
+
+    // Check if user is admin
+    if (verification.user.role !== 'admin') {
+      return { success: false, error: 'Admin access required' };
+    }
+
+    return { success: true, user: verification.user };
+  } catch (error) {
+    return { success: false, error: 'Authentication failed' };
   }
 }
 
@@ -19,18 +57,35 @@ export function getAdminData() {
   const token = localStorage.getItem('adminToken');
   const adminData = localStorage.getItem('adminData');
   
+  console.log('getAdminData: token exists:', !!token, 'adminData exists:', !!adminData);
+  
   if (!token || !adminData) return null;
   
-  // Verify token
-  const decoded = verifyToken(token);
-  if (!decoded || decoded.role !== 'admin') {
-    // Clear invalid data
+  try {
+    const decoded = jwtDecode(token);
+    console.log('getAdminData: decoded token:', decoded);
+    
+    // Check expiry (exp is in seconds)
+    if (!decoded.exp || Date.now() >= decoded.exp * 1000) {
+      console.log('getAdminData: token expired');
+      localStorage.removeItem('adminToken');
+      localStorage.removeItem('adminData');
+      return null;
+    }
+    // Check role
+    if (decoded.role !== 'admin') {
+      console.log('getAdminData: invalid role:', decoded.role);
+      localStorage.removeItem('adminToken');
+      localStorage.removeItem('adminData');
+      return null;
+    }
+    return JSON.parse(adminData);
+  } catch (e) {
+    console.log('getAdminData: error decoding token:', e);
     localStorage.removeItem('adminToken');
     localStorage.removeItem('adminData');
     return null;
   }
-  
-  return JSON.parse(adminData);
 }
 
 // Check if admin is authenticated

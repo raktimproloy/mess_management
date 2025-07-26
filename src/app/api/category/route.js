@@ -1,90 +1,124 @@
-import { promises as fs } from 'fs';
-import path from 'path';
+import { PrismaClient } from '@prisma/client';
+import { verifyAdminAuth } from '../../../lib/auth';
 
-const categoryPath = path.join(process.cwd(), 'public/database/categories.json');
+const prisma = new PrismaClient();
 
-async function readCategories() {
+// GET - List all categories (public access)
+export async function GET() {
   try {
-    const data = await fs.readFile(categoryPath, 'utf-8');
-    return JSON.parse(data);
-  } catch (err) {
-    if (err.code === 'ENOENT') return [];
-    throw err;
+    const categories = await prisma.category.findMany({
+      orderBy: {
+        createdAt: 'desc'
+      }
+    });
+
+    return new Response(JSON.stringify({
+      success: true,
+      categories: categories
+    }), {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+
+  } catch (error) {
+    console.error('Error fetching categories:', error);
+    return new Response(JSON.stringify({
+      success: false,
+      error: 'Internal server error'
+    }), {
+      status: 500,
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
   }
 }
 
-async function writeCategories(categories) {
-  await fs.writeFile(categoryPath, JSON.stringify(categories, null, 2));
-}
-
-export async function GET(request) {
-  const { searchParams } = new URL(request.url);
-  const id = searchParams.get('id');
-  const categories = await readCategories();
-  if (id) {
-    const cat = categories.find((c) => String(c.id) === String(id));
-    if (!cat) {
-      return new Response(JSON.stringify({ message: 'Category not found' }), { status: 404 });
-    }
-    return new Response(JSON.stringify(cat), { status: 200 });
-  }
-  return new Response(JSON.stringify(categories), { status: 200 });
-}
-
+// POST - Create new category (admin only)
 export async function POST(request) {
-  const data = await request.json();
-  if (!data.title || !data.amount) {
-    return new Response(JSON.stringify({ message: 'Title and amount are required' }), { status: 400 });
-  }
-  const categories = await readCategories();
-  const newId = categories.length ? Math.max(...categories.map(c => c.id)) + 1 : 1;
-  const now = new Date().toISOString();
-  const newCat = {
-    id: newId,
-    title: data.title,
-    amount: Number(data.amount),
-    description: data.description || '',
-    created_at: now,
-    updated_at: now,
-    status: data.status === 0 ? 0 : 1,
-  };
-  categories.push(newCat);
-  await writeCategories(categories);
-  return new Response(JSON.stringify(newCat), { status: 201 });
-}
+  try {
+    // Verify admin authentication
+    const authResult = verifyAdminAuth(request);
+    if (!authResult.success) {
+      return new Response(JSON.stringify({
+        success: false,
+        error: authResult.error
+      }), {
+        status: 401,
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+    }
 
-export async function PUT(request) {
-  const data = await request.json();
-  if (!data.id) {
-    return new Response(JSON.stringify({ message: 'ID is required' }), { status: 400 });
-  }
-  const categories = await readCategories();
-  const idx = categories.findIndex((c) => String(c.id) === String(data.id));
-  if (idx === -1) {
-    return new Response(JSON.stringify({ message: 'Category not found' }), { status: 404 });
-  }
-  categories[idx] = {
-    ...categories[idx],
-    ...data,
-    amount: Number(data.amount),
-    updated_at: new Date().toISOString(),
-  };
-  await writeCategories(categories);
-  return new Response(JSON.stringify(categories[idx]), { status: 200 });
-}
+    const { title, rentAmount, externalAmount, description, status } = await request.json();
 
-export async function DELETE(request) {
-  const { searchParams } = new URL(request.url);
-  const id = searchParams.get('id');
-  if (!id) {
-    return new Response(JSON.stringify({ message: 'ID is required' }), { status: 400 });
+    // Validate required fields
+    if (!title || !rentAmount || !description) {
+      return new Response(JSON.stringify({
+        success: false,
+        error: 'Title, rent amount, and description are required'
+      }), {
+        status: 400,
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+    }
+
+    // Check if category with this title already exists
+    const existingCategory = await prisma.category.findFirst({
+      where: {
+        title: title
+      }
+    });
+
+    if (existingCategory) {
+      return new Response(JSON.stringify({
+        success: false,
+        error: 'Category with this title already exists'
+      }), {
+        status: 409,
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+    }
+
+    // Create new category
+    const newCategory = await prisma.category.create({
+      data: {
+        title: title,
+        rentAmount: parseFloat(rentAmount),
+        externalAmount: externalAmount ? parseFloat(externalAmount) : 0,
+        description: description,
+        status: status ? parseInt(status) : 1
+      }
+    });
+
+    return new Response(JSON.stringify({
+      success: true,
+      message: 'Category created successfully',
+      category: newCategory
+    }), {
+      status: 201,
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+
+  } catch (error) {
+    console.error('Error creating category:', error);
+    return new Response(JSON.stringify({
+      success: false,
+      error: 'Internal server error'
+    }), {
+      status: 500,
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
   }
-  const categories = await readCategories();
-  const idx = categories.findIndex((c) => String(c.id) === String(id));
-  if (idx === -1) {
-    return new Response(JSON.stringify({ message: 'Category not found' }), { status: 404 });
-  }
-  const deleted = categories.splice(idx, 1)[0];
-  await writeCategories(categories);
-  return new Response(JSON.stringify(deleted), { status: 200 });
 } 

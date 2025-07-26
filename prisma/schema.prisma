@@ -22,13 +22,14 @@ model Admin {
 }
 
 model Category {
-  id          Int      @id @default(autoincrement())
-  title       String
-  amount      Float
-  description String
-  status      Int      @default(1)
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
+  id             Int      @id @default(autoincrement())
+  title          String
+  rentAmount     Float    @map("rent_amount")
+  externalAmount Float    @default(0) @map("external_amount")
+  description    String
+  status         Int      @default(1)
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
 
   // Relations
   students Student[]

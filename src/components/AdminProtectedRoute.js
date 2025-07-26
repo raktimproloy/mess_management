@@ -1,23 +1,30 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { isAdminAuthenticated } from '../lib/auth';
 
 export default function AdminProtectedRoute({ children }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
-  // Helper to check localStorage directly
+  // Helper to check authentication using the auth library
   const checkAuth = () => {
     if (typeof window !== 'undefined') {
-      const token = window.localStorage.getItem('adminToken');
-      if (token) {
+      const authenticated = isAdminAuthenticated();
+      console.log('AdminProtectedRoute: Authentication check:', authenticated ? 'authenticated' : 'not authenticated');
+      
+      if (authenticated) {
         setIsAuthenticated(true);
+        setLoading(false);
       } else {
         setIsAuthenticated(false);
-        router.replace('/login/admin');
+        setLoading(false);
+        // Only redirect if we're not already on the login page
+        if (window.location.pathname !== '/login/admin') {
+          router.replace('/login/admin');
+        }
       }
-      setLoading(false);
     }
   };
 
@@ -25,7 +32,7 @@ export default function AdminProtectedRoute({ children }) {
     checkAuth();
     // Listen for storage changes (e.g., logout in another tab)
     const onStorage = (e) => {
-      if (e.key === 'adminToken') {
+      if (e.key === 'adminToken' || e.key === 'adminData') {
         checkAuth();
       }
     };
