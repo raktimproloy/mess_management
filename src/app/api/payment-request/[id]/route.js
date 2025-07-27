@@ -1,16 +1,26 @@
 import { PrismaClient } from '@prisma/client';
-import { verifyToken } from '../../../../lib/auth';
+import { verifyAdminAuth } from '../../../../lib/auth';
 
 const prisma = new PrismaClient();
 
 // GET: Get specific payment request
 export async function GET(request, { params }) {
   try {
+    // Verify admin authentication
+    const authResult = verifyAdminAuth(request);
+    if (!authResult.success) {
+      return new Response(JSON.stringify({
+        success: false,
+        error: authResult.error
+      }), {
+        status: 401,
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+    }
+
     const { id } = params;
-    const authHeader = request.headers.get('authorization');
-    if (!authHeader) return new Response(JSON.stringify({ message: 'Unauthorized' }), { status: 401 });
-    const { success, user } = verifyToken(authHeader.split(' ')[1]);
-    if (!success) return new Response(JSON.stringify({ message: 'Invalid token' }), { status: 401 });
 
     const paymentRequest = await prisma.paymentRequest.findUnique({
       where: { id: parseInt(id) },
@@ -35,11 +45,7 @@ export async function GET(request, { params }) {
       return new Response(JSON.stringify({ message: 'Payment request not found' }), { status: 404 });
     }
 
-    // Check access permissions
-    if (user.role === 'student' && paymentRequest.studentId !== user.id) {
-      return new Response(JSON.stringify({ message: 'Forbidden' }), { status: 403 });
-    }
-
+    // Admin can access all payment requests
     return new Response(JSON.stringify({
       success: true,
       paymentRequest
@@ -51,14 +57,24 @@ export async function GET(request, { params }) {
   }
 }
 
-// PUT: Update payment request (admin: approve/reject, student: update own pending request)
+// PUT: Update payment request (admin: approve/reject)
 export async function PUT(request, { params }) {
   try {
+    // Verify admin authentication
+    const authResult = verifyAdminAuth(request);
+    if (!authResult.success) {
+      return new Response(JSON.stringify({
+        success: false,
+        error: authResult.error
+      }), {
+        status: 401,
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+    }
+
     const { id } = params;
-    const authHeader = request.headers.get('authorization');
-    if (!authHeader) return new Response(JSON.stringify({ message: 'Unauthorized' }), { status: 401 });
-    const { success, user } = verifyToken(authHeader.split(' ')[1]);
-    if (!success) return new Response(JSON.stringify({ message: 'Invalid token' }), { status: 401 });
 
     const data = await request.json();
     const paymentRequest = await prisma.paymentRequest.findUnique({
@@ -72,118 +88,69 @@ export async function PUT(request, { params }) {
 
     let updateData = {};
 
-    if (user.role === 'admin') {
-      // Admin can approve/reject payment requests
-      if (data.status && ['approved', 'rejected'].includes(data.status)) {
-        updateData.status = data.status;
+    // Admin can approve/reject payment requests
+    if (data.status && ['approved', 'rejected'].includes(data.status)) {
+      updateData.status = data.status;
 
-        // If approved, create rent history and update rent
-        if (data.status === 'approved') {
-          // Create rent history record
-          const rentHistory = await prisma.rentHistory.create({
-            data: {
-              rentMonth: `${paymentRequest.rent.createdAt.getFullYear()}-${String(paymentRequest.rent.createdAt.getMonth() + 1).padStart(2, '0')}`,
-              paidDate: new Date(),
-              studentId: paymentRequest.studentId,
-              categoryId: paymentRequest.categoryId,
-              status: 'approved',
-              paymentType: paymentRequest.paymentMethod,
-              dueRent: paymentRequest.rent.rentAmount,
-              dueAdvance: paymentRequest.rent.advanceAmount,
-              dueExternal: paymentRequest.rent.externalAmount,
-              paidRent: paymentRequest.rentAmount,
-              paidAdvance: paymentRequest.advanceAmount,
-              paidExternal: paymentRequest.externalAmount,
-              rentId: paymentRequest.rentId,
-              details: {
-                bikashNumber: paymentRequest.bikashNumber,
-                trxId: paymentRequest.trxId,
-                paymentRequestId: paymentRequest.id
-              }
+      // If approved, create rent history and update rent
+      if (data.status === 'approved') {
+        // Create rent history record
+        const rentHistory = await prisma.rentHistory.create({
+          data: {
+            rentMonth: `${paymentRequest.rent.createdAt.getFullYear()}-${String(paymentRequest.rent.createdAt.getMonth() + 1).padStart(2, '0')}`,
+            paidDate: new Date(),
+            studentId: paymentRequest.studentId,
+            categoryId: paymentRequest.categoryId,
+            status: 'approved',
+            paymentType: paymentRequest.paymentMethod,
+            dueRent: paymentRequest.rent.rentAmount,
+            dueAdvance: paymentRequest.rent.advanceAmount,
+            dueExternal: paymentRequest.rent.externalAmount,
+            paidRent: paymentRequest.rentAmount,
+            paidAdvance: paymentRequest.advanceAmount,
+            paidExternal: paymentRequest.externalAmount,
+            rentId: paymentRequest.rentId,
+            details: {
+              bikashNumber: paymentRequest.bikashNumber,
+              trxId: paymentRequest.trxId,
+              paymentRequestId: paymentRequest.id
             }
-          });
-
-          // Update payment request with rent history ID
-          updateData.rentHistoryId = rentHistory.id;
-
-          // Update rent record
-          const rentUpdateData = {};
-          
-          // Update rent paid amounts
-          if (paymentRequest.rentAmount > 0) {
-            rentUpdateData.rentPaid = { increment: paymentRequest.rentAmount };
           }
-          if (paymentRequest.advanceAmount > 0) {
-            rentUpdateData.advancePaid = { increment: paymentRequest.advanceAmount };
-          }
-          if (paymentRequest.externalAmount > 0) {
-            rentUpdateData.externalPaid = { increment: paymentRequest.externalAmount };
-          }
-          if (paymentRequest.previousDueAmount > 0) {
-            rentUpdateData.previousDuePaid = { increment: paymentRequest.previousDueAmount };
-          }
+        });
 
-          // Update paid date and type
-          rentUpdateData.paidDate = new Date();
-          rentUpdateData.paidType = paymentRequest.paymentMethod;
+        // Update payment request with rent history ID
+        updateData.rentHistoryId = rentHistory.id;
 
-          // Determine new status
-          const totalDue = paymentRequest.rent.rentAmount + paymentRequest.rent.externalAmount + paymentRequest.rent.previousDue;
-          const totalPaid = (paymentRequest.rent.rentPaid + paymentRequest.rentAmount) + 
-                           (paymentRequest.rent.externalPaid + paymentRequest.externalAmount) + 
-                           (paymentRequest.rent.previousDuePaid + paymentRequest.previousDueAmount);
+        // Update rent record: set paid fields to sum of previous + this request
+        const rent = paymentRequest.rent;
+        const newRentPaid = (rent.rentPaid || 0) + (paymentRequest.rentAmount || 0);
+        const newAdvancePaid = (rent.advancePaid || 0) + (paymentRequest.advanceAmount || 0);
+        const newExternalPaid = (rent.externalPaid || 0) + (paymentRequest.externalAmount || 0);
+        const newPreviousDuePaid = (rent.previousDuePaid || 0) + (paymentRequest.previousDueAmount || 0);
 
-          if (totalPaid >= totalDue) {
-            rentUpdateData.status = 'paid';
-          } else if (totalPaid > 0) {
-            rentUpdateData.status = 'partial';
-          }
-
-          // Update rent
-          await prisma.rent.update({
-            where: { id: paymentRequest.rentId },
-            data: rentUpdateData
-          });
+        // Determine new status
+        const totalDue = (rent.rentAmount || 0) + (rent.externalAmount || 0) + (rent.previousDue || 0);
+        const totalPaid = newRentPaid + newExternalPaid + newPreviousDuePaid;
+        let newStatus = 'unpaid';
+        if (totalPaid >= totalDue) {
+          newStatus = 'paid';
+        } else if (totalPaid > 0) {
+          newStatus = 'partial';
         }
-      }
-    } else if (user.role === 'student' && paymentRequest.studentId === user.id) {
-      // Student can only update pending requests
-      if (paymentRequest.status !== 'pending') {
-        return new Response(JSON.stringify({ message: 'Can only update pending requests' }), { status: 400 });
-      }
 
-      // Student can update payment details for pending requests
-      if (data.paymentMethod && ['on hand', 'online'].includes(data.paymentMethod)) {
-        updateData.paymentMethod = data.paymentMethod;
+        await prisma.rent.update({
+          where: { id: paymentRequest.rentId },
+          data: {
+            rentPaid: newRentPaid,
+            advancePaid: newAdvancePaid,
+            externalPaid: newExternalPaid,
+            previousDuePaid: newPreviousDuePaid,
+            status: newStatus,
+            paidDate: new Date(),
+            paidType: paymentRequest.paymentMethod
+          }
+        });
       }
-      if (data.bikashNumber !== undefined) {
-        updateData.bikashNumber = data.bikashNumber;
-      }
-      if (data.trxId !== undefined) {
-        updateData.trxId = data.trxId;
-      }
-      if (data.rentAmount !== undefined) {
-        updateData.rentAmount = parseFloat(data.rentAmount);
-      }
-      if (data.advanceAmount !== undefined) {
-        updateData.advanceAmount = parseFloat(data.advanceAmount);
-      }
-      if (data.externalAmount !== undefined) {
-        updateData.externalAmount = parseFloat(data.externalAmount);
-      }
-      if (data.previousDueAmount !== undefined) {
-        updateData.previousDueAmount = parseFloat(data.previousDueAmount);
-      }
-
-      // Recalculate total amount
-      const totalAmount = (updateData.rentAmount || paymentRequest.rentAmount) + 
-                         (updateData.advanceAmount || paymentRequest.advanceAmount) + 
-                         (updateData.externalAmount || paymentRequest.externalAmount) + 
-                         (updateData.previousDueAmount || paymentRequest.previousDueAmount);
-      
-      updateData.totalAmount = totalAmount;
-    } else {
-      return new Response(JSON.stringify({ message: 'Forbidden' }), { status: 403 });
     }
 
     const updatedPaymentRequest = await prisma.paymentRequest.update({
@@ -218,14 +185,24 @@ export async function PUT(request, { params }) {
   }
 }
 
-// DELETE: Delete payment request (student can delete own pending requests)
+// DELETE: Delete payment request (admin only)
 export async function DELETE(request, { params }) {
   try {
+    // Verify admin authentication
+    const authResult = verifyAdminAuth(request);
+    if (!authResult.success) {
+      return new Response(JSON.stringify({
+        success: false,
+        error: authResult.error
+      }), {
+        status: 401,
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+    }
+
     const { id } = params;
-    const authHeader = request.headers.get('authorization');
-    if (!authHeader) return new Response(JSON.stringify({ message: 'Unauthorized' }), { status: 401 });
-    const { success, user } = verifyToken(authHeader.split(' ')[1]);
-    if (!success) return new Response(JSON.stringify({ message: 'Invalid token' }), { status: 401 });
 
     const paymentRequest = await prisma.paymentRequest.findUnique({
       where: { id: parseInt(id) }
@@ -235,11 +212,7 @@ export async function DELETE(request, { params }) {
       return new Response(JSON.stringify({ message: 'Payment request not found' }), { status: 404 });
     }
 
-    // Check permissions
-    if (user.role === 'student' && paymentRequest.studentId !== user.id) {
-      return new Response(JSON.stringify({ message: 'Forbidden' }), { status: 403 });
-    }
-
+    // Admin can delete any payment request
     // Only allow deletion of pending requests
     if (paymentRequest.status !== 'pending') {
       return new Response(JSON.stringify({ message: 'Can only delete pending requests' }), { status: 400 });

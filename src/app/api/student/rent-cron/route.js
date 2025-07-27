@@ -84,8 +84,8 @@ export async function GET(request) {
         console.log(`    rentPaid: ${prevRent.rentPaid}, externalPaid: ${prevRent.externalPaid}`);
         
         // Calculate unpaid amount from previous month's rent for this student
-        const totalAmount = prevRent.rentAmount + prevRent.externalAmount;
-        const totalPaid = prevRent.rentPaid + (prevRent.externalPaid || 0);
+        const totalAmount = (prevRent.rentAmount || 0) + (prevRent.externalAmount || 0) + (prevRent.previousDue || 0);
+        const totalPaid = (prevRent.rentPaid || 0) + (prevRent.externalPaid || 0) + (prevRent.previousDuePaid || 0);
         previousDue = Math.max(0, totalAmount - totalPaid);
         
         console.log(`  Calculated previous due: totalAmount=${totalAmount}, totalPaid=${totalPaid}, previousDue=${previousDue}`);
@@ -201,8 +201,8 @@ export async function POST(request) {
           console.log(`    rentPaid: ${prevRent.rentPaid}, externalPaid: ${prevRent.externalPaid}`);
           
           // Calculate unpaid amount from previous month's rent for this student
-          const totalAmount = prevRent.rentAmount + prevRent.externalAmount;
-          const totalPaid = prevRent.rentPaid + (prevRent.externalPaid || 0);
+          const totalAmount = (prevRent.rentAmount || 0) + (prevRent.externalAmount || 0) + (prevRent.previousDue || 0);
+          const totalPaid = (prevRent.rentPaid || 0) + (prevRent.externalPaid || 0) + (prevRent.previousDuePaid || 0);
           previousDue = Math.max(0, totalAmount - totalPaid);
           
           console.log(`  Calculated previous due: totalAmount=${totalAmount}, totalPaid=${totalPaid}, previousDue=${previousDue}`);

@@ -2,7 +2,7 @@ import jwt from 'jsonwebtoken';
 import { jwtDecode } from 'jwt-decode';
 
 // Use a consistent JWT_SECRET across all files
-const JWT_SECRET = 'your_jwt_secret_key_here_make_it_long_and_secure_123456789';
+const JWT_SECRET = process.env.JWT_SECRET || process.env.NEXT_PUBLIC_JWT_SECRET;
 
 // Verify JWT token and extract user data
 export function verifyToken(token) {
@@ -55,16 +55,19 @@ export function verifyAdminAuth(request) {
 export function verifyStudentAuth(request) {
   try {
     const authHeader = request.headers.get('authorization');
+    
     if (!authHeader) {
       return { success: false, error: 'Authorization header missing' };
     }
 
     const token = extractTokenFromHeader(authHeader);
+    
     if (!token) {
       return { success: false, error: 'Invalid authorization format' };
     }
 
     const verification = verifyToken(token);
+    
     if (!verification.success) {
       return { success: false, error: verification.error };
     }

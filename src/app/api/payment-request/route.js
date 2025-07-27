@@ -1,42 +1,56 @@
 import { PrismaClient } from '@prisma/client';
-import { verifyToken } from '../../../lib/auth';
+import { verifyAdminAuth, verifyToken } from '../../../lib/auth';
 
 const prisma = new PrismaClient();
 
 // GET: List payment requests (admin: all, student: own)
 export async function GET(request) {
   try {
-    const authHeader = request.headers.get('authorization');
-    if (!authHeader) return new Response(JSON.stringify({ message: 'Unauthorized' }), { status: 401 });
-    const { success, user } = verifyToken(authHeader.split(' ')[1]);
-    if (!success) return new Response(JSON.stringify({ message: 'Invalid token' }), { status: 401 });
+    // Try admin auth first
+    let user = null;
+    let isAdmin = false;
+    let authResult = verifyAdminAuth(request);
+    if (authResult.success) {
+      user = authResult.user;
+      isAdmin = true;
+    } else {
+      // Try student auth
+      const authHeader = request.headers.get('authorization');
+      if (!authHeader) {
+        return new Response(JSON.stringify({ success: false, error: 'Unauthorized' }), { status: 401, headers: { 'Content-Type': 'application/json' } });
+      }
+      const tokenResult = verifyToken(authHeader.split(' ')[1]);
+      if (!tokenResult.success) {
+        return new Response(JSON.stringify({ success: false, error: 'Unauthorized' }), { status: 401, headers: { 'Content-Type': 'application/json' } });
+      }
+      user = tokenResult.user;
+      if (user.role !== 'student') {
+        return new Response(JSON.stringify({ success: false, error: 'Forbidden' }), { status: 403, headers: { 'Content-Type': 'application/json' } });
+      }
+    }
 
     const url = new URL(request.url);
     const page = parseInt(url.searchParams.get('page') || '1', 10);
-    const pageSize = parseInt(url.searchParams.get('pageSize') || '10', 10);
+    const limit = parseInt(url.searchParams.get('limit') || '10', 10);
     const status = url.searchParams.get('status') || '';
     const paymentMethod = url.searchParams.get('paymentMethod') || '';
+    const categoryId = url.searchParams.get('categoryId') || '';
     const search = url.searchParams.get('search') || '';
 
     let where = {};
-
-    // Filter by user role
-    if (user.role === 'student') {
+    if (!isAdmin) {
       where.studentId = user.id;
     }
-
-    // Filter by status
     if (status) {
       where.status = status;
     }
-
-    // Filter by payment method
     if (paymentMethod) {
       where.paymentMethod = paymentMethod;
     }
-
-    // Search by student name or phone (admin only)
-    if (search && user.role === 'admin') {
+    if (categoryId) {
+      where.categoryId = parseInt(categoryId);
+    }
+    if (search) {
       where.student = {
         OR: [
           { name: { contains: search } },
@@ -46,13 +60,13 @@ export async function GET(request) {
       };
     }
 
-    const [total, paymentRequests] = await Promise.all([
+    const [total, requests] = await Promise.all([
       prisma.paymentRequest.count({ where }),
       prisma.paymentRequest.findMany({
         where,
         orderBy: { createdAt: 'desc' },
-        skip: (page - 1) * pageSize,
-        take: pageSize,
+        skip: (page - 1) * limit,
+        take: limit,
         include: {
           student: {
             select: {
@@ -76,34 +90,32 @@ export async function GET(request) {
     const summary = allRequests.reduce((acc, request) => {
       acc.totalRequests++;
       acc.totalAmount += request.totalAmount;
-      
       if (request.status === 'pending') acc.pendingRequests++;
       else if (request.status === 'approved') acc.approvedRequests++;
       else if (request.status === 'rejected') acc.rejectedRequests++;
-      
-      if (request.paymentMethod === 'online') acc.onlinePayments++;
-      else if (request.paymentMethod === 'on hand') acc.cashPayments++;
-      
       return acc;
     }, {
       totalRequests: 0,
       totalAmount: 0,
       pendingRequests: 0,
       approvedRequests: 0,
-      rejectedRequests: 0,
-      onlinePayments: 0,
-      cashPayments: 0
+      rejectedRequests: 0
     });
 
     return new Response(JSON.stringify({
       success: true,
-      paymentRequests,
+      requests,
       total,
       page,
-      pageSize,
+      limit,
+      totalPages: Math.ceil(total / limit),
       summary
-    }), { status: 200 });
-
+    }), {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
   } catch (err) {
     console.error('Error fetching payment requests:', err);
     return new Response(JSON.stringify({ message: 'Server error', error: err.message }), { status: 500 });
@@ -221,6 +233,33 @@ export async function POST(request) {
 
   } catch (err) {
     console.error('Error creating payment request:', err);
+    return new Response(JSON.stringify({ message: 'Server error', error: err.message }), { status: 500 });
+  }
+} 
+
+export async function DELETE(request) {
+  try {
+    const authHeader = request.headers.get('authorization');
+    if (!authHeader) return new Response(JSON.stringify({ message: 'Unauthorized' }), { status: 401 });
+    const { success, user } = verifyToken(authHeader.split(' ')[1]);
+    if (!success || user.role !== 'student') return new Response(JSON.stringify({ message: 'Forbidden' }), { status: 403 });
+
+    const url = new URL(request.url);
+    const id = url.searchParams.get('id');
+    if (!id) return new Response(JSON.stringify({ message: 'Request ID required' }), { status: 400 });
+
+    const paymentRequest = await prisma.paymentRequest.findUnique({ where: { id: parseInt(id) } });
+    if (!paymentRequest) return new Response(JSON.stringify({ message: 'Payment request not found' }), { status: 404 });
+    if (paymentRequest.studentId !== user.id) return new Response(JSON.stringify({ message: 'Forbidden' }), { status: 403 });
+    if (paymentRequest.status !== 'pending') return new Response(JSON.stringify({ message: 'Only pending requests can be cancelled' }), { status: 400 });
+
+    // Update status to 'cancelled' instead of deleting
+    await prisma.paymentRequest.update({
+      where: { id: parseInt(id) },
+      data: { status: 'cancelled' }
+    });
+    return new Response(JSON.stringify({ success: true, message: 'Payment request cancelled' }), { status: 200 });
+  } catch (err) {
     return new Response(JSON.stringify({ message: 'Server error', error: err.message }), { status: 500 });
   }
 } 

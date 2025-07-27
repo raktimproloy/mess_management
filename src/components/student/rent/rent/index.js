@@ -21,8 +21,67 @@ export default function DueRent() {
     bikashNumber: "",
     trxId: ""
   });
+  // Add state to store payment requests
+  const [paymentRequests, setPaymentRequests] = useState([]);
+  const [expandedRentId, setExpandedRentId] = useState(null);
+  const [currentMonthHistory, setCurrentMonthHistory] = useState([]);
 
   const studentData = getStudentData();
+
+  // Fetch payment requests for the student
+  useEffect(() => {
+    async function fetchPaymentRequests() {
+      try {
+        const token = localStorage.getItem('studentToken');
+        const response = await fetch('/api/payment-request', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        if (!response.ok) throw new Error('Failed to fetch payment requests');
+        const data = await response.json();
+        setPaymentRequests(data.requests || []);
+      } catch (error) {
+        setPaymentRequests([]);
+      }
+    }
+    fetchPaymentRequests();
+    // Optionally, refetch when rent data changes
+  }, [currentRent, previousRents]);
+
+  // Fetch current month's rent history for the student
+  useEffect(() => {
+    async function fetchCurrentMonthHistory() {
+      try {
+        const token = localStorage.getItem('studentToken');
+        const now = new Date();
+        const month = now.getMonth() + 1;
+        const year = now.getFullYear();
+        const response = await fetch(`/api/student/rent-history?month=${month}&year=${year}&pageSize=10`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        if (!response.ok) throw new Error('Failed to fetch rent history');
+        const data = await response.json();
+        setCurrentMonthHistory(data.history || []);
+      } catch (error) {
+        setCurrentMonthHistory([]);
+      }
+    }
+    fetchCurrentMonthHistory();
+  }, []);
+
+  // Helper to get pending request for a rent
+  const getPendingRequestForRent = (rentId) => {
+    return paymentRequests.find(r => r.rentId === rentId && r.status === 'pending');
+  };
+
+  // Add helper to get all payment requests for a rent
+  const getRequestsForRent = (rentId) => {
+    return paymentRequests.filter(r => r.rentId === rentId);
+  };
 
   useEffect(() => {
     fetchRentData();
@@ -71,11 +130,16 @@ export default function DueRent() {
   const openModal = (type, rent = null) => {
     setModal({ open: true, type, rent });
     if (rent) {
+      // Calculate remaining due for each field
+      const remainingRent = (rent.rentAmount || 0) - (rent.rentPaid || 0);
+      const remainingAdvance = (rent.advanceAmount || 0) - (rent.advancePaid || 0);
+      const remainingExternal = (rent.externalAmount || 0) - (rent.externalPaid || 0);
+      const remainingPreviousDue = (rent.previousDue || 0) - (rent.previousDuePaid || 0);
       setPaymentForm({
-        rentAmount: rent.rentAmount || 0,
-        advanceAmount: rent.advanceAmount || 0,
-        externalAmount: rent.externalAmount || 0,
-        previousDueAmount: rent.previousDue || 0,
+        rentAmount: remainingRent > 0 ? remainingRent : 0,
+        advanceAmount: remainingAdvance > 0 ? remainingAdvance : 0,
+        externalAmount: remainingExternal > 0 ? remainingExternal : 0,
+        previousDueAmount: remainingPreviousDue > 0 ? remainingPreviousDue : 0,
         paymentMethod: "on hand",
         bikashNumber: "",
         trxId: ""
@@ -162,6 +226,37 @@ export default function DueRent() {
 
   return (
     <div className="p-6 bg-gray-900 min-h-screen">
+      {currentMonthHistory.length > 0 && (
+        <div className="bg-green-900 rounded-lg p-4 mb-6">
+          <h3 className="text-lg font-semibold text-white mb-2">Current Month Paid Rent History</h3>
+          <table className="min-w-full divide-y divide-green-700 text-sm">
+            <thead>
+              <tr>
+                <th className="px-2 py-1 text-left text-green-200">Paid Date</th>
+                <th className="px-2 py-1 text-left text-green-200">Paid Rent</th>
+                <th className="px-2 py-1 text-left text-green-200">Paid Advance</th>
+                <th className="px-2 py-1 text-left text-green-200">Paid External</th>
+                <th className="px-2 py-1 text-left text-green-200">Payment Type</th>
+                <th className="px-2 py-1 text-left text-green-200">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {currentMonthHistory.map((h) => (
+                <tr key={h.id}>
+                  <td className="px-2 py-1 text-green-100">{new Date(h.paidDate).toLocaleString()}</td>
+                  <td className="px-2 py-1 text-green-100">₹{h.paidRent}</td>
+                  <td className="px-2 py-1 text-green-100">₹{h.paidAdvance}</td>
+                  <td className="px-2 py-1 text-green-100">₹{h.paidExternal}</td>
+                  <td className="px-2 py-1 text-green-100">{h.paymentType}</td>
+                  <td className="px-2 py-1 text-green-100">
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${h.status === 'approved' ? 'bg-green-600 text-white' : h.status === 'rejected' ? 'bg-red-600 text-white' : 'bg-yellow-600 text-white'}`}>{h.status}</span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
       {/* Current Month Summary */}
       {currentRent ? (
         <div className="bg-gray-800 rounded-lg shadow-lg p-6 mb-6 border border-gray-700">
@@ -181,15 +276,70 @@ export default function DueRent() {
                 {currentRent.status}
               </span>
               {currentRent.status !== 'paid' && (
-                <button
-                  onClick={() => openModal("payment", currentRent)}
-                  className="px-4 py-2 rounded-md bg-blue-600 text-white font-semibold hover:bg-blue-700 transition"
-                >
-                  Request Payment
-                </button>
+                getPendingRequestForRent(currentRent.id) ? (
+                  <>
+                    <button className="px-4 py-2 rounded-md bg-yellow-500 text-white font-semibold cursor-not-allowed" disabled>Pending</button>
+                    <button
+                      className="px-4 py-2 rounded-md bg-red-600 text-white font-semibold ml-2"
+                      onClick={async () => {
+                        const token = localStorage.getItem('studentToken');
+                        const req = getPendingRequestForRent(currentRent.id);
+                        if (!req) return;
+                        const res = await fetch(`/api/payment-request?id=${req.id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
+                        if (res.ok) {
+                          toast.success('Request cancelled');
+                          // Refetch payment requests and rent data
+                          fetchRentData();
+                        } else {
+                          toast.error('Failed to cancel request');
+                        }
+                      }}
+                    >Cancel Request</button>
+                  </>
+                ) : (
+                  <button
+                    onClick={() => openModal("payment", currentRent)}
+                    className="px-4 py-2 rounded-md bg-blue-600 text-white font-semibold hover:bg-blue-700 transition"
+                  >
+                    Request Payment
+                  </button>
+                )
               )}
             </div>
           </div>
+          {currentRent && (
+            <div className="bg-gray-700 rounded-lg p-4 mb-6">
+              <h3 className="text-lg font-semibold text-white mb-2">Payment Requests for This Month</h3>
+              {getRequestsForRent(currentRent.id).length === 0 ? (
+                <div className="text-gray-300">No payment requests for this month.</div>
+              ) : (
+                <table className="min-w-full divide-y divide-gray-600 text-sm">
+                  <thead>
+                    <tr>
+                      <th className="px-2 py-1 text-left text-gray-300">Date</th>
+                      <th className="px-2 py-1 text-left text-gray-300">Amount</th>
+                      <th className="px-2 py-1 text-left text-gray-300">Method</th>
+                      <th className="px-2 py-1 text-left text-gray-300">Status</th>
+                      <th className="px-2 py-1 text-left text-gray-300">TRX ID</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {getRequestsForRent(currentRent.id).map(req => (
+                      <tr key={req.id}>
+                        <td className="px-2 py-1 text-gray-200">{new Date(req.createdAt).toLocaleString()}</td>
+                        <td className="px-2 py-1 text-gray-200">₹{req.totalAmount}</td>
+                        <td className="px-2 py-1 text-gray-200">{req.paymentMethod}</td>
+                        <td className="px-2 py-1 text-gray-200">
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${req.status === 'pending' ? 'bg-yellow-600 text-white' : req.status === 'approved' ? 'bg-green-600 text-white' : req.status === 'rejected' ? 'bg-red-600 text-white' : req.status === 'cancelled' ? 'bg-gray-500 text-white' : 'bg-gray-700 text-gray-300'}`}>{req.status}</span>
+                        </td>
+                        <td className="px-2 py-1 text-gray-200">{req.trxId || '-'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          )}
         </div>
       ) : (
         <div className="bg-gray-800 rounded-lg shadow-lg p-6 mb-6 border border-gray-700">
@@ -216,39 +366,73 @@ export default function DueRent() {
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-300 uppercase">Previous Due</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-300 uppercase">Total Due</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-300 uppercase">Status</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-300 uppercase">Action</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-300 uppercase">Paid Rent</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-300 uppercase">Paid Advance</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-300 uppercase">Paid External</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-300 uppercase">Paid Previous Due</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-300 uppercase">Paid Date</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-700">
               {previousRents.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-4 py-6 text-center text-gray-400">No previous rent data found.</td>
+                  <td colSpan={12} className="px-4 py-6 text-center text-gray-400">No previous rent data found.</td>
                 </tr>
               ) : (
                 previousRents.map((rent) => (
-                  <tr key={rent.id} className="hover:bg-gray-700 transition-colors">
-                    <td className="px-4 py-3 text-sm text-white">{formatDate(rent.createdAt)}</td>
-                    <td className="px-4 py-3 text-sm text-white">₹{rent.rentAmount || 0}</td>
-                    <td className="px-4 py-3 text-sm text-white">₹{rent.advanceAmount || 0}</td>
-                    <td className="px-4 py-3 text-sm text-white">₹{rent.externalAmount || 0}</td>
-                    <td className="px-4 py-3 text-sm text-white">₹{rent.previousDue || 0}</td>
-                    <td className="px-4 py-3 text-sm text-white">₹{rent.totalDue || 0}</td>
-                    <td className="px-4 py-3 text-sm">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(rent.status)}`}>
-                        {rent.status}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-sm text-white">
-                      {rent.status !== 'paid' && (
-                        <button
-                          onClick={() => openModal("payment", rent)}
-                          className="px-3 py-1 border border-blue-500 rounded hover:bg-blue-600 text-blue-500 hover:text-white transition"
-                        >
-                          Request Payment
-                        </button>
-                      )}
-                    </td>
-                  </tr>
+                  <React.Fragment key={rent.id}>
+                    <tr>
+                      <td className="px-4 py-3 text-sm text-white">{formatDate(rent.createdAt)}</td>
+                      <td className="px-4 py-3 text-sm text-white">₹{rent.rentAmount || 0}</td>
+                      <td className="px-4 py-3 text-sm text-white">₹{rent.advanceAmount || 0}</td>
+                      <td className="px-4 py-3 text-sm text-white">₹{rent.externalAmount || 0}</td>
+                      <td className="px-4 py-3 text-sm text-white">₹{rent.previousDue || 0}</td>
+                      <td className="px-4 py-3 text-sm text-white">₹{rent.totalDue || 0}</td>
+                      <td className="px-4 py-3 text-sm">
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(rent.status)}`}>{rent.status}</span>
+                      </td>
+                      <td className="px-4 py-3 text-sm text-white">₹{rent.rentPaid || 0}</td>
+                      <td className="px-4 py-3 text-sm text-white">₹{rent.advancePaid || 0}</td>
+                      <td className="px-4 py-3 text-sm text-white">₹{rent.externalPaid || 0}</td>
+                      <td className="px-4 py-3 text-sm text-white">₹{rent.previousDuePaid || 0}</td>
+                      <td className="px-4 py-3 text-sm text-white">{rent.paidDate ? new Date(rent.paidDate).toLocaleString() : '-'}</td>
+                    </tr>
+                    {expandedRentId === rent.id && (
+                      <tr>
+                        <td colSpan={8} className="bg-gray-700 p-3">
+                          <h4 className="text-sm font-semibold text-white mb-2">Payment Requests</h4>
+                          {getRequestsForRent(rent.id).length === 0 ? (
+                            <div className="text-gray-300">No payment requests for this month.</div>
+                          ) : (
+                            <table className="min-w-full divide-y divide-gray-600 text-xs">
+                              <thead>
+                                <tr>
+                                  <th className="px-2 py-1 text-left text-gray-300">Date</th>
+                                  <th className="px-2 py-1 text-left text-gray-300">Amount</th>
+                                  <th className="px-2 py-1 text-left text-gray-300">Method</th>
+                                  <th className="px-2 py-1 text-left text-gray-300">Status</th>
+                                  <th className="px-2 py-1 text-left text-gray-300">TRX ID</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {getRequestsForRent(rent.id).map(req => (
+                                  <tr key={req.id}>
+                                    <td className="px-2 py-1 text-gray-200">{new Date(req.createdAt).toLocaleString()}</td>
+                                    <td className="px-2 py-1 text-gray-200">₹{req.totalAmount}</td>
+                                    <td className="px-2 py-1 text-gray-200">{req.paymentMethod}</td>
+                                    <td className="px-2 py-1 text-gray-200">
+                                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${req.status === 'pending' ? 'bg-yellow-600 text-white' : req.status === 'approved' ? 'bg-green-600 text-white' : req.status === 'rejected' ? 'bg-red-600 text-white' : req.status === 'cancelled' ? 'bg-gray-500 text-white' : 'bg-gray-700 text-gray-300'}`}>{req.status}</span>
+                                    </td>
+                                    <td className="px-2 py-1 text-gray-200">{req.trxId || '-'}</td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          )}
+                        </td>
+                      </tr>
+                    )}
+                  </React.Fragment>
                 ))
               )}
             </tbody>

@@ -4,7 +4,7 @@ import jwt from 'jsonwebtoken';
 
 const prisma = new PrismaClient();
 // Use the same JWT_SECRET as the auth library
-const JWT_SECRET = 'your_jwt_secret_key_here_make_it_long_and_secure_123456789';
+const JWT_SECRET = process.env.JWT_SECRET || process.env.NEXT_PUBLIC_JWT_SECRET;
 
 export async function POST(request) {
   try {

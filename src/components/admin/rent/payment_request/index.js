@@ -12,6 +12,7 @@ export default function PaymentRequest() {
     search: "",
     status: "",
     paymentMethod: "",
+    categoryId: "",
   });
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -180,7 +181,7 @@ export default function PaymentRequest() {
 
       {/* Filters */}
       <div className="bg-gray-800 rounded-lg p-4 mb-6 border border-gray-700">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-1">Search</label>
             <input
@@ -191,6 +192,22 @@ export default function PaymentRequest() {
               className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="Student name or phone"
             />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-1">Category</label>
+            <select
+              name="categoryId"
+              value={filters.categoryId}
+              onChange={handleFilterChange}
+              className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">All Categories</option>
+              {categories.map((category) => (
+                <option key={category.id} value={category.id}>
+                  {category.title}
+                </option>
+              ))}
+            </select>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-1">Status</label>
@@ -222,7 +239,7 @@ export default function PaymentRequest() {
           <div className="flex items-end">
             <button
               onClick={() => {
-                setFilters({ search: "", status: "", paymentMethod: "" });
+                setFilters({ search: "", status: "", paymentMethod: "", categoryId: "" });
                 setPage(1);
               }}
               className="w-full px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition"
