@@ -4,15 +4,9 @@ import { toast } from "react-hot-toast";
 
 const PAGE_SIZE = 10;
 
-export default function PaymentRequest() {
+export default function PaymentRequests() {
   const [requests, setRequests] = useState([]);
-  const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [filters, setFilters] = useState({
-    search: "",
-    status: "",
-    paymentMethod: "",
-  });
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [summary, setSummary] = useState({
@@ -24,34 +18,15 @@ export default function PaymentRequest() {
   });
 
   useEffect(() => {
-    fetchCategories();
     fetchPaymentRequests();
-  }, [page, filters]);
-
-  const fetchCategories = async () => {
-    try {
-      const response = await fetch('/api/category');
-      if (response.ok) {
-        const data = await response.json();
-        setCategories(data.categories || []);
-      }
-    } catch (error) {
-      console.error('Error fetching categories:', error);
-    }
-  };
+  }, [page]);
 
   const fetchPaymentRequests = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('adminToken');
+      const token = localStorage.getItem('studentToken');
       
-      const queryParams = new URLSearchParams({
-        page: page.toString(),
-        limit: PAGE_SIZE.toString(),
-        ...filters
-      });
-
-      const response = await fetch(`/api/payment-request?${queryParams}`, {
+      const response = await fetch(`/api/payment-request?page=${page}&limit=${PAGE_SIZE}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -74,34 +49,31 @@ export default function PaymentRequest() {
     }
   };
 
-  const handleFilterChange = (e) => {
-    const { name, value } = e.target;
-    setFilters(prev => ({ ...prev, [name]: value }));
-    setPage(1);
-  };
+  const handleDeleteRequest = async (requestId) => {
+    if (!confirm('Are you sure you want to delete this payment request?')) {
+      return;
+    }
 
-  const handleAction = async (requestId, action) => {
     try {
-      const token = localStorage.getItem('adminToken');
+      const token = localStorage.getItem('studentToken');
       
       const response = await fetch(`/api/payment-request/${requestId}`, {
-        method: 'PUT',
+        method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ status: action })
+        }
       });
 
       if (!response.ok) {
-        throw new Error(`Failed to ${action} payment request`);
+        throw new Error('Failed to delete payment request');
       }
 
-      toast.success(`Payment request ${action}ed successfully!`);
+      toast.success('Payment request deleted successfully!');
       fetchPaymentRequests(); // Refresh data
     } catch (error) {
-      console.error(`Error ${action}ing payment request:`, error);
-      toast.error(`Failed to ${action} payment request`);
+      console.error('Error deleting payment request:', error);
+      toast.error('Failed to delete payment request');
     }
   };
 
@@ -151,7 +123,7 @@ export default function PaymentRequest() {
       {/* Header */}
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-white mb-2">Payment Requests</h1>
-        <p className="text-gray-400">Manage student payment requests and approve or reject them</p>
+        <p className="text-gray-400">Manage your payment requests and track their status</p>
       </div>
 
       {/* Summary Cards */}
@@ -178,73 +150,19 @@ export default function PaymentRequest() {
         </div>
       </div>
 
-      {/* Filters */}
-      <div className="bg-gray-800 rounded-lg p-4 mb-6 border border-gray-700">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">Search</label>
-            <input
-              type="text"
-              name="search"
-              value={filters.search}
-              onChange={handleFilterChange}
-              className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Student name or phone"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">Status</label>
-            <select
-              name="status"
-              value={filters.status}
-              onChange={handleFilterChange}
-              className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="">All Status</option>
-              <option value="pending">Pending</option>
-              <option value="approved">Approved</option>
-              <option value="rejected">Rejected</option>
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">Payment Method</label>
-            <select
-              name="paymentMethod"
-              value={filters.paymentMethod}
-              onChange={handleFilterChange}
-              className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="">All Methods</option>
-              <option value="on hand">On Hand</option>
-              <option value="online">Online</option>
-            </select>
-          </div>
-          <div className="flex items-end">
-            <button
-              onClick={() => {
-                setFilters({ search: "", status: "", paymentMethod: "" });
-                setPage(1);
-              }}
-              className="w-full px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition"
-            >
-              Clear Filters
-            </button>
-          </div>
-        </div>
-      </div>
-
       {/* Requests Table */}
       <div className="bg-gray-800 rounded-lg shadow-lg border border-gray-700">
+        <div className="px-6 py-4 border-b border-gray-700">
+          <h2 className="text-xl font-semibold text-white">Payment Requests</h2>
+        </div>
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-700">
             <thead className="bg-gray-700">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-300 uppercase">Student</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-300 uppercase">Category</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-300 uppercase">Date</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-300 uppercase">Rent Month</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-300 uppercase">Amount</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-300 uppercase">Payment Method</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-300 uppercase">Request Date</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-300 uppercase">Status</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-300 uppercase">Actions</th>
               </tr>
@@ -252,20 +170,12 @@ export default function PaymentRequest() {
             <tbody className="divide-y divide-gray-700">
               {requests.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-4 py-6 text-center text-gray-400">No payment requests found.</td>
+                  <td colSpan={6} className="px-4 py-6 text-center text-gray-400">No payment requests found.</td>
                 </tr>
               ) : (
                 requests.map((request) => (
                   <tr key={request.id} className="hover:bg-gray-700 transition-colors">
-                    <td className="px-4 py-3 text-sm text-white">
-                      <div>
-                        <div className="font-medium">{request.student?.name || 'N/A'}</div>
-                        <div className="text-gray-400 text-xs">{request.student?.phone || 'N/A'}</div>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 text-sm text-white">
-                      {request.category?.title || 'N/A'}
-                    </td>
+                    <td className="px-4 py-3 text-sm text-white">{formatDate(request.createdAt)}</td>
                     <td className="px-4 py-3 text-sm text-white">
                       {request.rent ? formatDate(request.rent.createdAt) : 'N/A'}
                     </td>
@@ -275,32 +185,19 @@ export default function PaymentRequest() {
                         {request.paymentMethod}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-sm text-white">{formatDate(request.createdAt)}</td>
                     <td className="px-4 py-3 text-sm">
                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(request.status)}`}>
                         {request.status}
                       </span>
                     </td>
                     <td className="px-4 py-3 text-sm text-white">
-                      {request.status === "pending" ? (
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => handleAction(request.id, "approved")}
-                            className="px-3 py-1 border border-green-500 rounded hover:bg-green-600 text-green-500 hover:text-white transition"
-                          >
-                            Approve
-                          </button>
-                          <button
-                            onClick={() => handleAction(request.id, "rejected")}
-                            className="px-3 py-1 border border-red-500 rounded hover:bg-red-600 text-red-500 hover:text-white transition"
-                          >
-                            Reject
-                          </button>
-                        </div>
-                      ) : (
-                        <span className="text-gray-400 text-xs">
-                          {request.status === 'approved' ? 'Already Approved' : 'Already Rejected'}
-                        </span>
+                      {request.status === 'pending' && (
+                        <button
+                          onClick={() => handleDeleteRequest(request.id)}
+                          className="px-3 py-1 border border-red-500 rounded hover:bg-red-600 text-red-500 hover:text-white transition"
+                        >
+                          Delete
+                        </button>
                       )}
                     </td>
                   </tr>
@@ -348,4 +245,4 @@ export default function PaymentRequest() {
       )}
     </div>
   );
-}
+} 

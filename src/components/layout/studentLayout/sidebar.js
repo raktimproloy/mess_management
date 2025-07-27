@@ -3,10 +3,11 @@ import Link from "next/link";
 
 const navItems = [
   { name: "Dashboard", icon: "🏠", href: "/student/dashboard" },
-  { name: "Rent", icon: "👥", href: "/student/rent" },
-  { name: "RentHistory", icon: "👥", href: "/student/rent-history" },
+  { name: "Rent", icon: "💰", href: "/student/rent" },
+  { name: "Payment Requests", icon: "📋", href: "/student/payment-requests" },
+  { name: "Rent History", icon: "📊", href: "/student/rent-history" },
   { name: "Profile", icon: "⚙️", href: "/student/profile" },
-  { name: "Logout", icon: "📊", href: "/student/logout" },
+  { name: "Logout", icon: "🚪", href: "/student/logout" },
 ];
 
 export default function StudentSidebar() {

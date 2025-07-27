@@ -1,7 +1,8 @@
 import jwt from 'jsonwebtoken';
 import { jwtDecode } from 'jwt-decode';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret_key_here';
+// Use a consistent JWT_SECRET across all files
+const JWT_SECRET = 'your_jwt_secret_key_here_make_it_long_and_secure_123456789';
 
 // Verify JWT token and extract user data
 export function verifyToken(token) {
@@ -50,6 +51,35 @@ export function verifyAdminAuth(request) {
   }
 }
 
+// Verify student authentication
+export function verifyStudentAuth(request) {
+  try {
+    const authHeader = request.headers.get('authorization');
+    if (!authHeader) {
+      return { success: false, error: 'Authorization header missing' };
+    }
+
+    const token = extractTokenFromHeader(authHeader);
+    if (!token) {
+      return { success: false, error: 'Invalid authorization format' };
+    }
+
+    const verification = verifyToken(token);
+    if (!verification.success) {
+      return { success: false, error: verification.error };
+    }
+
+    // Check if user is student
+    if (verification.user.role !== 'student') {
+      return { success: false, error: 'Student access required' };
+    }
+
+    return { success: true, student: verification.user };
+  } catch (error) {
+    return { success: false, error: 'Authentication failed' };
+  }
+}
+
 // Get admin data from localStorage
 export function getAdminData() {
   if (typeof window === 'undefined') return null;
@@ -57,31 +87,25 @@ export function getAdminData() {
   const token = localStorage.getItem('adminToken');
   const adminData = localStorage.getItem('adminData');
   
-  console.log('getAdminData: token exists:', !!token, 'adminData exists:', !!adminData);
-  
   if (!token || !adminData) return null;
   
   try {
     const decoded = jwtDecode(token);
-    console.log('getAdminData: decoded token:', decoded);
     
     // Check expiry (exp is in seconds)
     if (!decoded.exp || Date.now() >= decoded.exp * 1000) {
-      console.log('getAdminData: token expired');
       localStorage.removeItem('adminToken');
       localStorage.removeItem('adminData');
       return null;
     }
     // Check role
     if (decoded.role !== 'admin') {
-      console.log('getAdminData: invalid role:', decoded.role);
       localStorage.removeItem('adminToken');
       localStorage.removeItem('adminData');
       return null;
     }
     return JSON.parse(adminData);
   } catch (e) {
-    console.log('getAdminData: error decoding token:', e);
     localStorage.removeItem('adminToken');
     localStorage.removeItem('adminData');
     return null;

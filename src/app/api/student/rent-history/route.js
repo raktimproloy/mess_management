@@ -1,24 +1,39 @@
 import { PrismaClient } from '@prisma/client';
+import { verifyStudentAuth } from '../../../../lib/auth';
 
 const prisma = new PrismaClient();
 
 export async function GET(request) {
   try {
+    // Verify student authentication
+    const authResult = verifyStudentAuth(request);
+    if (!authResult.success) {
+      return new Response(JSON.stringify({
+        success: false,
+        error: authResult.error
+      }), {
+        status: 401,
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+    }
+
     const url = new URL(request.url);
     const page = parseInt(url.searchParams.get('page') || '1', 10);
     const pageSize = parseInt(url.searchParams.get('pageSize') || '10', 10);
-    const studentId = url.searchParams.get('studentId');
     const categoryId = url.searchParams.get('categoryId');
     const month = url.searchParams.get('month');
     const year = url.searchParams.get('year');
     const paymentType = url.searchParams.get('paymentType');
-    const search = url.searchParams.get('search') || '';
 
-    // Build where clause
-    let where = {};
-    
-    // Filter by student ID if provided
-    if (studentId) where.studentId = parseInt(studentId);
+    // Get student ID from the authenticated user
+    const studentId = authResult.student.id;
+
+    // Build where clause - always filter by the authenticated student
+    let where = {
+      studentId: studentId
+    };
     
     // Filter by category if provided
     if (categoryId) where.categoryId = parseInt(categoryId);
@@ -32,17 +47,6 @@ export async function GET(request) {
     } else if (year) {
       where.rentMonth = { startsWith: `${year}-` };
     }
-    
-    // Search by student name or phone
-    if (search) {
-      where.student = {
-        OR: [
-          { name: { contains: search } },
-          { phone: { contains: search } },
-          { smsPhone: { contains: search } },
-        ],
-      };
-    }
 
     // Get total count and rent history with pagination
     const [total, history] = await Promise.all([
@@ -53,11 +57,6 @@ export async function GET(request) {
         skip: (page - 1) * pageSize,
         take: pageSize,
         include: { 
-          student: {
-            include: {
-              categoryRef: true
-            }
-          }, 
           rent: {
             include: {
               category: true
@@ -67,7 +66,7 @@ export async function GET(request) {
       }),
     ]);
 
-    // Calculate summary statistics
+    // Calculate summary statistics for this student
     const allHistory = await prisma.rentHistory.findMany({ where });
     const totalPaid = allHistory.reduce((sum, record) => 
       sum + record.paidRent + record.paidAdvance + record.paidExternal, 0
@@ -77,6 +76,7 @@ export async function GET(request) {
     );
 
     return new Response(JSON.stringify({
+      success: true,
       history,
       total,
       page,
@@ -92,8 +92,9 @@ export async function GET(request) {
       headers: { 'Content-Type': 'application/json' }
     });
   } catch (err) {
-    console.error('Error fetching rent history:', err);
+    console.error('Error fetching student rent history:', err);
     return new Response(JSON.stringify({ 
+      success: false,
       message: 'Server error', 
       error: err.message 
     }), { 

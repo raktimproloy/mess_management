@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import { verifyToken } from '../../../lib/auth';
+import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
 
@@ -39,11 +40,21 @@ export async function GET(request) {
         skip: (page - 1) * pageSize,
         take: pageSize,
       });
-      return new Response(JSON.stringify({ students, total, page, pageSize }), { status: 200 });
+      
+      // Remove passwords from response
+      const studentsWithoutPasswords = students.map(student => {
+        const { password: _, ...studentWithoutPassword } = student;
+        return studentWithoutPassword;
+      });
+      
+      return new Response(JSON.stringify({ students: studentsWithoutPasswords, total, page, pageSize }), { status: 200 });
     } else if (user.role === 'student') {
       const student = await prisma.student.findUnique({ where: { id: user.id } });
       if (!student) return new Response(JSON.stringify({ message: 'Student not found' }), { status: 404 });
-      return new Response(JSON.stringify({ students: [student], total: 1, page: 1, pageSize: 1 }), { status: 200 });
+      
+      // Remove password from response
+      const { password: _, ...studentWithoutPassword } = student;
+      return new Response(JSON.stringify({ students: [studentWithoutPassword], total: 1, page: 1, pageSize: 1 }), { status: 200 });
     } else {
       return new Response(JSON.stringify({ message: 'Forbidden' }), { status: 403 });
     }
@@ -59,21 +70,29 @@ export async function POST(request) {
     if (!authHeader) return new Response(JSON.stringify({ message: 'Unauthorized' }), { status: 401 });
     const { success, user } = verifyToken(authHeader.split(' ')[1]);
     if (!success || user.role !== 'admin') return new Response(JSON.stringify({ message: 'Forbidden' }), { status: 403 });
+    
     const data = await request.json();
     if (!data.name || !data.phone || !data.categoryId || !data.joiningDate) {
       return new Response(JSON.stringify({ message: 'Missing required fields' }), { status: 400 });
     }
+    
     // Check for duplicate phone
     const existing = await prisma.student.findUnique({ where: { phone: data.phone } });
     if (existing) {
       return new Response(JSON.stringify({ message: 'Student with this phone already exists' }), { status: 409 });
     }
+    
+    // Hash the password
+    const passwordToHash = data.password || data.phone; // Use phone as default password if not provided
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(passwordToHash, saltRounds);
+    
     const newStudent = await prisma.student.create({
       data: {
         name: data.name,
         phone: data.phone,
         smsPhone: data.smsPhone || data.phone,
-        password: data.password || data.phone,
+        password: hashedPassword, // Store hashed password
         profileImage: '',
         hideRanking: 0,
         status: data.status || 'living',
@@ -82,7 +101,10 @@ export async function POST(request) {
         joiningDate: new Date(data.joiningDate),
       },
     });
-    return new Response(JSON.stringify({ message: 'Student created', student: newStudent }), { status: 201 });
+    
+    // Return student data without password
+    const { password: _, ...studentWithoutPassword } = newStudent;
+    return new Response(JSON.stringify({ message: 'Student created', student: studentWithoutPassword }), { status: 201 });
   } catch (err) {
     return new Response(JSON.stringify({ message: 'Server error', error: err.message }), { status: 500 });
   }

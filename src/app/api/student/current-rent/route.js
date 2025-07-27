@@ -1,94 +1,202 @@
-import { promises as fs } from 'fs';
-import path from 'path';
+import { PrismaClient } from '@prisma/client';
+import { verifyStudentAuth } from '../../../../lib/auth';
 
-const rentsPath = path.join(process.cwd(), 'public/database/rents.json');
-const studentsPath = path.join(process.cwd(), 'public/database/students.json');
-const categoriesPath = path.join(process.cwd(), 'public/database/categories.json');
+const prisma = new PrismaClient();
 
-function getMonthYear(date) {
-  const d = new Date(date);
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-}
-
-function isCurrentMonth(date) {
-  const now = new Date();
-  const d = new Date(date);
-  return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
+function getMonthRange(date) {
+  const start = new Date(date.getFullYear(), date.getMonth(), 1);
+  const end = new Date(date.getFullYear(), date.getMonth() + 1, 0, 23, 59, 59, 999);
+  return { start, end };
 }
 
 export async function GET(request) {
-  const url = new URL(request.url);
-  const page = parseInt(url.searchParams.get('page') || '1', 10);
-  const pageSize = parseInt(url.searchParams.get('pageSize') || '10', 10);
-  const search = url.searchParams.get('search') || '';
-  const category = url.searchParams.get('category');
+  try {
+    // Verify student authentication
+    const authResult = verifyStudentAuth(request);
+    
+    if (!authResult.success) {
+      return new Response(JSON.stringify({
+        success: false,
+        error: authResult.error
+      }), {
+        status: 401,
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+    }
 
-  const [rentsRaw, students, categories] = await Promise.all([
-    fs.readFile(rentsPath, 'utf-8').then(JSON.parse),
-    fs.readFile(studentsPath, 'utf-8').then(JSON.parse),
-    fs.readFile(categoriesPath, 'utf-8').then(JSON.parse),
-  ]);
-  const now = new Date();
-  const currentMonthYear = getMonthYear(now);
+    const url = new URL(request.url);
+    const page = parseInt(url.searchParams.get('page') || '1', 10);
+    const limit = parseInt(url.searchParams.get('limit') || '10', 10);
+    const studentId = authResult.student.id;
 
-  // Filter rents for current month
-  let rents = rentsRaw.filter(r => getMonthYear(r.month_year) === currentMonthYear);
+    // Get current month range
+    const now = new Date();
+    const { start, end } = getMonthRange(now);
 
-  // Filter by category
-  if (category) {
-    rents = rents.filter(r => {
-      const student = students.find(s => s.id === r.studentId);
-      return student && (student.categoryId || student.category) == category;
+    // Get current month's rent
+    const currentRent = await prisma.rent.findFirst({
+      where: {
+        studentId: studentId,
+        createdAt: {
+          gte: start,
+          lte: end,
+        },
+      },
+      include: {
+        category: true,
+        student: {
+          select: {
+            id: true,
+            name: true,
+            phone: true,
+            smsPhone: true,
+            status: true,
+            categoryRef: true
+          }
+        }
+      },
     });
-  }
 
-  // Search by student name or phone
-  if (search) {
-    rents = rents.filter(r => {
-      const student = students.find(s => s.id === r.studentId);
-      return student && (
-        student.name.toLowerCase().includes(search.toLowerCase()) ||
-        (student.phone && student.phone.includes(search))
-      );
-    });
-  }
+    // Calculate total due for current rent
+    if (currentRent) {
+      currentRent.totalDue = (currentRent.rentAmount || 0) + 
+                            (currentRent.advanceAmount || 0) + 
+                            (currentRent.externalAmount || 0) + 
+                            (currentRent.previousDue || 0);
+    }
 
-  // Pagination
-  const total = rents.length;
-  const paginated = rents.slice((page - 1) * pageSize, page * pageSize);
-
-  // Totals
-  let totalRent = 0, totalPaid = 0, totalDue = 0;
-  for (const r of rents) {
-    totalRent += (r.rent_amount || 0);
-    if (r.status === 'paid') totalPaid += (r.rent_amount || 0);
-    else totalDue += (r.rent_amount || 0);
-  }
-  // Total students for current month
-  const studentIds = new Set(rents.map(r => r.studentId));
-  const totalStudents = studentIds.size;
-
-  // Attach student and category info
-  const result = paginated.map(r => {
-    const student = students.find(s => s.id === r.studentId);
-    const categoryObj = categories.find(c => c.id === (student?.categoryId || student?.category));
-    return {
-      ...r,
-      student,
-      category: categoryObj,
+    // Get previous months' rents with pagination
+    const previousRentsWhere = {
+      studentId: studentId,
+      createdAt: {
+        lt: start, // Before current month
+      },
     };
-  });
 
-  return new Response(JSON.stringify({
-    rents: result,
-    total,
-    totalRent,
-    totalPaid,
-    totalDue,
-    totalStudents,
-    page,
-    pageSize
-  }), { status: 200 });
+    const [totalPreviousRents, previousRents] = await Promise.all([
+      prisma.rent.count({ where: previousRentsWhere }),
+      prisma.rent.findMany({
+        where: previousRentsWhere,
+        orderBy: { createdAt: 'desc' }, // Latest first
+        skip: (page - 1) * limit,
+        take: limit,
+        include: {
+          category: true,
+          student: {
+            select: {
+              id: true,
+              name: true,
+              phone: true,
+              smsPhone: true,
+              status: true,
+              categoryRef: true
+            }
+          }
+        },
+      }),
+    ]);
+
+    // Calculate total due for each previous rent
+    previousRents.forEach(rent => {
+      rent.totalDue = (rent.rentAmount || 0) + 
+                     (rent.advanceAmount || 0) + 
+                     (rent.externalAmount || 0) + 
+                     (rent.previousDue || 0);
+    });
+
+    // Calculate summary for current month
+    let currentMonthSummary = {
+      totalDue: 0,
+      totalPaid: 0,
+      remainingDue: 0,
+      status: 'no_rent'
+    };
+
+    if (currentRent) {
+      const totalDue = currentRent.rentAmount + currentRent.externalAmount + currentRent.previousDue;
+      const totalPaid = currentRent.rentPaid + currentRent.externalPaid + currentRent.previousDuePaid;
+      
+      currentMonthSummary = {
+        totalDue,
+        totalPaid,
+        remainingDue: Math.max(0, totalDue - totalPaid),
+        status: currentRent.status
+      };
+    }
+
+    // Calculate summary for previous months
+    const allPreviousRents = await prisma.rent.findMany({
+      where: previousRentsWhere,
+      select: {
+        rentAmount: true,
+        externalAmount: true,
+        previousDue: true,
+        rentPaid: true,
+        externalPaid: true,
+        previousDuePaid: true,
+        status: true
+      }
+    });
+
+    const previousMonthsSummary = allPreviousRents.reduce((summary, rent) => {
+      const totalDue = rent.rentAmount + rent.externalAmount + rent.previousDue;
+      const totalPaid = rent.rentPaid + rent.externalPaid + rent.previousDuePaid;
+      
+      summary.totalDue += totalDue;
+      summary.totalPaid += totalPaid;
+      summary.remainingDue += Math.max(0, totalDue - totalPaid);
+      
+      if (rent.status === 'paid') summary.paidMonths++;
+      else if (rent.status === 'partial') summary.partialMonths++;
+      else summary.unpaidMonths++;
+      
+      return summary;
+    }, {
+      totalDue: 0,
+      totalPaid: 0,
+      remainingDue: 0,
+      paidMonths: 0,
+      partialMonths: 0,
+      unpaidMonths: 0
+    });
+
+    return new Response(JSON.stringify({
+      success: true,
+      currentRent,
+      currentMonthSummary,
+      previousRents,
+      previousMonthsSummary: {
+        ...previousMonthsSummary,
+        totalPages: Math.ceil(totalPreviousRents / limit)
+      },
+      pagination: {
+        page,
+        limit,
+        total: totalPreviousRents,
+        totalPages: Math.ceil(totalPreviousRents / limit)
+      }
+    }), {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+
+  } catch (err) {
+    console.error('Error fetching student current rent:', err);
+    return new Response(JSON.stringify({
+      success: false,
+      message: 'Server error',
+      error: err.message
+    }), {
+      status: 500,
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+  }
 }
 
 // POST: Mark rent as fully paid (all due amounts paid)

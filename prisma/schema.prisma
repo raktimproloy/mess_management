@@ -34,6 +34,7 @@ model Category {
   // Relations
   students Student[]
   rents    Rent[]
+  paymentRequests PaymentRequest[]
 
   @@map("categories")
 }
@@ -57,6 +58,7 @@ model Student {
   categoryRef Category? @relation(fields: [categoryId], references: [id])
   rents       Rent[]
   rentHistory RentHistory[]
+  paymentRequests PaymentRequest[]
 
   @@map("students")
 }
@@ -83,6 +85,7 @@ model Rent {
   student       Student       @relation(fields: [studentId], references: [id])
   category      Category      @relation(fields: [categoryId], references: [id])
   rentHistory   RentHistory[]
+  paymentRequests PaymentRequest[]
 
   @@map("rents")
 }
@@ -109,8 +112,36 @@ model RentHistory {
   // Relations
   student     Student     @relation(fields: [studentId], references: [id])
   rent        Rent?       @relation(fields: [rentId], references: [id])
+  paymentRequests PaymentRequest[]
 
   @@map("rent_history")
+}
+
+model PaymentRequest {
+  id            Int      @id @default(autoincrement())
+  studentId     Int      @map("student_id")
+  categoryId    Int      @map("category_id")
+  rentId        Int      @map("rent_id")
+  rentHistoryId Int?     @map("rent_history_id") // null initially, set after approval
+  status        String   @default("pending") // pending, approved, rejected
+  paymentMethod String   @map("payment_method") // on hand, online
+  bikashNumber  String?  @map("bikash_number")
+  trxId         String?  @map("trx_id")
+  totalAmount   Float    @map("total_amount")
+  rentAmount    Float    @default(0) @map("rent_amount")
+  advanceAmount Float    @default(0) @map("advance_amount")
+  externalAmount Float   @default(0) @map("external_amount")
+  previousDueAmount Float @default(0) @map("previous_due_amount")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relations
+  student      Student     @relation(fields: [studentId], references: [id])
+  category     Category    @relation(fields: [categoryId], references: [id])
+  rent         Rent        @relation(fields: [rentId], references: [id])
+  rentHistory  RentHistory? @relation(fields: [rentHistoryId], references: [id])
+
+  @@map("payment_requests")
 }
 
 model Testing {

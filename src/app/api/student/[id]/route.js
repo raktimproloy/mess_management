@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import { verifyToken } from '../../../../lib/auth';
+import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
 
@@ -14,7 +15,9 @@ export async function GET(request, { params }) {
     const student = await prisma.student.findUnique({ where: { id: parseInt(id) } });
     if (!student) return new Response(JSON.stringify({ message: 'Student not found' }), { status: 404 });
     if (user.role === 'admin' || (user.role === 'student' && String(user.id) === String(id))) {
-      return new Response(JSON.stringify(student), { status: 200 });
+      // Return student data without password
+      const { password: _, ...studentWithoutPassword } = student;
+      return new Response(JSON.stringify(studentWithoutPassword), { status: 200 });
     } else {
       return new Response(JSON.stringify({ message: 'Forbidden' }), { status: 403 });
     }
@@ -31,10 +34,13 @@ export async function PUT(request, { params }) {
     if (!authHeader) return new Response(JSON.stringify({ message: 'Unauthorized' }), { status: 401 });
     const { success, user } = verifyToken(authHeader.split(' ')[1]);
     if (!success) return new Response(JSON.stringify({ message: 'Invalid token' }), { status: 401 });
+    
     const data = await request.json();
     const student = await prisma.student.findUnique({ where: { id: parseInt(id) } });
     if (!student) return new Response(JSON.stringify({ message: 'Student not found' }), { status: 404 });
+    
     let updateData = {};
+    
     if (user.role === 'admin') {
       updateData = { ...data };
       delete updateData.id;
@@ -52,6 +58,13 @@ export async function PUT(request, { params }) {
         updateData.joiningDate = new Date(data.newJoiningDate);
       }
       delete updateData.newJoiningDate;
+      
+      // Hash password if it's being updated
+      if (updateData.password) {
+        const saltRounds = 10;
+        updateData.password = await bcrypt.hash(updateData.password, saltRounds);
+      }
+      
     } else if (user.role === 'student' && String(user.id) === String(id)) {
       // Only allow certain fields
       const allowed = ['name', 'smsPhone', 'profileImage', 'hideRanking', 'password'];
@@ -60,11 +73,22 @@ export async function PUT(request, { params }) {
           updateData[key] = data[key];
         }
       }
+      
+      // Hash password if it's being updated
+      if (updateData.password) {
+        const saltRounds = 10;
+        updateData.password = await bcrypt.hash(updateData.password, saltRounds);
+      }
+      
     } else {
       return new Response(JSON.stringify({ message: 'Forbidden' }), { status: 403 });
     }
+    
     const updated = await prisma.student.update({ where: { id: parseInt(id) }, data: updateData });
-    return new Response(JSON.stringify(updated), { status: 200 });
+    
+    // Return student data without password
+    const { password: _, ...studentWithoutPassword } = updated;
+    return new Response(JSON.stringify(studentWithoutPassword), { status: 200 });
   } catch (err) {
     return new Response(JSON.stringify({ message: 'Server error', error: err.message }), { status: 500 });
   }
@@ -82,7 +106,10 @@ export async function DELETE(request, { params }) {
       where: { id: parseInt(id) },
       data: { status: 'leave', updatedAt: new Date() },
     });
-    return new Response(JSON.stringify({ message: 'Student set to leave', student: updated }), { status: 200 });
+    
+    // Return student data without password
+    const { password: _, ...studentWithoutPassword } = updated;
+    return new Response(JSON.stringify({ message: 'Student set to leave', student: studentWithoutPassword }), { status: 200 });
   } catch (err) {
     return new Response(JSON.stringify({ message: 'Server error', error: err.message }), { status: 500 });
   }

@@ -1,253 +1,375 @@
-"use client";
-import React, { useState, useMemo, useEffect } from "react";
-
-const PAGE_SIZE = 5;
-
-// Mock data for a single student
-const studentHistory = [
-  { id: 1, monthYear: "June 2024", paidAmount: 2000, beforePaidDue: 2000, due: 0, advance: 0, payFor: "regular", paymentType: "online", paidDate: "2024-06-05", status: "approve" },
-  { id: 2, monthYear: "May 2024", paidAmount: 1500, beforePaidDue: 2000, due: 500, advance: 0, payFor: "regular", paymentType: "on hand", paidDate: "2024-05-10", status: "pending" },
-  { id: 3, monthYear: "April 2024", paidAmount: 2200, beforePaidDue: 2200, due: 0, advance: 200, payFor: "advance", paymentType: "online", paidDate: "2024-04-15", status: "approve" },
-  { id: 4, monthYear: "March 2024", paidAmount: 1000, beforePaidDue: 2000, due: 1000, advance: 0, payFor: "regular", paymentType: "on hand", paidDate: "2024-03-20", status: "pending" },
-  { id: 5, monthYear: "February 2024", paidAmount: 550, beforePaidDue: 550, due: 0, advance: 0, payFor: "regular", paymentType: "online", paidDate: "2024-02-25", status: "approve" },
-  { id: 6, monthYear: "January 2024", paidAmount: 0, beforePaidDue: 2000, due: 2000, advance: 0, payFor: "regular", paymentType: "on hand", paidDate: "2024-01-30", status: "pending" },
-];
+'use client';
+import { useState, useEffect } from 'react';
+import toast from 'react-hot-toast';
+import { Toaster } from 'react-hot-toast';
 
 function getUnique(arr, key) {
-  return [...new Set(arr.map((item) => item[key]))].filter(Boolean);
+  return [...new Set(arr.map(item => item[key]))];
 }
 
 export default function StudentRentHistory() {
   const [history, setHistory] = useState([]);
-  const [filters, setFilters] = useState({
-    month: "",
-    year: "",
-    paymentType: "",
-    payFor: "",
-  });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [page, setPage] = useState(1);
-  const [modal, setModal] = useState({ open: false, record: null });
+  const [pageSize] = useState(10);
+  const [total, setTotal] = useState(0);
+  const [summary, setSummary] = useState({});
+  
+  // Filters
+  const [filters, setFilters] = useState({
+    category: '',
+    month: '',
+    year: '',
+    paymentType: ''
+  });
+  
+  // Available filter options
+  const [categories, setCategories] = useState([]);
+  const [paymentTypes, setPaymentTypes] = useState([]);
 
   useEffect(() => {
-    setHistory(studentHistory);
-  }, []);
+    fetchCategories();
+    fetchHistory();
+  }, [page, filters]);
 
-  // Extract unique months and years from data
-  const months = useMemo(() => getUnique(history, "monthYear").map(m => m.split(" ")[0]), [history]);
-  const years = useMemo(() => getUnique(history, "monthYear").map(m => m.split(" ")[1]), [history]);
-  const paymentTypes = ["online", "on hand"];
-  const payFors = getUnique(history, "payFor");
+  const fetchCategories = async () => {
+    try {
+      const response = await fetch('/api/category');
+      const data = await response.json();
+      if (data.success) {
+        setCategories(data.categories);
+      }
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+    }
+  };
 
-  // Filtering
-  const filteredHistory = useMemo(() => {
-    let data = history;
-    if (filters.paymentType) {
-      data = data.filter((r) => r.paymentType === filters.paymentType);
-    }
-    if (filters.month) {
-      data = data.filter((r) => r.monthYear.split(" ")[0] === filters.month);
-    }
-    if (filters.year) {
-      data = data.filter((r) => r.monthYear.split(" ")[1] === filters.year);
-    }
-    if (filters.payFor) {
-      data = data.filter((r) => r.payFor === filters.payFor);
-    }
-    return data;
-  }, [history, filters]);
+  const fetchHistory = async () => {
+    setLoading(true);
+    try {
+      const token = localStorage.getItem('studentToken');
+      if (!token) {
+        throw new Error('Authentication required');
+      }
 
-  // Pagination
-  const totalPages = Math.ceil(filteredHistory.length / PAGE_SIZE) || 1;
-  const paginatedHistory = useMemo(() => {
-    const start = (page - 1) * PAGE_SIZE;
-    return filteredHistory.slice(start, start + PAGE_SIZE);
-  }, [filteredHistory, page]);
+      const params = new URLSearchParams({
+        page: page.toString(),
+        pageSize: pageSize.toString(),
+        ...(filters.category && { categoryId: filters.category }),
+        ...(filters.month && { month: filters.month }),
+        ...(filters.year && { year: filters.year }),
+        ...(filters.paymentType && { paymentType: filters.paymentType })
+      });
 
-  // Handlers
+      const response = await fetch(`/api/student/rent-history?${params}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      const data = await response.json();
+      
+      if (response.ok && data.success) {
+        setHistory(data.history);
+        setTotal(data.total);
+        setSummary(data.summary);
+        
+        // Extract unique payment types for filter dropdown
+        const types = getUnique(data.history, 'paymentType');
+        setPaymentTypes(types);
+      } else {
+        throw new Error(data.message || 'Failed to fetch rent history');
+      }
+    } catch (error) {
+      setError(error.message);
+      toast.error(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
-    setFilters((prev) => ({ ...prev, [name]: value }));
+    setFilters(prev => ({ ...prev, [name]: value }));
+    setPage(1); // Reset to first page when filters change
+  };
+
+  const handleSearch = (e) => {
+    e.preventDefault();
     setPage(1);
+    fetchHistory();
   };
+
   const handlePageChange = (newPage) => {
-    if (newPage >= 1 && newPage <= totalPages) setPage(newPage);
+    setPage(newPage);
   };
-  const openModal = (record) => setModal({ open: true, record });
-  const closeModal = () => setModal({ open: false, record: null });
+
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'BDT'
+    }).format(amount);
+  };
+
+  // Get category title from rent record
+  const getCategoryTitle = (record) => {
+    if (record.rent?.category?.title) {
+      return record.rent.category.title;
+    }
+    return 'N/A';
+  };
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
-      <div className="text-2xl font-bold text-black mb-6">My Rent History</div>
+    <div className="p-6 min-h-screen bg-[#18181b] dark:bg-[#18181b]">
+      <Toaster 
+        position="top-right"
+        toastOptions={{
+          duration: 4000,
+          style: {
+            background: '#232329',
+            color: '#fff',
+            border: '1px solid #374151',
+          },
+          success: {
+            iconTheme: {
+              primary: '#10B981',
+              secondary: '#fff',
+            },
+          },
+          error: {
+            iconTheme: {
+              primary: '#EF4444',
+              secondary: '#fff',
+            },
+          },
+        }}
+      />
+      
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-white mb-2">My Rent History</h1>
+        <p className="text-gray-400">View your rent payment history</p>
+      </div>
+
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <div className="bg-[#232329] p-4 rounded-lg">
+          <h3 className="text-gray-400 text-sm">Total Records</h3>
+          <p className="text-2xl font-bold text-white">{summary.totalRecords || 0}</p>
+        </div>
+        <div className="bg-[#232329] p-4 rounded-lg">
+          <h3 className="text-gray-400 text-sm">Total Paid</h3>
+          <p className="text-2xl font-bold text-green-400">{formatCurrency(summary.totalPaid || 0)}</p>
+        </div>
+        <div className="bg-[#232329] p-4 rounded-lg">
+          <h3 className="text-gray-400 text-sm">Total Due</h3>
+          <p className="text-2xl font-bold text-red-400">{formatCurrency(summary.totalDue || 0)}</p>
+        </div>
+        <div className="bg-[#232329] p-4 rounded-lg">
+          <h3 className="text-gray-400 text-sm">Average Payment</h3>
+          <p className="text-2xl font-bold text-blue-400">{formatCurrency(summary.averagePayment || 0)}</p>
+        </div>
+      </div>
+      
       {/* Filters */}
-      <form className="flex flex-wrap gap-4 items-end mb-4 bg-white p-4 rounded-lg shadow">
-        <div>
-          <label className="block text-sm font-medium text-black mb-1">Month</label>
-          <select
-            name="month"
-            value={filters.month}
-            onChange={handleFilterChange}
-            className="px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
-          >
-            <option value="">All</option>
-            {months.map((m) => (
-              <option key={m} value={m}>{m}</option>
-            ))}
-          </select>
+      <div className="bg-[#232329] p-4 rounded-lg mb-6">
+        <form onSubmit={handleSearch} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-white mb-1">Category</label>
+            <select
+              name="category"
+              value={filters.category}
+              onChange={handleFilterChange}
+              className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-[#18181b] text-white border-gray-600"
+            >
+              <option value="">All Categories</option>
+              {categories.map((cat) => (
+                <option key={cat.id} value={cat.id}>
+                  {cat.title}
+                </option>
+              ))}
+            </select>
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-white mb-1">Month</label>
+            <select
+              name="month"
+              value={filters.month}
+              onChange={handleFilterChange}
+              className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-[#18181b] text-white border-gray-600"
+            >
+              <option value="">All Months</option>
+              {Array.from({ length: 12 }, (_, i) => i + 1).map(month => (
+                <option key={month} value={month}>
+                  {new Date(2024, month - 1).toLocaleDateString('en-US', { month: 'long' })}
+                </option>
+              ))}
+            </select>
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-white mb-1">Year</label>
+            <select
+              name="year"
+              value={filters.year}
+              onChange={handleFilterChange}
+              className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-[#18181b] text-white border-gray-600"
+            >
+              <option value="">All Years</option>
+              {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i).map(year => (
+                <option key={year} value={year}>{year}</option>
+              ))}
+            </select>
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-white mb-1">Payment Type</label>
+            <select
+              name="paymentType"
+              value={filters.paymentType}
+              onChange={handleFilterChange}
+              className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-[#18181b] text-white border-gray-600"
+            >
+              <option value="">All Types</option>
+              {paymentTypes.map((type) => (
+                <option key={type} value={type}>{type}</option>
+              ))}
+            </select>
+          </div>
+          
+          <div className="flex items-end">
+            <button
+              type="submit"
+              className="w-full px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+            >
+              Filter
+            </button>
+          </div>
+        </form>
+      </div>
+      
+      {/* Loading and Error States */}
+      {loading && (
+        <div className="flex items-center justify-center mb-4">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <span className="ml-2 text-blue-400">Loading...</span>
         </div>
-        <div>
-          <label className="block text-sm font-medium text-black mb-1">Year</label>
-          <select
-            name="year"
-            value={filters.year}
-            onChange={handleFilterChange}
-            className="px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
-          >
-            <option value="">All</option>
-            {years.map((y) => (
-              <option key={y} value={y}>{y}</option>
-            ))}
-          </select>
+      )}
+      
+      {error && (
+        <div className="text-red-400 mb-4 p-4 bg-red-900/20 rounded-lg">
+          {error}
         </div>
-        <div>
-          <label className="block text-sm font-medium text-black mb-1">Payment Type</label>
-          <select
-            name="paymentType"
-            value={filters.paymentType}
-            onChange={handleFilterChange}
-            className="px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
-          >
-            <option value="">All</option>
-            {paymentTypes.map((pt) => (
-              <option key={pt} value={pt}>{pt.charAt(0).toUpperCase() + pt.slice(1)}</option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-black mb-1">Pay For</label>
-          <select
-            name="payFor"
-            value={filters.payFor}
-            onChange={handleFilterChange}
-            className="px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
-          >
-            <option value="">All</option>
-            {payFors.map((pf) => (
-              <option key={pf} value={pf}>{pf.charAt(0).toUpperCase() + pf.slice(1)}</option>
-            ))}
-          </select>
-        </div>
-      </form>
-      {/* Table */}
-      <div className="overflow-x-auto rounded-lg shadow bg-white">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-100">
-            <tr>
-              <th className="px-4 py-2 text-left text-xs font-semibold text-black uppercase">Month & Year</th>
-              <th className="px-4 py-2 text-left text-xs font-semibold text-black uppercase">Paid Amount</th>
-              <th className="px-4 py-2 text-left text-xs font-semibold text-black uppercase">Before Paid Due</th>
-              <th className="px-4 py-2 text-left text-xs font-semibold text-black uppercase">After Paid Due</th>
-              <th className="px-4 py-2 text-left text-xs font-semibold text-black uppercase">Advance</th>
-              <th className="px-4 py-2 text-left text-xs font-semibold text-black uppercase">Pay For</th>
-              <th className="px-4 py-2 text-left text-xs font-semibold text-black uppercase">Payment Type</th>
-              <th className="px-4 py-2 text-left text-xs font-semibold text-black uppercase">Paid Date</th>
-              <th className="px-4 py-2 text-left text-xs font-semibold text-black uppercase">Status</th>
-              <th className="px-4 py-2 text-left text-xs font-semibold text-black uppercase">Action</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100">
-            {paginatedHistory.length === 0 ? (
+      )}
+      
+      {/* History Table */}
+      <div className="bg-[#232329] rounded-lg shadow overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-700">
+            <thead className="bg-[#18181b]">
               <tr>
-                <td colSpan={10} className="px-4 py-6 text-center text-black">No data found.</td>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                  Category
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                  Month
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                  Payment Type
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                  Due Amount
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                  Paid Amount
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                  Date
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                  Status
+                </th>
               </tr>
-            ) : (
-              paginatedHistory.map((record) => (
-                <tr key={record.id} className="hover:bg-gray-50">
-                  <td className="px-4 py-2 text-sm text-black">{record.monthYear}</td>
-                  <td className="px-4 py-2 text-sm text-black">₹{record.paidAmount}</td>
-                  <td className="px-4 py-2 text-sm text-black">₹{record.beforePaidDue}</td>
-                  <td className="px-4 py-2 text-sm text-black">₹{record.due}</td>
-                  <td className="px-4 py-2 text-sm text-black">₹{record.advance}</td>
-                  <td className="px-4 py-2 text-sm text-black">{record.payFor.charAt(0).toUpperCase() + record.payFor.slice(1)}</td>
-                  <td className="px-4 py-2 text-sm text-black">{record.paymentType.charAt(0).toUpperCase() + record.paymentType.slice(1)}</td>
-                  <td className="px-4 py-2 text-sm text-black">{record.paidDate}</td>
-                  <td className="px-4 py-2 text-sm">
-                    <span className={`px-2 py-1 rounded text-xs font-semibold 
-                      ${record.status === "approve" ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"}
-                    `}>
-                      {record.status.charAt(0).toUpperCase() + record.status.slice(1)}
+            </thead>
+            <tbody className="bg-[#232329] divide-y divide-gray-700">
+              {history.map((record) => (
+                <tr key={record.id} className="hover:bg-[#18181b] transition">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                    {getCategoryTitle(record)}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                    {record.rentMonth}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                      record.paymentType === 'on hand' 
+                        ? 'bg-green-100 text-green-800' 
+                        : 'bg-blue-100 text-blue-800'
+                    }`}>
+                      {record.paymentType}
                     </span>
                   </td>
-                  <td className="px-4 py-2 text-sm text-black">
-                    <button
-                      onClick={() => openModal(record)}
-                      className="px-2 py-1 border border-black rounded hover:bg-blue-200 text-black transition"
-                      title="View"
-                    >
-                      View
-                    </button>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                    {formatCurrency(record.dueRent + record.dueAdvance + record.dueExternal)}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-green-400 font-medium">
+                    {formatCurrency(record.paidRent + record.paidAdvance + record.paidExternal)}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                    {formatDate(record.paidDate)}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                      record.status === 'approved' 
+                        ? 'bg-green-100 text-green-800' 
+                        : record.status === 'rejected'
+                        ? 'bg-red-100 text-red-800'
+                        : 'bg-yellow-100 text-yellow-800'
+                    }`}>
+                      {record.status}
+                    </span>
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
-      {/* Pagination */}
-      <div className="flex justify-between items-center mt-6">
-        <div className="text-sm text-black">Page {page} of {totalPages}</div>
-        <div className="flex gap-2">
-          <button
-            onClick={() => handlePageChange(page - 1)}
-            disabled={page === 1}
-            className="px-3 py-1 rounded bg-gray-200 text-black hover:bg-gray-300 disabled:opacity-50"
-          >
-            Previous
-          </button>
-          {Array.from({ length: totalPages }, (_, i) => (
-            <button
-              key={i + 1}
-              onClick={() => handlePageChange(i + 1)}
-              className={`px-3 py-1 rounded ${page === i + 1 ? "bg-blue-600 text-white" : "bg-gray-200 text-black hover:bg-gray-300"}`}
-            >
-              {i + 1}
-            </button>
-          ))}
-          <button
-            onClick={() => handlePageChange(page + 1)}
-            disabled={page === totalPages}
-            className="px-3 py-1 rounded bg-gray-200 text-black hover:bg-gray-300 disabled:opacity-50"
-          >
-            Next
-          </button>
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
-      {/* View Modal */}
-      {modal.open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-          <div className="bg-white rounded-lg shadow-lg w-full max-w-md p-6 relative animate-fadeIn">
+      
+      {/* Pagination */}
+      {total > 0 && (
+        <div className="flex justify-between items-center mt-6">
+          <div className="text-sm text-white">
+            Showing {((page - 1) * pageSize) + 1} to {Math.min(page * pageSize, total)} of {total} records
+          </div>
+          <div className="flex gap-2">
             <button
-              onClick={closeModal}
-              className="absolute top-2 right-2 text-black text-xl font-bold hover:text-red-500"
-              title="Close"
+              onClick={() => handlePageChange(page - 1)}
+              disabled={page === 1}
+              className="px-3 py-1 rounded bg-gray-700 text-white hover:bg-gray-600 disabled:opacity-50"
             >
-              ×
+              Previous
             </button>
-            <h2 className="text-xl font-semibold mb-4 text-black text-center">Payment Details</h2>
-            <div className="mb-4 text-black space-y-2">
-              <div><span className="font-semibold">Month & Year:</span> {modal.record?.monthYear}</div>
-              <div><span className="font-semibold">Paid Amount:</span> ₹{modal.record?.paidAmount}</div>
-              <div><span className="font-semibold">Before Paid Due:</span> ₹{modal.record?.beforePaidDue}</div>
-              <div><span className="font-semibold">After Paid Due:</span> ₹{modal.record?.due}</div>
-              <div><span className="font-semibold">Advance:</span> ₹{modal.record?.advance}</div>
-              <div><span className="font-semibold">Pay For:</span> {modal.record?.payFor?.charAt(0).toUpperCase() + modal.record?.payFor?.slice(1)}</div>
-              <div><span className="font-semibold">Payment Type:</span> {modal.record?.paymentType?.charAt(0).toUpperCase() + modal.record?.paymentType?.slice(1)}</div>
-              <div><span className="font-semibold">Paid Date:</span> {modal.record?.paidDate}</div>
-              <div><span className="font-semibold">Status:</span> <span className={`px-2 py-1 rounded text-xs font-semibold 
-                ${modal.record?.status === "approve" ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"}
-              `}>
-                {modal.record?.status?.charAt(0).toUpperCase() + modal.record?.status?.slice(1)}
-              </span></div>
-            </div>
+            <span className="px-3 py-1 text-white">
+              Page {page} of {Math.ceil(total / pageSize)}
+            </span>
+            <button
+              onClick={() => handlePageChange(page + 1)}
+              disabled={page >= Math.ceil(total / pageSize)}
+              className="px-3 py-1 rounded bg-gray-700 text-white hover:bg-gray-600 disabled:opacity-50"
+            >
+              Next
+            </button>
           </div>
         </div>
       )}
