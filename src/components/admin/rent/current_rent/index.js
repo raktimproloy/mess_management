@@ -494,9 +494,19 @@ export default function CurrentRent() {
               {modal.rent.previousDue > 0 && (
                 <div className="bg-[#18181b] p-4 rounded-lg border border-gray-600">
                   <h3 className="text-lg font-semibold mb-2 text-orange-300">Previous Due</h3>
+                  <div className="grid grid-cols-2 gap-4 mb-3">
+                    <div>
+                      <span className="text-gray-300">Total Previous Due: </span>
+                      <span className="font-bold text-white">৳{modal.rent.previousDue || 0}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-300">Already Paid: </span>
+                      <span className="font-bold text-green-400">৳{modal.rent.previousDuePaid || 0}</span>
+                    </div>
+                  </div>
                   <div className="mb-2">
-                    <span className="text-gray-300">Previous Due Amount: </span>
-                    <span className="font-bold text-red-400">৳{modal.rent.previousDue || 0}</span>
+                    <span className="text-gray-300">Remaining Due: </span>
+                    <span className="font-bold text-red-400">৳{(modal.rent.previousDue || 0) - (modal.rent.previousDuePaid || 0)}</span>
                   </div>
                   <input
                     type="number"

@@ -4,7 +4,7 @@ const prisma = new PrismaClient();
 
 export async function POST(request) {
   try {
-    const { rentId, rentPaid, advancePaid, externalPaid, paymentType = 'partial', paidType } = await request.json();
+    const { rentId, rentPaid, advancePaid, externalPaid, previousDuePaid, paymentType = 'partial', paidType } = await request.json();
 
     if (!rentId) {
       return new Response(JSON.stringify({ 
@@ -33,25 +33,9 @@ export async function POST(request) {
     }
 
     // Calculate payment distribution
-    let remainingRentPaid = rentPaid || 0;
-    let remainingExternalPaid = externalPaid || 0;
-    let newPreviousDuePaid = rent.previousDuePaid || 0;
-    let newRentPaid = rent.rentPaid || 0;
-    let newExternalPaid = rent.externalPaid || 0;
-
-    // First, pay off previous due if any
-    if (rent.previousDue > 0 && remainingRentPaid > 0) {
-      const previousDueRemaining = rent.previousDue - (rent.previousDuePaid || 0);
-      if (previousDueRemaining > 0) {
-        const amountToPayPreviousDue = Math.min(remainingRentPaid, previousDueRemaining);
-        newPreviousDuePaid += amountToPayPreviousDue;
-        remainingRentPaid -= amountToPayPreviousDue;
-      }
-    }
-
-    // Then apply remaining payments to current month
-    newRentPaid += remainingRentPaid;
-    newExternalPaid += remainingExternalPaid;
+    let newPreviousDuePaid = (rent.previousDuePaid || 0) + (previousDuePaid || 0);
+    let newRentPaid = (rent.rentPaid || 0) + (rentPaid || 0);
+    let newExternalPaid = (rent.externalPaid || 0) + (externalPaid || 0);
 
     // Calculate total due and paid for current month
     const totalDue = rent.rentAmount + rent.externalAmount;
