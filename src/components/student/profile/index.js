@@ -110,7 +110,7 @@ export default function StudentProfile() {
         name: profile.name,
         smsPhone: profile.smsPhone || profile.sms_phone,
         profileImage: imageUrl,
-        hideRanking: profile.hideRanking ?? profile.hide_ranking,
+        hideRanking: (profile.hideRanking ?? profile.hide_ranking) ? 1 : 0,
       };
       const res = await fetch(`/api/student/${student.id}`, {
         method: "PUT",
