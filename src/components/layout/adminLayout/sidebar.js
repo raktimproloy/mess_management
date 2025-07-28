@@ -9,6 +9,7 @@ const navItems = [
   { name: "Add Student", icon: "➕", href: "/admin/students/create" },
   { name: "Students", icon: "🧑‍🎓", href: "/admin/students" },
   { name: "Category", icon: "📂", href: "/admin/category" },
+  { name: "Discount", icon: "�", href: "/admin/discount" },
   { name: "Reports", icon: "📊", href: "/admin/reports" },
 ];
 

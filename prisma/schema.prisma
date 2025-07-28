@@ -151,3 +151,21 @@ model Testing {
 
   @@map("testing")
 }
+
+model Discount {
+  id            Int      @id @default(autoincrement())
+  title         String
+  discountType  DiscountType @map("discount_type")
+  discountAmount Float   @map("discount_amount")
+  description   String
+  status        Int      @default(1)
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  @@map("discounts")
+}
+
+enum DiscountType {
+  percent
+  tk
+}
