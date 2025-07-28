@@ -18,6 +18,10 @@ export default function AddStudent() {
     joiningDate: "",
     type: "new",
     dueRent: "",
+    currentMonthRentDue: 0,
+    currentMonthExternalDue: 0,
+    currentMonthAdvanceDue: 0,
+    previousDue: 0,
   });
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -53,7 +57,10 @@ export default function AddStudent() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
+    setForm((prev) => ({
+      ...prev,
+      [name]: e.target.type === 'number' ? Number(value) : value
+    }));
   };
 
   const handleTypeChange = (e) => {
@@ -73,6 +80,7 @@ export default function AddStudent() {
       try {
         setLoading(true);
         const token = getToken();
+        // 1. Create the student
         const res = await fetch("/api/student", {
           method: "POST",
           headers: { 
@@ -96,8 +104,40 @@ export default function AddStudent() {
         }
 
         const data = await res.json();
+        const newStudent = data.student;
+
+        // 2. If old, create rent record for this student
+        if (form.type === "old") {
+          const rentRes = await fetch("/api/rent", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`
+            },
+            body: JSON.stringify({
+              studentId: newStudent.id,
+              categoryId: form.category,
+              rentAmount: form.currentMonthRentDue,
+              externalAmount: form.currentMonthExternalDue,
+              advanceAmount: form.currentMonthAdvanceDue,
+              previousDue: form.previousDue,
+              status: "unpaid",
+              // Optionally, set paid fields to 0
+              rentPaid: 0,
+              advancePaid: 0,
+              externalPaid: 0,
+              previousDuePaid: 0,
+              paidDate: null,
+              paidType: null
+            })
+          });
+          if (!rentRes.ok) {
+            const rentError = await rentRes.json();
+            throw new Error(rentError.message || "Student created, but failed to create rent record");
+          }
+        }
+
         toast.success("Student created successfully!");
-        
         // Reset form
         setForm({
           name: "",
@@ -108,8 +148,11 @@ export default function AddStudent() {
           joiningDate: "",
           type: "new",
           dueRent: "",
+          currentMonthRentDue: 0,
+          currentMonthExternalDue: 0,
+          currentMonthAdvanceDue: 0,
+          previousDue: 0,
         });
-        
         resolve("Student created successfully");
       } catch (error) {
         reject(error.message || "Failed to create student");
@@ -267,18 +310,60 @@ export default function AddStudent() {
         
         {/* Current Due Rent (only if old) */}
         {form.type === "old" && (
-          <div className="mb-4">
-            <label className="block mb-1 text-gray-700 dark:text-gray-300">Current Due Rent</label>
-            <input
-              type="number"
-              name="dueRent"
-              value={form.dueRent}
-              onChange={handleChange}
-              className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-[#18181b] dark:text-white dark:border-gray-600"
-              placeholder="Enter current due rent"
-              disabled={loading}
-            />
-          </div>
+          <>
+            <div className="mb-4">
+              <label className="block mb-1 text-gray-700 dark:text-gray-300">Current Month Rent Due</label>
+              <input
+                type="number"
+                name="currentMonthRentDue"
+                value={form.currentMonthRentDue}
+                onChange={handleChange}
+                className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-[#18181b] dark:text-white dark:border-gray-600"
+                placeholder="Enter current month rent due"
+                min="0"
+                disabled={loading}
+              />
+            </div>
+            <div className="mb-4">
+              <label className="block mb-1 text-gray-700 dark:text-gray-300">Current Month External Due</label>
+              <input
+                type="number"
+                name="currentMonthExternalDue"
+                value={form.currentMonthExternalDue}
+                onChange={handleChange}
+                className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-[#18181b] dark:text-white dark:border-gray-600"
+                placeholder="Enter current month external due"
+                min="0"
+                disabled={loading}
+              />
+            </div>
+            <div className="mb-4">
+              <label className="block mb-1 text-gray-700 dark:text-gray-300">Current Month Advance Due</label>
+              <input
+                type="number"
+                name="currentMonthAdvanceDue"
+                value={form.currentMonthAdvanceDue}
+                onChange={handleChange}
+                className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-[#18181b] dark:text-white dark:border-gray-600"
+                placeholder="Enter current month advance due"
+                min="0"
+                disabled={loading}
+              />
+            </div>
+            <div className="mb-4">
+              <label className="block mb-1 text-gray-700 dark:text-gray-300">Previous Due</label>
+              <input
+                type="number"
+                name="previousDue"
+                value={form.previousDue}
+                onChange={handleChange}
+                className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-[#18181b] dark:text-white dark:border-gray-600"
+                placeholder="Enter previous due"
+                min="0"
+                disabled={loading}
+              />
+            </div>
+          </>
         )}
         
         <button

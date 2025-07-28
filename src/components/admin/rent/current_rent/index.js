@@ -22,6 +22,7 @@ export default function CurrentRent() {
   const [rentPaid, setRentPaid] = useState("");
   const [advancePaid, setAdvancePaid] = useState("");
   const [externalPaid, setExternalPaid] = useState("");
+  const [previousDuePaid, setPreviousDuePaid] = useState("");
   const [paymentType, setPaymentType] = useState("on hand");
   const [confirmModal, setConfirmModal] = useState({ open: false, rent: null });
 
@@ -92,6 +93,7 @@ export default function CurrentRent() {
       setRentPaid("");
       setAdvancePaid("");
       setExternalPaid("");
+      setPreviousDuePaid("");
       setPaymentType("on hand");
     }
   };
@@ -141,7 +143,7 @@ export default function CurrentRent() {
   };
   const handlePay = async () => {
     // Partial payment - validate that at least one amount is entered
-    if (!rentPaid && !advancePaid && !externalPaid) {
+    if (!rentPaid && !advancePaid && !externalPaid && !previousDuePaid) {
       toast.error("Please enter at least one payment amount");
       return;
     }
@@ -154,6 +156,7 @@ export default function CurrentRent() {
         rentPaid: parseFloat(rentPaid) || 0,
         advancePaid: parseFloat(advancePaid) || 0,
         externalPaid: parseFloat(externalPaid) || 0,
+        previousDuePaid: parseFloat(previousDuePaid) || 0,
         paidType: paymentType
       };
 
@@ -454,8 +457,11 @@ export default function CurrentRent() {
                   className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-[#232329] text-white border-gray-600"
                   placeholder="Enter advance payment amount"
                   value={advancePaid}
-                  onChange={e => setAdvancePaid(e.target.value)}
+                  onChange={e => setAdvancePaid(Number(e.target.value))}
                 />
+                {advancePaid > 0 && (
+                  <div className="text-green-500 text-xs mt-1">Advance will be carried forward to next month's rent.</div>
+                )}
               </div>
 
               {/* External Due Section */}
@@ -492,7 +498,14 @@ export default function CurrentRent() {
                     <span className="text-gray-300">Previous Due Amount: </span>
                     <span className="font-bold text-red-400">৳{modal.rent.previousDue || 0}</span>
                   </div>
-                  <p className="text-sm text-gray-400">This amount is already included in the total calculation above.</p>
+                  <input
+                    type="number"
+                    className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 bg-[#232329] text-white border-gray-600"
+                    placeholder="Enter previous due payment amount"
+                    value={previousDuePaid}
+                    onChange={e => setPreviousDuePaid(e.target.value)}
+                  />
+                  <p className="text-sm text-gray-400 mt-1">This amount will be paid towards previous due.</p>
                 </div>
               )}
 

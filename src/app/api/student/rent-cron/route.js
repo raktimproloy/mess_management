@@ -77,20 +77,28 @@ export async function GET(request) {
       
       let previousDue = 0;
       let previousDuePaid = 0; // This is initialized to 0 for the new rent record
+      let carryForwardAdvance = 0;
       if (prevRent) {
         console.log(`  Found previous month rent (ID: ${prevRent.id}) for student ${student.id}. Details:`);
         console.log(`    createdAt: ${prevRent.createdAt.toISOString()}`);
         console.log(`    rentAmount: ${prevRent.rentAmount}, externalAmount: ${prevRent.externalAmount}`);
         console.log(`    rentPaid: ${prevRent.rentPaid}, externalPaid: ${prevRent.externalPaid}`);
+        console.log(`    advancePaid: ${prevRent.advancePaid}, advanceAmount: ${prevRent.advanceAmount}`);
         
         // Calculate unpaid amount from previous month's rent for this student
         const totalAmount = (prevRent.rentAmount || 0) + (prevRent.externalAmount || 0) + (prevRent.previousDue || 0);
         const totalPaid = (prevRent.rentPaid || 0) + (prevRent.externalPaid || 0) + (prevRent.previousDuePaid || 0);
         previousDue = Math.max(0, totalAmount - totalPaid);
         
+        // Calculate carry-forward advance (advanceAmount - advancePaid)
+        carryForwardAdvance = (prevRent.advanceAmount || 0) - (prevRent.advancePaid || 0);
+        if (carryForwardAdvance < 0) carryForwardAdvance = 0;
         console.log(`  Calculated previous due: totalAmount=${totalAmount}, totalPaid=${totalPaid}, previousDue=${previousDue}`);
+        console.log(`  Carry forward advance: ${carryForwardAdvance}`);
+        console.log(`  [DEBUG] For student ${student.id}, prevRent.advancePaid=${prevRent.advancePaid}, prevRent.advanceAmount=${prevRent.advanceAmount}, carryForwardAdvance=${carryForwardAdvance}`);
       } else {
         console.log(`  No previous month rent found for student ${student.id}. Previous due remains 0.`);
+        carryForwardAdvance = 0;
       }
 
       // Compose new rent preview
@@ -103,7 +111,7 @@ export async function GET(request) {
         externalAmount,
         previousDue,
         previousDuePaid,
-        advanceAmount: 0,
+        advanceAmount: carryForwardAdvance,
         status: 'unpaid',
         rentPaid: 0,
         advancePaid: 0,
@@ -194,20 +202,28 @@ export async function POST(request) {
         
         let previousDue = 0;
         let previousDuePaid = 0; // This is initialized to 0 for the new rent record
+        let carryForwardAdvance = 0;
         if (prevRent) {
           console.log(`  Found previous month rent (ID: ${prevRent.id}) for student ${student.id}. Details:`);
           console.log(`    createdAt: ${prevRent.createdAt.toISOString()}`);
           console.log(`    rentAmount: ${prevRent.rentAmount}, externalAmount: ${prevRent.externalAmount}`);
           console.log(`    rentPaid: ${prevRent.rentPaid}, externalPaid: ${prevRent.externalPaid}`);
+          console.log(`    advancePaid: ${prevRent.advancePaid}, advanceAmount: ${prevRent.advanceAmount}`);
           
           // Calculate unpaid amount from previous month's rent for this student
           const totalAmount = (prevRent.rentAmount || 0) + (prevRent.externalAmount || 0) + (prevRent.previousDue || 0);
           const totalPaid = (prevRent.rentPaid || 0) + (prevRent.externalPaid || 0) + (prevRent.previousDuePaid || 0);
           previousDue = Math.max(0, totalAmount - totalPaid);
           
+          // Calculate carry-forward advance (advanceAmount - advancePaid)
+          carryForwardAdvance = (prevRent.advanceAmount || 0) - (prevRent.advancePaid || 0);
+          if (carryForwardAdvance < 0) carryForwardAdvance = 0;
           console.log(`  Calculated previous due: totalAmount=${totalAmount}, totalPaid=${totalPaid}, previousDue=${previousDue}`);
+          console.log(`  Carry forward advance: ${carryForwardAdvance}`);
+          console.log(`  [DEBUG] For student ${student.id}, prevRent.advancePaid=${prevRent.advancePaid}, prevRent.advanceAmount=${prevRent.advanceAmount}, carryForwardAdvance=${carryForwardAdvance}`);
         } else {
           console.log(`  No previous month rent found for student ${student.id}. Previous due remains 0.`);
+          carryForwardAdvance = 0;
         }
 
         console.log(`Creating rent for student ${student.name}: rentAmount=${rentAmount}, externalAmount=${externalAmount}, previousDue=${previousDue}`);
@@ -221,7 +237,7 @@ export async function POST(request) {
             externalAmount,
             previousDue,
             previousDuePaid,
-            advanceAmount: 0,
+            advanceAmount: carryForwardAdvance,
             status: 'unpaid',
             rentPaid: 0,
             advancePaid: 0,
