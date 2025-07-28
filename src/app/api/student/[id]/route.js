@@ -5,9 +5,9 @@ import bcrypt from 'bcryptjs';
 const prisma = new PrismaClient();
 
 // GET: Get student by ID (admin: any, student: self)
-export async function GET(request, { params }) {
+export async function GET(request, context) {
   try {
-    const { id } = params;
+    const { id } = await context.params;
     const authHeader = request.headers.get('authorization');
     if (!authHeader) return new Response(JSON.stringify({ message: 'Unauthorized' }), { status: 401 });
     const { success, user } = verifyToken(authHeader.split(' ')[1]);
@@ -27,9 +27,9 @@ export async function GET(request, { params }) {
 }
 
 // PUT: Update student (admin: any, student: self, with field restrictions)
-export async function PUT(request, { params }) {
+export async function PUT(request, context) {
   try {
-    const { id } = params;
+    const { id } = await context.params;
     const authHeader = request.headers.get('authorization');
     if (!authHeader) return new Response(JSON.stringify({ message: 'Unauthorized' }), { status: 401 });
     const { success, user } = verifyToken(authHeader.split(' ')[1]);
@@ -95,9 +95,9 @@ export async function PUT(request, { params }) {
 }
 
 // DELETE: Set status to 'leave' (soft delete)
-export async function DELETE(request, { params }) {
+export async function DELETE(request, context) {
   try {
-    const { id } = params;
+    const { id } = await context.params;
     const authHeader = request.headers.get('authorization');
     if (!authHeader) return new Response(JSON.stringify({ message: 'Unauthorized' }), { status: 401 });
     const { success, user } = verifyToken(authHeader.split(' ')[1]);
