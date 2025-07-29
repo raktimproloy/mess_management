@@ -50,15 +50,22 @@ model Student {
   status       String   @default("living") // living, leave
   category     Int
   categoryId   Int      @map("category_id")
+  referenceId  Int?     @map("reference_id") // NEW: reference student ID
+  discountId   Int?     @map("discount_id") // NEW: discount ID
+  discountAmount Float  @default(0) @map("discount_amount") // NEW: total discount amount for reference students
   joiningDate  DateTime @map("joining_date")
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
   // Relations
   categoryRef Category? @relation(fields: [categoryId], references: [id])
+  discountRef Discount? @relation(fields: [discountId], references: [id])
   rents       Rent[]
   rentHistory RentHistory[]
   paymentRequests PaymentRequest[]
+  // Self-referencing relation for references
+  referencedBy Student[] @relation("StudentReference")
+  references   Student? @relation("StudentReference", fields: [referenceId], references: [id])
 
   @@map("students")
 }
@@ -70,6 +77,7 @@ model Rent {
   externalAmount Float    @default(0) @map("external_amount")
   previousDue    Float    @default(0) // NEW: previous due
   previousDuePaid Float   @default(0) // NEW: previous due paid
+  discountAmount Float    @default(0) @map("discount_amount") // NEW: discount amount for reference students
   status         String   @default("unpaid") // unpaid, paid, partial
   rentPaid       Float    @default(0) @map("rent_paid")
   advancePaid    Float    @default(0) // NEW: advance paid
@@ -161,6 +169,9 @@ model Discount {
   status        Int      @default(1)
   createdAt     DateTime @default(now()) @map("created_at")
   updatedAt     DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  students Student[]
 
   @@map("discounts")
 }

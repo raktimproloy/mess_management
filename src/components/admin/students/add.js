@@ -22,8 +22,12 @@ export default function AddStudent() {
     currentMonthExternalDue: 0,
     currentMonthAdvanceDue: 0,
     previousDue: 0,
+    referenceId: "", // NEW: reference student ID
+    discountId: "", // NEW: discount ID
   });
   const [categories, setCategories] = useState([]);
+  const [livingStudents, setLivingStudents] = useState([]); // NEW: living students for reference
+  const [discounts, setDiscounts] = useState([]); // NEW: discounts list
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -42,6 +46,43 @@ export default function AddStudent() {
       }
     }
     fetchCategories();
+  }, []);
+
+  // NEW: Fetch living students for reference selection
+  useEffect(() => {
+    async function fetchLivingStudents() {
+      try {
+        const token = getToken();
+        const res = await fetch("/api/student?status=living", {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+        if (!res.ok) throw new Error("Failed to fetch living students");
+        const data = await res.json();
+        setLivingStudents(data.students || []);
+      } catch (error) {
+        toast.error("Error loading living students");
+        setLivingStudents([]);
+      }
+    }
+    fetchLivingStudents();
+  }, []);
+
+  // NEW: Fetch discounts
+  useEffect(() => {
+    async function fetchDiscounts() {
+      try {
+        const res = await fetch("/api/discount");
+        if (!res.ok) throw new Error("Failed to fetch discounts");
+        const data = await res.json();
+        setDiscounts(data.discounts || []);
+      } catch (error) {
+        toast.error("Error loading discounts");
+        setDiscounts([]);
+      }
+    }
+    fetchDiscounts();
   }, []);
 
   // Sync smsPhone and password with phone if empty
@@ -66,6 +107,33 @@ export default function AddStudent() {
   const handleTypeChange = (e) => {
     const value = e.target.value;
     setForm((prev) => ({ ...prev, type: value, dueRent: value === "old" ? prev.dueRent : "" }));
+  };
+
+  // NEW: Handle reference selection
+  const handleReferenceChange = (e) => {
+    const value = e.target.value;
+    setForm((prev) => ({ 
+      ...prev, 
+      referenceId: value,
+      discountId: "" // Reset discount when reference changes
+    }));
+  };
+
+  // NEW: Handle discount selection
+  const handleDiscountChange = (e) => {
+    const value = e.target.value;
+    setForm((prev) => ({
+      ...prev,
+      discountId: value
+    }));
+  };
+
+  // NEW: Remove discount from selection
+  const removeDiscount = () => {
+    setForm((prev) => ({
+      ...prev,
+      discountId: ""
+    }));
   };
 
   const handleSubmit = async (e) => {
@@ -94,7 +162,9 @@ export default function AddStudent() {
             password: form.password,
             categoryId: form.category,
             joiningDate: form.joiningDate,
-            status: form.type === "old" ? "living" : "living"
+            status: form.type === "old" ? "living" : "living",
+            referenceId: form.referenceId || null,
+            discountId: form.discountId || null
           }),
         });
 
@@ -152,6 +222,8 @@ export default function AddStudent() {
           currentMonthExternalDue: 0,
           currentMonthAdvanceDue: 0,
           previousDue: 0,
+          referenceId: "",
+          discountId: "",
         });
         resolve("Student created successfully");
       } catch (error) {
@@ -303,10 +375,68 @@ export default function AddStudent() {
             value={form.joiningDate}
             onChange={handleChange}
             className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-[#18181b] dark:text-white dark:border-gray-600"
+            placeholder="Enter joining date"
             required
             disabled={loading}
           />
         </div>
+
+        {/* Reference Selection */}
+        <div className="mb-4">
+          <label className="block mb-1 text-gray-700 dark:text-gray-300">Reference Student</label>
+          <select
+            name="referenceId"
+            value={form.referenceId}
+            onChange={handleReferenceChange}
+            className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-[#18181b] dark:text-white dark:border-gray-600"
+            disabled={loading}
+          >
+            <option value="">Select a reference student (optional)</option>
+            {livingStudents.map((student) => (
+              <option key={student.id} value={student.id}>
+                {student.name} - {student.phone}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Discount Selection - only show if reference is selected */}
+        {form.referenceId && (
+          <div className="mb-4">
+            <label className="block mb-1 text-gray-700 dark:text-gray-300">Discount for Reference Student</label>
+            <select
+              name="discountId"
+              value={form.discountId}
+              onChange={handleDiscountChange}
+              className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-[#18181b] dark:text-white dark:border-gray-600"
+              disabled={loading}
+            >
+              <option value="">Select a discount (optional)</option>
+              {discounts.map((discount) => (
+                <option key={discount.id} value={discount.id}>
+                  {discount.title} - {discount.discountAmount}{discount.discountType === 'percent' ? '%' : '৳'}
+                </option>
+              ))}
+            </select>
+            
+            {/* Show selected discount */}
+            {form.discountId && (
+              <div className="mt-2">
+                <label className="block mb-1 text-sm text-gray-600 dark:text-gray-400">Selected Discount:</label>
+                <div className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                  {discounts.find(d => d.id == form.discountId)?.title} - {discounts.find(d => d.id == form.discountId)?.discountAmount}{discounts.find(d => d.id == form.discountId)?.discountType === 'percent' ? '%' : '৳'}
+                  <button
+                    type="button"
+                    onClick={removeDiscount}
+                    className="ml-1 inline-flex items-center justify-center w-4 h-4 rounded-full text-blue-600 hover:bg-blue-200 dark:text-blue-400 dark:hover:bg-blue-800"
+                  >
+                    ×
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
         
         {/* Current Due Rent (only if old) */}
         {form.type === "old" && (

@@ -19,13 +19,36 @@ export async function GET(request) {
     console.log('Previous Month Start Date:', prevMonth.toISOString());
     console.log('Previous Month/Year:', prevMonthYear);
 
+    // Get all discounts (like categories)
+    const discounts = await prisma.discount.findMany({
+      where: { status: 1 }, // Only active discounts
+      orderBy: { createdAt: 'desc' }
+    });
+    console.log(`Found ${discounts.length} active discounts`);
+
     // Get all living students whose joiningDate is in the past
     const students = await prisma.student.findMany({
       where: {
         status: 'living',
-        joiningDate: { lte: now },
+        // Remove the joiningDate filter to include all living students
+        // joiningDate: { lte: now },
       },
-      include: { categoryRef: true },
+      include: { 
+        categoryRef: true,
+        discountRef: true,
+        references: {
+          select: {
+            id: true,
+            name: true,
+            discountAmount: true
+          }
+        }
+      },
+    });
+
+    console.log(`Found ${students.length} living students`);
+    students.forEach(student => {
+      console.log(`  Student: ${student.name} (ID: ${student.id}), Joining Date: ${student.joiningDate}, Status: ${student.status}`);
     });
 
     let previewRents = [];
@@ -101,6 +124,78 @@ export async function GET(request) {
         carryForwardAdvance = 0;
       }
 
+      // Check if this student is a reference (has invited others) and calculate discount
+      let discountAmount = 0;
+      let discountInfo = null;
+      
+      console.log(`  Student ${student.name} (ID: ${student.id}) details:`);
+      console.log(`    Reference ID: ${student.referenceId}`);
+      console.log(`    Discount ID: ${student.discountId}`);
+      
+      // Check if this student has invited others (is a reference)
+      const invitedStudents = await prisma.student.findMany({
+        where: {
+          referenceId: student.id,
+          status: 'living'
+        },
+        include: {
+          discountRef: true
+        }
+      });
+      
+      console.log(`  Students invited by ${student.name}: ${invitedStudents.length}`);
+      
+      if (invitedStudents.length > 0) {
+        console.log(`  This student (${student.name}) is a reference and has invited ${invitedStudents.length} students`);
+        
+        // Calculate total discount amount from all invited students
+        let totalDiscountAmount = 0;
+        let discountDetails = [];
+        
+        for (const invitedStudent of invitedStudents) {
+          if (invitedStudent.discountRef) {
+            const discount = invitedStudent.discountRef;
+            console.log(`  Invited student ${invitedStudent.name} has discount: ${discount.title} - ${discount.discountAmount}${discount.discountType === 'percent' ? '%' : '৳'}`);
+            
+            // Calculate discount amount based on this student's rent amount
+            let studentDiscountAmount = 0;
+            if (discount.discountType === 'percent') {
+              studentDiscountAmount = (rentAmount * discount.discountAmount) / 100;
+            } else {
+              studentDiscountAmount = discount.discountAmount;
+            }
+            
+            totalDiscountAmount += studentDiscountAmount;
+            discountDetails.push({
+              invitedStudentId: invitedStudent.id,
+              invitedStudentName: invitedStudent.name,
+              discountId: invitedStudent.discountId,
+              discountTitle: discount.title,
+              discountType: discount.discountType,
+              discountAmount: studentDiscountAmount
+            });
+            
+            console.log(`  Calculated discount amount for this invitation: ${studentDiscountAmount}`);
+          }
+        }
+        
+        if (totalDiscountAmount > 0) {
+          discountAmount = totalDiscountAmount;
+          console.log(`  Total discount amount for reference student ${student.name}: ${discountAmount}`);
+          
+          discountInfo = {
+            referenceStudentId: student.id,
+            referenceStudentName: student.name,
+            totalDiscountAmount: discountAmount,
+            invitedStudentsCount: invitedStudents.length,
+            discountDetails: discountDetails,
+            note: `Reference student gets discount for inviting ${invitedStudents.length} students`
+          };
+        }
+      } else {
+        console.log(`  Student is not a reference (hasn't invited anyone)`);
+      }
+
       // Compose new rent preview
       previewRents.push({
         studentId: student.id,
@@ -112,12 +207,14 @@ export async function GET(request) {
         previousDue,
         previousDuePaid,
         advanceAmount: carryForwardAdvance,
+        discountAmount, // Add discount amount to preview
         status: 'unpaid',
         rentPaid: 0,
         advancePaid: 0,
         externalPaid: 0,
         paidDate: null,
         paidType: null,
+        discountInfo
       });
     }
     console.log('--- End Rent Cron GET (Preview) Debug ---');
@@ -140,16 +237,37 @@ export async function POST(request) {
     console.log('Current Date:', now.toISOString());
     console.log('Previous Month Start Date:', prevMonth.toISOString());
 
+    // Get all discounts (like categories)
+    const discounts = await prisma.discount.findMany({
+      where: { status: 1 }, // Only active discounts
+      orderBy: { createdAt: 'desc' }
+    });
+    console.log(`Found ${discounts.length} active discounts`);
+
     // Get all living students whose joiningDate is in the past
     const students = await prisma.student.findMany({
       where: {
         status: 'living',
-        joiningDate: { lte: now },
+        // Remove the joiningDate filter to include all living students
+        // joiningDate: { lte: now },
       },
-      include: { categoryRef: true },
+      include: { 
+        categoryRef: true,
+        discountRef: true,
+        references: {
+          select: {
+            id: true,
+            name: true,
+            discountAmount: true
+          }
+        }
+      },
     });
 
-    console.log('Found', students.length, 'living students');
+    console.log(`Found ${students.length} living students`);
+    students.forEach(student => {
+      console.log(`  Student: ${student.name} (ID: ${student.id}), Joining Date: ${student.joiningDate}, Status: ${student.status}`);
+    });
 
     let createdRents = [];
     for (const student of students) {
@@ -226,9 +344,81 @@ export async function POST(request) {
           carryForwardAdvance = 0;
         }
 
-        console.log(`Creating rent for student ${student.name}: rentAmount=${rentAmount}, externalAmount=${externalAmount}, previousDue=${previousDue}`);
+        // Check if this student is a reference (has invited others) and calculate discount
+        let discountAmount = 0;
+        let discountInfo = null;
+        
+        console.log(`  Student ${student.name} (ID: ${student.id}) details:`);
+        console.log(`    Reference ID: ${student.referenceId}`);
+        console.log(`    Discount ID: ${student.discountId}`);
+        
+        // Check if this student has invited others (is a reference)
+        const invitedStudents = await prisma.student.findMany({
+          where: {
+            referenceId: student.id,
+            status: 'living'
+          },
+          include: {
+            discountRef: true
+          }
+        });
+        
+        console.log(`  Students invited by ${student.name}: ${invitedStudents.length}`);
+        
+        if (invitedStudents.length > 0) {
+          console.log(`  This student (${student.name}) is a reference and has invited ${invitedStudents.length} students`);
+          
+          // Calculate total discount amount from all invited students
+          let totalDiscountAmount = 0;
+          let discountDetails = [];
+          
+          for (const invitedStudent of invitedStudents) {
+            if (invitedStudent.discountRef) {
+              const discount = invitedStudent.discountRef;
+              console.log(`  Invited student ${invitedStudent.name} has discount: ${discount.title} - ${discount.discountAmount}${discount.discountType === 'percent' ? '%' : '৳'}`);
+              
+              // Calculate discount amount based on this student's rent amount
+              let studentDiscountAmount = 0;
+              if (discount.discountType === 'percent') {
+                studentDiscountAmount = (rentAmount * discount.discountAmount) / 100;
+              } else {
+                studentDiscountAmount = discount.discountAmount;
+              }
+              
+              totalDiscountAmount += studentDiscountAmount;
+              discountDetails.push({
+                invitedStudentId: invitedStudent.id,
+                invitedStudentName: invitedStudent.name,
+                discountId: invitedStudent.discountId,
+                discountTitle: discount.title,
+                discountType: discount.discountType,
+                discountAmount: studentDiscountAmount
+              });
+              
+              console.log(`  Calculated discount amount for this invitation: ${studentDiscountAmount}`);
+            }
+          }
+          
+          if (totalDiscountAmount > 0) {
+            discountAmount = totalDiscountAmount;
+            console.log(`  Total discount amount for reference student ${student.name}: ${discountAmount}`);
+            
+            discountInfo = {
+              referenceStudentId: student.id,
+              referenceStudentName: student.name,
+              totalDiscountAmount: discountAmount,
+              invitedStudentsCount: invitedStudents.length,
+              discountDetails: discountDetails,
+              note: `Reference student gets discount for inviting ${invitedStudents.length} students`
+            };
+          }
+        } else {
+          console.log(`  Student is not a reference (hasn't invited anyone)`);
+        }
 
-        // Create new rent record (createdAt will be automatically set)
+        console.log(`Creating rent for student ${student.name}: rentAmount=${rentAmount}, externalAmount=${externalAmount}, previousDue=${previousDue}, discountAmount=${discountAmount}`);
+
+        // Create new rent record with discount amount
         const newRent = await prisma.rent.create({
           data: {
             studentId: student.id,
@@ -244,6 +434,7 @@ export async function POST(request) {
             externalPaid: 0,
             paidDate: null,
             paidType: null,
+            discountAmount: discountAmount, // Add discount amount to rent record
           },
         });
 
@@ -252,7 +443,9 @@ export async function POST(request) {
         createdRents.push({
           ...newRent,
           studentName: student.name,
-          categoryTitle: category.title
+          categoryTitle: category.title,
+          discountAmount, // Add discount amount to response
+          discountInfo
         });
 
       } catch (studentError) {

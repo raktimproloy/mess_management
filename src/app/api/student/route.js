@@ -39,6 +39,17 @@ export async function GET(request) {
         orderBy: { [sort]: order },
         skip: (page - 1) * pageSize,
         take: pageSize,
+        include: {
+          categoryRef: true,
+          discountRef: true,
+          references: {
+            select: {
+              id: true,
+              name: true,
+              phone: true
+            }
+          }
+        }
       });
       
       // Remove passwords from response
@@ -99,6 +110,8 @@ export async function POST(request) {
         category: parseInt(data.categoryId),
         categoryId: parseInt(data.categoryId),
         joiningDate: new Date(data.joiningDate),
+        discountId: data.discountId ? parseInt(data.discountId) : null,
+        referenceId: data.referenceId ? parseInt(data.referenceId) : null,
       },
     });
     
