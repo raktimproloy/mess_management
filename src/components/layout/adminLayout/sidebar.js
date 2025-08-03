@@ -6,11 +6,11 @@ const navItems = [
   { name: "CurrentRent", icon: "💰", href: "/admin/current_rent" },
   { name: "RentHistory", icon: "📜", href: "/admin/rent_history" },
   { name: "PaymentRequest", icon: "💳", href: "/admin/payment_request" },
+  { name: "Complaints", icon: "📝", href: "/admin/complaint" },
   { name: "Add Student", icon: "➕", href: "/admin/students/create" },
   { name: "Students", icon: "🧑‍🎓", href: "/admin/students" },
   { name: "Category", icon: "📂", href: "/admin/category" },
   { name: "Discount", icon: "�", href: "/admin/discount" },
-  { name: "Reports", icon: "📊", href: "/admin/reports" },
 ];
 
 export default function AdminSidebar() {

@@ -53,6 +53,7 @@ export async function POST(request) {
         id: student.id, 
         name: student.name, 
         phone: student.phone, 
+        status: student.status, 
         role: 'student' 
       }, 
       JWT_SECRET, 

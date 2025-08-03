@@ -6,6 +6,7 @@ const navItems = [
   { name: "Rent", icon: "💰", href: "/student/rent" },
   { name: "Payment Requests", icon: "📋", href: "/student/payment-requests" },
   { name: "Rent History", icon: "📊", href: "/student/rent-history" },
+  { name: "Complaint", icon: "📝", href: "/student/complaint" },
   { name: "Profile", icon: "⚙️", href: "/student/profile" },
   { name: "Logout", icon: "🚪", href: "/student/logout" },
 ];
