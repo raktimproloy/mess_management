@@ -25,6 +25,8 @@ export async function GET(request) {
     const currentYear = now.getFullYear();
     const currentMonthYear = `${currentYear}-${currentMonth.toString().padStart(2, '0')}`;
 
+    try {
+
     // Fetch all required data for the student
     const [
       student,
@@ -137,26 +139,26 @@ export async function GET(request) {
 
     // Calculate due rent for current month
     const dueRent = currentRent ? {
-      rentAmount: currentRent.rentAmount,
-      advanceAmount: currentRent.advanceAmount,
-      externalAmount: currentRent.externalAmount,
-      previousDue: currentRent.previousDue,
-      discountAmount: currentRent.discountAmount,
-      totalDue: currentRent.rentAmount + currentRent.advanceAmount + currentRent.externalAmount + currentRent.previousDue - currentRent.discountAmount,
-      paidAmount: currentRent.rentPaid + currentRent.advancePaid + currentRent.externalPaid,
-      remainingDue: (currentRent.rentAmount + currentRent.advanceAmount + currentRent.externalAmount + currentRent.previousDue - currentRent.discountAmount) - (currentRent.rentPaid + currentRent.advancePaid + currentRent.externalPaid),
-      status: currentRent.status
+      rentAmount: currentRent.rentAmount || 0,
+      advanceAmount: currentRent.advanceAmount || 0,
+      externalAmount: currentRent.externalAmount || 0,
+      previousDue: currentRent.previousDue || 0,
+      discountAmount: currentRent.discountAmount || 0,
+      totalDue: (currentRent.rentAmount || 0) + (currentRent.advanceAmount || 0) + (currentRent.externalAmount || 0) + (currentRent.previousDue || 0) - (currentRent.discountAmount || 0),
+      paidAmount: (currentRent.rentPaid || 0) + (currentRent.advancePaid || 0) + (currentRent.externalPaid || 0),
+      remainingDue: ((currentRent.rentAmount || 0) + (currentRent.advanceAmount || 0) + (currentRent.externalAmount || 0) + (currentRent.previousDue || 0) - (currentRent.discountAmount || 0)) - ((currentRent.rentPaid || 0) + (currentRent.advancePaid || 0) + (currentRent.externalPaid || 0)),
+      status: currentRent.status || 'N/A'
     } : null;
 
     // Calculate complaint statistics
-    const complaintStats = complaints.reduce((acc, complaint) => {
+    const complaintStats = (complaints || []).reduce((acc, complaint) => {
       acc.total++;
       acc[complaint.status]++;
       return acc;
     }, { total: 0, pending: 0, checking: 0, solved: 0, canceled: 0 });
 
     // Calculate payment request statistics
-    const paymentStats = paymentRequests.reduce((acc, request) => {
+    const paymentStats = (paymentRequests || []).reduce((acc, request) => {
       acc.total++;
       acc[request.status]++;
       acc.totalAmount += request.totalAmount;
@@ -164,12 +166,13 @@ export async function GET(request) {
     }, { total: 0, pending: 0, approved: 0, rejected: 0, totalAmount: 0 });
 
     // Calculate total paid amount
-    const totalPaid = (totalPaidAmount._sum.paidRent || 0) + 
+    const totalPaid = totalPaidAmount && totalPaidAmount._sum ? 
+                     (totalPaidAmount._sum.paidRent || 0) + 
                      (totalPaidAmount._sum.paidAdvance || 0) + 
-                     (totalPaidAmount._sum.paidExternal || 0);
+                     (totalPaidAmount._sum.paidExternal || 0) : 0;
 
     // Calculate monthly statistics
-    const monthlyStatsData = monthlyStats.reduce((acc, stat) => {
+    const monthlyStatsData = (monthlyStats || []).reduce((acc, stat) => {
       const monthKey = stat.rentMonth;
       if (!acc[monthKey]) {
         acc[monthKey] = { totalPaid: 0, paymentCount: 0 };
@@ -180,15 +183,15 @@ export async function GET(request) {
     }, {});
 
     // Calculate average monthly payment
-    const totalPayments = rentHistory.length;
+    const totalPayments = (rentHistory || []).length;
     const averageMonthlyPayment = totalPayments > 0 ? totalPaid / totalPayments : 0;
 
     // Calculate discount information
     const discountInfo = student.discountRef ? {
-      title: student.discountRef.title,
-      type: student.discountRef.discountType,
-      amount: student.discountRef.discountAmount,
-      description: student.discountRef.description
+      title: student.discountRef.title || 'N/A',
+      type: student.discountRef.discountType || 'N/A',
+      amount: student.discountRef.discountAmount || 0,
+      description: student.discountRef.description || 'N/A'
     } : null;
 
     return new Response(JSON.stringify({
@@ -197,19 +200,23 @@ export async function GET(request) {
         // Student Information
         student: {
           id: student.id,
-          name: student.name,
-          phone: student.phone,
-          status: student.status,
+          name: student.name || 'N/A',
+          phone: student.phone || 'N/A',
+          status: student.status || 'N/A',
           joiningDate: student.joiningDate,
-          livingMonths: livingMonths,
-          profileImage: student.profileImage
+          livingMonths: livingMonths || 0,
+          profileImage: student.profileImage || null
         },
         
         // Category Information
-        category: {
-          title: student.categoryRef.title,
-          rentAmount: student.categoryRef.rentAmount,
-          externalAmount: student.categoryRef.externalAmount
+        category: student.categoryRef ? {
+          title: student.categoryRef.title || 'N/A',
+          rentAmount: student.categoryRef.rentAmount || 0,
+          externalAmount: student.categoryRef.externalAmount || 0
+        } : {
+          title: 'N/A',
+          rentAmount: 0,
+          externalAmount: 0
         },
         
         // Discount Information
@@ -220,10 +227,10 @@ export async function GET(request) {
         
         // Rent Statistics
         rents: {
-          total: allRents.length,
-          paid: allRents.filter(rent => rent.status === 'paid').length,
-          unpaid: allRents.filter(rent => rent.status === 'unpaid').length,
-          partial: allRents.filter(rent => rent.status === 'partial').length
+          total: (allRents || []).length,
+          paid: (allRents || []).filter(rent => rent.status === 'paid').length,
+          unpaid: (allRents || []).filter(rent => rent.status === 'unpaid').length,
+          partial: (allRents || []).filter(rent => rent.status === 'partial').length
         },
         
         // Complaint Statistics
@@ -233,7 +240,7 @@ export async function GET(request) {
           checking: complaintStats.checking,
           solved: complaintStats.solved,
           canceled: complaintStats.canceled,
-          recent: complaints.slice(0, 5)
+          recent: (complaints || []).slice(0, 5)
         },
         
         // Payment Statistics
@@ -243,15 +250,15 @@ export async function GET(request) {
           approved: paymentStats.approved,
           rejected: paymentStats.rejected,
           totalAmount: paymentStats.totalAmount,
-          recent: paymentRequests.slice(0, 5)
+          recent: (paymentRequests || []).slice(0, 5)
         },
         
         // Payment History
         rentHistory: {
-          total: rentHistory.length,
+          total: (rentHistory || []).length,
           totalPaid: totalPaid,
           averageMonthlyPayment: averageMonthlyPayment,
-          recent: rentHistory.slice(0, 5)
+          recent: (rentHistory || []).slice(0, 5)
         },
         
         // Monthly Statistics
@@ -269,11 +276,24 @@ export async function GET(request) {
       headers: { 'Content-Type': 'application/json' }
     });
 
+    } catch (error) {
+      console.error('Error processing student dashboard data:', error);
+      return new Response(JSON.stringify({
+        success: false,
+        error: 'Error processing dashboard data',
+        details: error.message
+      }), {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
   } catch (error) {
     console.error('Error fetching student dashboard data:', error);
     return new Response(JSON.stringify({
       success: false,
-      error: 'Internal server error'
+      error: 'Internal server error',
+      details: error.message
     }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' }
