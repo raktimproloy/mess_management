@@ -1,4 +1,5 @@
 'use client'
+import Link from 'next/link';
 import { useState } from 'react';
 import { FaUtensils, FaWifi, FaTshirt, FaParking, FaShieldAlt, FaStar } from 'react-icons/fa';
 import { IoIosArrowForward, IoIosArrowBack } from 'react-icons/io';
@@ -9,28 +10,28 @@ export default function Home() {
   const features = [
     {
       icon: <FaUtensils className="text-3xl text-amber-500" />,
-      title: "Delicious Food",
-      description: "Daily fresh meals prepared by expert chefs with diverse menu options"
+      title: "সুস্বাদু খাবার",
+      description: "দৈনিক তাজা খাবার, অভিজ্ঞ রাঁধুনির হাতে প্রস্তুত বিভিন্ন স্বাদের মেনু দিয়ে প্রতিদিন কিছু নতুন।"
     },
     {
       icon: <FaWifi className="text-3xl text-amber-500" />,
       title: "High-Speed WiFi",
-      description: "Uninterrupted high-speed internet for study and entertainment"
+      description: "পড়াশোনা আর বিনোদনের জন্য নিরবিচারে দ্রুতগতির ইন্টারনেট সারাদিনই।"
     },
     {
       icon: <FaTshirt className="text-3xl text-amber-500" />,
-      title: "Laundry Service",
-      description: "Weekly laundry service to keep your clothes fresh and clean"
+      title: "Cleaning Service",
+      description: "নিয়মিত পরিষ্কার-পরিচ্ছন্ন পরিবেশ — স্বাস্থ্যকর ও আরামদায়ক থাকার নিশ্চয়তা।"
     },
     {
       icon: <FaParking className="text-3xl text-amber-500" />,
-      title: "Secure Parking",
-      description: "Dedicated parking space for bicycles and two-wheelers"
+      title: "Free WiFi",
+      description: "পড়াশোনা হোক বা বিনোদন, এখন থাকুন সবসময় কানেক্টেড — কোনো অতিরিক্ত খরচ ছাড়াই।"
     },
     {
       icon: <FaShieldAlt className="text-3xl text-amber-500" />,
       title: "24/7 Security",
-      description: "CCTV surveillance and security personnel for your safety"
+      description: "আপনার নিরাপত্তায় সারাক্ষণ সিসিটিভি নজরদারি থাকে।"
     }
   ];
 
@@ -78,19 +79,18 @@ export default function Home() {
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
             <div>
-              <h1 className="text-4xl md:text-6xl font-bold mb-4 leading-tight">
-                Your Perfect <span className="text-amber-500">Student Mess</span> Experience
+              <h1 className="text-2xl md:text-4xl font-bold mb-4 leading-tight">
+              আপনার পারফেক্ট <span className="text-amber-500">স্টুডেন্ট লাইফ</span> শুরু হোক এখান থেকেই।
               </h1>
               <p className="text-xl text-gray-300 mb-8 max-w-lg">
-                Delicious food, comfortable living, and a supportive community - everything you need to focus on your studies.
+              সুস্বাদু খাবার, শান্তিপূর্ণ ঘর, আর ভালো বন্ধুমনস্ক পরিবেশ —
+পড়াশোনার জন্য একদম পারফেক্ট একটা জায়গা।
+এখনই জয়েন করুন, নিশ্চিন্তে থাকুন!
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
-                <button className="bg-amber-500 hover:bg-amber-600 text-gray-900 font-bold py-3 px-8 rounded-lg transition duration-300">
+                <Link href={"/contact"} className="bg-amber-500 hover:bg-amber-600 text-gray-900 font-bold py-3 px-8 rounded-lg transition duration-300">
                   Book a Visit
-                </button>
-                <button className="bg-transparent border-2 border-amber-500 text-amber-500 hover:bg-amber-500/10 font-bold py-3 px-8 rounded-lg transition duration-300">
-                  View Plans
-                </button>
+                </Link>
               </div>
             </div>
             <div className="relative">
@@ -140,9 +140,9 @@ export default function Home() {
       <section className="py-16 px-4 bg-gray-800">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">Why Choose Our Mess?</h2>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">কেন আমাদের মেস বেছে নেবেন?</h2>
             <p className="text-gray-400 max-w-2xl mx-auto">
-              We provide everything a student needs for a comfortable and productive college life.
+            আমরা দিচ্ছি একজন শিক্ষার্থীর আরামদায়ক ও সফল কলেজ জীবনের জন্য প্রয়োজনীয় সবকিছু।
             </p>
           </div>
           
@@ -162,9 +162,9 @@ export default function Home() {
       <section className="py-16 px-4 bg-gradient-to-r from-gray-800 to-gray-900">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">What Students Say</h2>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">ছাত্রদের অভিমত</h2>
             <p className="text-gray-400 max-w-2xl mx-auto">
-              Hear from students who have made our mess their home away from home.
+            যারা আমাদের মেসকে নিজের দ্বিতীয় বাড়ি বানিয়েছে, তাদের অভিজ্ঞতা শুনে নিন।
             </p>
           </div>
           

@@ -22,64 +22,64 @@ const AboutPage = () => {
       {
         id: 1,
         icon: <FaCalendarAlt className="text-3xl" />,
-        title: "Online Booking",
-        description: "Students can book mess seats online with real-time availability tracking and instant confirmation",
+        title: "অনলাইন বুকিং",
+        description: "শিক্ষার্থীরা এখন অনলাইনে মেস সিট বুক করতে পারবেন, সঙ্গে থাকবে সরাসরি সিটের খালি থাকার তথ্য এবং সঙ্গে সঙ্গেই কনফার্মেশন।",
         color: "from-amber-500/10 to-amber-500/5",
         hoverColor: "from-amber-500/20 to-amber-500/10"
       },
       {
         id: 2,
         icon: <FaUtensils className="text-3xl" />,
-        title: "Menu Management",
-        description: "Create weekly menus, track nutrition values, and handle special dietary requirements",
+        title: "মেনু ব্যবস্থাপনা",
+        description: "সাপ্তাহিক মেনু ডিজাইন, পুষ্টি মান নিরীক্ষণ, এবং বিশেষ খাদ্যসংক্রান্ত প্রয়োজনীয়তা সহজেই পরিচালনা করুন।",
         color: "from-green-500/10 to-green-500/5",
         hoverColor: "from-green-500/20 to-green-500/10"
       },
       {
         id: 3,
         icon: <FaCreditCard className="text-3xl" />,
-        title: "Payment System",
-        description: "Secure online payments with multiple options, automated billing, and receipt generation",
+        title: "পেমেন্ট সিস্টেম",
+        description: "নিরাপদ অনলাইন পেমেন্ট, বিভিন্ন পেমেন্ট অপশন, স্বয়ংক্রিয় বিলিং ও রসিদ জেনারেশন সুবিধাসহ।",
         color: "from-blue-500/10 to-blue-500/5",
         hoverColor: "from-blue-500/20 to-blue-500/10"
       },
       {
         id: 4,
         icon: <FaChartLine className="text-3xl" />,
-        title: "Feedback & Analytics",
-        description: "Collect student feedback, generate reports, and gain insights to improve operations",
+        title: "মতামত ও বিশ্লেষণ",
+        description: "শিক্ষার্থীদের মতামত সংগ্রহ করুন, রিপোর্ট তৈরি করুন, এবং অপারেশন উন্নয়নের জন্য তথ্য আহরণ করুন।",
         color: "from-purple-500/10 to-purple-500/5",
         hoverColor: "from-purple-500/20 to-purple-500/10"
       },
       {
         id: 5,
         icon: <FaUserFriends className="text-3xl" />,
-        title: "Attendance Tracking",
-        description: "Automated student attendance with RFID/NFC technology for accurate meal tracking",
+        title: "উপস্থিতি পর্যবেক্ষণ",
+        description: "আরএফআইডি/এনএফসি প্রযুক্তি ব্যবহার করে স্বয়ংক্রিয় ছাত্র উপস্থিতি ট্র্যাকিং, যা সঠিক মেস খাবারের হিসাব নিশ্চিত করে।",
         color: "from-red-500/10 to-red-500/5",
         hoverColor: "from-red-500/20 to-red-500/10"
       },
       {
         id: 6,
         icon: <FaClipboardList className="text-3xl" />,
-        title: "Inventory Management",
-        description: "Track ingredients, automate purchase orders, and reduce food waste",
+        title: "মজুদ ব্যবস্থাপনা",
+        description: "উপকরণ ট্র্যাকিং, স্বয়ংক্রিয় ক্রয় আদেশ, এবং খাদ্য অপচয় হ্রাস করার জন্য আধুনিক সমাধান।",
         color: "from-cyan-500/10 to-cyan-500/5",
         hoverColor: "from-cyan-500/20 to-cyan-500/10"
       },
       {
         id: 7,
         icon: <FaBell className="text-3xl" />,
-        title: "Smart Notifications",
-        description: "Automated alerts for menu changes, payment reminders, and special events",
+        title: "স্মার্ট নোটিফিকেশন",
+        description: "মেনু পরিবর্তন, পেমেন্ট রিমাইন্ডার, এবং বিশেষ ইভেন্টের জন্য স্বয়ংক্রিয় বিজ্ঞপ্তি।",
         color: "from-pink-500/10 to-pink-500/5",
         hoverColor: "from-pink-500/20 to-pink-500/10"
       },
       {
         id: 8,
         icon: <FaMapMarkedAlt className="text-3xl" />,
-        title: "Multi-Location",
-        description: "Manage multiple mess locations from a single dashboard with centralized control",
+        title: "মাল্টি-লোকেশন ম্যানেজমেন্ট",
+        description: "একটি ড্যাশবোর্ড থেকে একাধিক মেসের অবস্থান পরিচালনা করুন, কেন্দ্রীয় নিয়ন্ত্রণসহ।",
         color: "from-indigo-500/10 to-indigo-500/5",
         hoverColor: "from-indigo-500/20 to-indigo-500/10"
       }
@@ -128,17 +128,18 @@ const AboutPage = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
             <div>
               <h1 className="text-4xl md:text-6xl font-bold mb-6">
-                About <span className="text-amber-500">MessManager</span>
+                About <span className="text-amber-500">Avilash Palace</span>
               </h1>
               <p className="text-xl text-gray-300 mb-8">
-                We're revolutionizing the way students experience mess life. Our mission is to create a home-like environment with delicious food, comfortable living, and a supportive community.
+              শিক্ষার্থীদের মেস লাইফকে আধুনিক ও আরামদায়ক করে তুলতে কাজ করছে।
+              আমাদের লক্ষ্য, এমন একটি পরিবেশ তৈরি করা — যেখানে থাকবে ঘরের মতো স্বাদ, আরাম, ও বন্ধুবান্ধব কমিউনিটির সাপোর্ট।
               </p>
               <div className="flex flex-wrap gap-4">
                 <div className="bg-amber-500/20 border border-amber-500/30 px-4 py-2 rounded-lg">
-                  <p className="text-amber-500 font-medium">Serving since 2015</p>
+                  <p className="text-amber-500 font-medium">Serving since 2010</p>
                 </div>
                 <div className="bg-amber-500/20 border border-amber-500/30 px-4 py-2 rounded-lg">
-                  <p className="text-amber-500 font-medium">5000+ Happy Students</p>
+                  <p className="text-amber-500 font-medium">1700+ Happy Students</p>
                 </div>
               </div>
             </div>
@@ -148,28 +149,28 @@ const AboutPage = () => {
                   <FaUserFriends className="text-amber-500 text-2xl" />
                 </div>
                 <h3 className="text-xl font-bold mb-2">Student Community</h3>
-                <p className="text-gray-400">Join our vibrant community of students from diverse backgrounds.</p>
+                <p className="text-gray-400">বিভিন্ন ব্যাকগ্রাউন্ড থেকে আগত প্রাণবন্ত শিক্ষার্থীদের আমাদের কমিউনিটিতে যোগ দিন।</p>
               </div>
-              <div className="bg-gray-800 border border-gray-700 rounded-xl p-6">
+              {/* <div className="bg-gray-800 border border-gray-700 rounded-xl p-6">
                 <div className="bg-amber-500/10 p-4 rounded-full w-16 h-16 flex items-center justify-center mb-4">
                   <FaUtensils className="text-amber-500 text-2xl" />
                 </div>
                 <h3 className="text-xl font-bold mb-2">Quality Food</h3>
                 <p className="text-gray-400">Nutritious meals prepared by expert chefs with hygiene standards.</p>
-              </div>
+              </div> */}
               <div className="bg-gray-800 border border-gray-700 rounded-xl p-6">
                 <div className="bg-amber-500/10 p-4 rounded-full w-16 h-16 flex items-center justify-center mb-4">
                   <FaHeart className="text-amber-500 text-2xl" />
                 </div>
                 <h3 className="text-xl font-bold mb-2">Care & Support</h3>
-                <p className="text-gray-400">24/7 support staff to ensure your comfort and safety.</p>
+                <p className="text-gray-400">২৪ ঘণ্টা, আপনার আরাম ও নিরাপত্তার জন্য সহায়ক কর্মীরা প্রস্তুত।</p>
               </div>
               <div className="bg-gray-800 border border-gray-700 rounded-xl p-6">
                 <div className="bg-amber-500/10 p-4 rounded-full w-16 h-16 flex items-center justify-center mb-4">
                   <IoIosRocket className="text-amber-500 text-2xl" />
                 </div>
                 <h3 className="text-xl font-bold mb-2">Modern Facilities</h3>
-                <p className="text-gray-400">High-speed WiFi, study rooms, and recreational areas.</p>
+                <p className="text-gray-400">দ্রুতগতির ওয়াইফাই, খোলা জায়গা এবং বিনোদনের জন্য বিশেষ জায়গা।</p>
               </div>
             </div>
           </div>
@@ -180,10 +181,10 @@ const AboutPage = () => {
       <section className="py-20 px-4">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">Our Story</h2>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">আমাদের গল্প</h2>
             <div className="w-20 h-1 bg-amber-500 mx-auto mb-6"></div>
             <p className="text-gray-400 max-w-3xl mx-auto">
-              How we transformed from a small student mess to the most preferred accommodation provider
+            কিভাবে আমরা একটি ছোট স্টুডেন্ট মেস থেকে হয়ে উঠলাম শিক্ষার্থীদের সবচেয়ে প্রিয় আবাসনের ঠিকানা।
             </p>
           </div>
           
@@ -193,29 +194,29 @@ const AboutPage = () => {
                 <div className="bg-gray-200 border-2 border-dashed rounded-xl w-full h-full" />
               </div>
               <div className="absolute -bottom-6 -right-6 bg-amber-500 text-gray-900 font-bold py-3 px-6 rounded-lg">
-                Since 2015
+                Since 2010
               </div>
             </div>
             
             <div>
-              <h3 className="text-2xl font-bold mb-6">From Humble Beginnings to Student Favorite</h3>
+              <h3 className="text-2xl font-bold mb-6">বিনম্র শুরু থেকে শিক্ষার্থীদের প্রিয় ঠিকানা পর্যন্ত</h3>
               <p className="text-gray-300 mb-6">
-                MessManager started with just 12 students in a small rented house near the university campus. Our founders, former students themselves, understood the challenges of finding quality accommodation and nutritious food at affordable prices.
+              অবিলাশ প্যালেস শুরু হয়েছিল বিশ্ববিদ্যালয় ক্যাম্পাসের কাছে একটি ছোট ভাড়া বাসায় মাত্র ১২ জন ছাত্রের জন্য। মেসের মালিকরাও প্রাক্তন ছাত্র ছিলেন, তাই তারা ভালো আবাসন এবং পুষ্টিকর খাবার সাশ্রয়ী দামে পাওয়ার সমস্যাগুলো ভালভাবে বুঝতে পারতেন।
               </p>
               <p className="text-gray-300 mb-6">
-                Today, we serve over 1,500 students across 8 locations with modern facilities, diverse menus, and a supportive community environment. Our journey has been fueled by student feedback and our commitment to continuous improvement.
+              আজ আমরা আধুনিক সুবিধা ও সহায়ক কমিউনিটি পরিবেশ নিয়ে ১,৭০০+ শিক্ষার্থীর সেবা দিয়ে আসছি। আমাদের এই যাত্রা চালিত হয়েছে শিক্ষার্থীদের মতামত এবং নিরবচ্ছিন্ন উন্নতির প্রতি আমাদের প্রতিশ্রুতির মাধ্যমে।
               </p>
               <div className="flex items-center">
-                <div className="mr-4">
+                {/* <div className="mr-4">
                   <div className="bg-amber-500 text-gray-900 font-bold text-3xl px-6 py-3 rounded-lg">8</div>
                   <p className="text-center mt-2 text-gray-400">Locations</p>
-                </div>
+                </div> */}
                 <div className="mr-4">
-                  <div className="bg-amber-500 text-gray-900 font-bold text-3xl px-6 py-3 rounded-lg">1500+</div>
+                  <div className="bg-amber-500 text-gray-900 font-bold text-3xl px-6 py-3 rounded-lg">1700+</div>
                   <p className="text-center mt-2 text-gray-400">Students</p>
                 </div>
                 <div>
-                  <div className="bg-amber-500 text-gray-900 font-bold text-3xl px-6 py-3 rounded-lg">97%</div>
+                  <div className="bg-amber-500 text-gray-900 font-bold text-3xl px-6 py-3 rounded-lg">95%</div>
                   <p className="text-center mt-2 text-gray-400">Satisfaction</p>
                 </div>
               </div>
@@ -228,10 +229,10 @@ const AboutPage = () => {
       <section className="py-20 px-4 bg-gray-800">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">Our Core Values</h2>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">আমাদের মূল মূল্যবোধ</h2>
             <div className="w-20 h-1 bg-amber-500 mx-auto mb-6"></div>
             <p className="text-gray-400 max-w-3xl mx-auto">
-              The principles that guide everything we do at MessManager
+            এসবই হলো সেই নীতিমালা যা আমাদের প্রতিটি কাজের পথপ্রদর্শক।
             </p>
           </div>
           
@@ -240,9 +241,9 @@ const AboutPage = () => {
               <div className="bg-amber-500/10 p-4 rounded-full w-16 h-16 flex items-center justify-center mb-6">
                 <FaMedal className="text-amber-500 text-2xl" />
               </div>
-              <h3 className="text-xl font-bold mb-4">Quality First</h3>
+              <h3 className="text-xl font-bold mb-4">গুণগত মান সর্বোচ্চ</h3>
               <p className="text-gray-400">
-                We never compromise on food quality or living conditions. Our ingredients are sourced fresh daily, and our facilities are maintained to the highest standards.
+              খাবারের গুণগত মান এবং থাকার পরিবেশে আমরা কখনো ছাড় দিই না। প্রতিদিন তাজা উপকরণ নিয়ে রান্না করি, আর সুবিধাগুলো সর্বোচ্চ মানে বজায় রাখি।
               </p>
             </div>
             
@@ -250,9 +251,10 @@ const AboutPage = () => {
               <div className="bg-amber-500/10 p-4 rounded-full w-16 h-16 flex items-center justify-center mb-6">
                 <FaHeart className="text-amber-500 text-2xl" />
               </div>
-              <h3 className="text-xl font-bold mb-4">Student Well-being</h3>
+              <h3 className="text-xl font-bold mb-4">ছাত্রছাত্রীদের সুস্থতা ও কল্যাণ</h3>
               <p className="text-gray-400">
-                Your health and happiness are our priority. We provide nutritious meals, mental health support, and recreational activities to help you thrive.
+              আপনার শারীরিক ও মানসিক সুস্থতা আমাদের মূল লক্ষ্য।
+              পুষ্টিকর খাবার, মানসিক স্বাস্থ্য সেবা, এবং মনোরঞ্জনের মাধ্যমে আমরা আপনাকে সব দিক থেকে সহায়তা করি।
               </p>
             </div>
             
@@ -260,9 +262,10 @@ const AboutPage = () => {
               <div className="bg-amber-500/10 p-4 rounded-full w-16 h-16 flex items-center justify-center mb-6">
                 <FaChartLine className="text-amber-500 text-2xl" />
               </div>
-              <h3 className="text-xl font-bold mb-4">Continuous Improvement</h3>
+              <h3 className="text-xl font-bold mb-4">অবিরত উন্নয়ন</h3>
               <p className="text-gray-400">
-                We constantly evolve based on student feedback. Monthly surveys and suggestion boxes help us enhance your mess experience.
+              শিক্ষার্থীদের মূল্যবান প্রতিক্রিয়া অনুযায়ী আমরা ক্রমাগত নিজেদের উন্নত করে যাচ্ছি।
+              মাসিক জরিপ এবং প্রস্তাবনার মাধ্যমে মেসের অভিজ্ঞতাকে আরও উন্নত করা হয়।
               </p>
             </div>
           </div>
@@ -278,7 +281,7 @@ const AboutPage = () => {
           </h2>
           <div className="w-20 h-1 bg-amber-500 mx-auto mb-6"></div>
           <p className="text-gray-400 max-w-3xl mx-auto">
-            Everything you need to streamline mess operations and enhance student experience
+          মেস পরিচালনা সহজ করার জন্য এবং শিক্ষার্থীদের অভিজ্ঞতা উন্নত করার জন্য প্রয়োজনীয় সব কিছু।
           </p>
         </div>
         
@@ -310,134 +313,9 @@ const AboutPage = () => {
             </div>
           ))}
         </div>
-        
-        {/* Feature Details Panel */}
-        {activeFeature && (
-          <div className="bg-gray-800 border border-amber-500/30 rounded-xl overflow-hidden mb-16 animate-fadeIn">
-            <div className="p-6 md:p-8">
-              <div className="flex justify-between items-start mb-6">
-                <h3 className="text-2xl font-bold">
-                  {features.find(f => f.id === activeFeature)?.title}
-                </h3>
-                <button 
-                  onClick={() => setActiveFeature(null)}
-                  className="text-gray-400 hover:text-white p-2 rounded-full hover:bg-gray-700 transition-colors"
-                >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
-                  </svg>
-                </button>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div>
-                  <h4 className="text-lg font-semibold mb-4 text-amber-500">Key Benefits</h4>
-                  <ul className="space-y-3">
-                    {featureDetails[activeFeature].benefits.map((benefit, index) => (
-                      <li key={index} className="flex items-start">
-                        <svg className="w-5 h-5 text-amber-500 mt-1 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
-                        </svg>
-                        <span className="text-gray-300">{benefit}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-                
-                <div>
-                  <div className="bg-gradient-to-r from-gray-700 to-gray-800 p-6 rounded-xl mb-6">
-                    <h4 className="text-lg font-semibold mb-2 text-amber-500">Impact</h4>
-                    <p className="text-gray-300">{featureDetails[activeFeature].stats}</p>
-                  </div>
-                  
-                  <div className="flex space-x-4">
-                    <button className="bg-amber-500 hover:bg-amber-600 text-gray-900 font-medium py-2 px-4 rounded-lg transition duration-300 text-sm">
-                      See Demo
-                    </button>
-                    <button className="bg-transparent border border-amber-500 text-amber-500 hover:bg-amber-500/10 font-medium py-2 px-4 rounded-lg transition duration-300 text-sm">
-                      Documentation
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            <div className="bg-gray-900/50 p-6 border-t border-gray-700">
-              <h4 className="text-lg font-semibold mb-4 text-amber-500">Perfect For</h4>
-              <div className="flex flex-wrap gap-3">
-                {["College Students", "Hostel Managers", "Mess Committees", "Campus Admins", "Student Groups"].map((item, index) => (
-                  <div key={index} className="bg-amber-500/10 border border-amber-500/30 text-amber-500 px-4 py-2 rounded-lg text-sm">
-                    {item}
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-        
-        {/* Stats Section */}
-        <div className="bg-gray-800 border border-gray-700 rounded-xl p-8 grid grid-cols-2 md:grid-cols-4 gap-6">
-          <div className="text-center">
-            <div className="text-3xl md:text-4xl font-bold text-amber-500 mb-2">97%</div>
-            <p className="text-gray-400">Student Satisfaction</p>
-          </div>
-          <div className="text-center">
-            <div className="text-3xl md:text-4xl font-bold text-amber-500 mb-2">50+</div>
-            <p className="text-gray-400">Mess Locations</p>
-          </div>
-          <div className="text-center">
-            <div className="text-3xl md:text-4xl font-bold text-amber-500 mb-2">10K+</div>
-            <p className="text-gray-400">Active Users</p>
-          </div>
-          <div className="text-center">
-            <div className="text-3xl md:text-4xl font-bold text-amber-500 mb-2">24/7</div>
-            <p className="text-gray-400">Support Available</p>
-          </div>
-        </div>
       </div>
     </section>
 
-      {/* Testimonial Section */}
-      <section className="py-20 px-4 bg-gray-800">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">Student Experiences</h2>
-            <div className="w-20 h-1 bg-amber-500 mx-auto mb-6"></div>
-            <p className="text-gray-400 max-w-3xl mx-auto">
-              Hear from students who call MessManager their home away from home
-            </p>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {[
-              { 
-                text: "MessManager transformed my college experience. The food is amazing, and I've made friends for life here. It truly feels like a second home!",
-                name: "Rahul Singh",
-                course: "Engineering Student"
-              },
-              { 
-                text: "As an international student, finding good accommodation was challenging. MessManager provided not just a place to stay, but a supportive community.",
-                name: "Sophia Chen",
-                course: "Medical Student"
-              },
-              { 
-                text: "The study rooms and high-speed WiFi helped me maintain my grades. Plus, the monthly cultural events make college life so much more enjoyable!",
-                name: "Ananya Patel",
-                course: "MBA Student"
-              }
-            ].map((testimonial, index) => (
-              <div key={index} className="bg-gray-900 border border-gray-700 rounded-xl p-8">
-                <div className="text-amber-500 text-4xl mb-4">"</div>
-                <p className="text-gray-300 mb-6 italic">{testimonial.text}</p>
-                <div>
-                  <h4 className="font-bold text-lg">{testimonial.name}</h4>
-                  <p className="text-amber-500">{testimonial.course}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
 
     </div>
   );
