@@ -165,11 +165,22 @@ export async function GET(request) {
       return acc;
     }, { total: 0, pending: 0, approved: 0, rejected: 0, totalAmount: 0 });
 
-    // Calculate total paid amount
-    const totalPaid = totalPaidAmount && totalPaidAmount._sum ? 
-                     (totalPaidAmount._sum.paidRent || 0) + 
-                     (totalPaidAmount._sum.paidAdvance || 0) + 
-                     (totalPaidAmount._sum.paidExternal || 0) : 0;
+    // Calculate total paid amount - handle null values properly
+    let totalPaid = 0;
+    if (totalPaidAmount && totalPaidAmount._sum) {
+      const paidRent = totalPaidAmount._sum.paidRent || 0;
+      const paidAdvance = totalPaidAmount._sum.paidAdvance || 0;
+      const paidExternal = totalPaidAmount._sum.paidExternal || 0;
+      totalPaid = paidRent + paidAdvance + paidExternal;
+    }
+
+    // Alternative calculation method - sum from actual records
+    const calculatedTotalPaid = (rentHistory || []).reduce((sum, record) => {
+      return sum + (record.paidRent || 0) + (record.paidAdvance || 0) + (record.paidExternal || 0);
+    }, 0);
+    
+    // Use the calculated total if aggregation returns 0 or null
+    const finalTotalPaid = calculatedTotalPaid > 0 ? calculatedTotalPaid : totalPaid;
 
     // Calculate monthly statistics
     const monthlyStatsData = (monthlyStats || []).reduce((acc, stat) => {
@@ -184,7 +195,7 @@ export async function GET(request) {
 
     // Calculate average monthly payment
     const totalPayments = (rentHistory || []).length;
-    const averageMonthlyPayment = totalPayments > 0 ? totalPaid / totalPayments : 0;
+    const averageMonthlyPayment = totalPayments > 0 ? finalTotalPaid / totalPayments : 0;
 
     // Calculate discount information
     const discountInfo = student.discountRef ? {
@@ -256,7 +267,7 @@ export async function GET(request) {
         // Payment History
         rentHistory: {
           total: (rentHistory || []).length,
-          totalPaid: totalPaid,
+          totalPaid: finalTotalPaid,
           averageMonthlyPayment: averageMonthlyPayment,
           recent: (rentHistory || []).slice(0, 5)
         },

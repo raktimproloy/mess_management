@@ -1,14 +1,38 @@
 "use client";
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { toast } from 'react-hot-toast';
+import { getAdminData, getStudentData } from '../../../lib/auth';
 
 export default function AdminDashboard() {
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
-    fetchDashboardData();
-  }, []);
+    // Check authentication
+    const checkAuth = () => {
+      const adminData = getAdminData();
+      const studentData = getStudentData();
+
+      // If student is logged in, redirect to student dashboard
+      if (studentData) {
+        router.push('/student/dashboard');
+        return;
+      }
+
+      // If no admin is logged in, redirect to login
+      if (!adminData) {
+        router.push('/login/admin');
+        return;
+      }
+
+      // If admin is logged in, fetch dashboard data
+      fetchDashboardData();
+    };
+
+    checkAuth();
+  }, []); // Remove router from dependencies to prevent infinite re-renders
 
   const fetchDashboardData = async () => {
     try {

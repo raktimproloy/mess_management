@@ -18,7 +18,7 @@ export default function StudentLayout({ children }) {
         <StudentSidebar />
         <div className="flex-1 flex flex-col ml-64">
           <StudentHeader />
-          <main className="flex-1 p-8 bg-[#18181b] text-white overflow-y-auto">
+          <main className="flex-1 p-0 md:p-8 bg-[#18181b] text-white overflow-y-auto">
             {children}
           </main>
         </div>
@@ -56,7 +56,7 @@ export default function StudentLayout({ children }) {
           </div>
         </div>
         
-        <main className="flex-1 p-4 bg-[#18181b] text-white overflow-y-auto pb-24">
+        <main className="flex-1 p-0 md:p-4 bg-[#18181b] text-white overflow-y-auto pb-24">
           {children}
         </main>
         <StudentBottomNav />

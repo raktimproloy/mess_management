@@ -6,223 +6,47 @@ function getMonthYear(date) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
 }
 
-export async function GET(request) {
-  try {
-    const now = new Date();
-    const currentMonthYear = getMonthYear(now);
-    const prevMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-    const prevMonthYear = getMonthYear(prevMonth);
+/**
+ * Calculate booking amount deduction and return adjusted amounts
+ * @param {number} bookingAmount - Student's booking amount
+ * @param {number} rentAmount - Category rent amount
+ * @param {number} externalAmount - Category external amount
+ * @param {number} advanceAmount - Carry forward advance amount
+ * @returns {object} Adjusted amounts and remaining booking amount
+ */
+function calculateBookingDeduction(bookingAmount, rentAmount, externalAmount, advanceAmount) {
+  let remainingBookingAmount = bookingAmount;
+  let adjustedRentAmount = rentAmount;
+  let adjustedExternalAmount = externalAmount;
+  let adjustedAdvanceAmount = advanceAmount;
 
-    console.log('--- Rent Cron GET (Preview) Debug ---');
-    console.log('Current Date:', now.toISOString());
-    console.log('Current Month/Year:', currentMonthYear);
-    console.log('Previous Month Start Date:', prevMonth.toISOString());
-    console.log('Previous Month/Year:', prevMonthYear);
-
-    // Get all discounts (like categories)
-    const discounts = await prisma.discount.findMany({
-      where: { status: 1 }, // Only active discounts
-      orderBy: { createdAt: 'desc' }
-    });
-    console.log(`Found ${discounts.length} active discounts`);
-
-    // Get all living students whose joiningDate is in the past
-    const students = await prisma.student.findMany({
-      where: {
-        status: 'living',
-        // Remove the joiningDate filter to include all living students
-        // joiningDate: { lte: now },
-      },
-      include: { 
-        categoryRef: true,
-        discountRef: true,
-        references: {
-          select: {
-            id: true,
-            name: true,
-            discountAmount: true
-          }
-        }
-      },
-    });
-
-    console.log(`Found ${students.length} living students`);
-    students.forEach(student => {
-      console.log(`  Student: ${student.name} (ID: ${student.id}), Joining Date: ${student.joiningDate}, Status: ${student.status}`);
-    });
-
-    let previewRents = [];
-    for (const student of students) {
-      console.log(`Processing student: ${student.name} (ID: ${student.id})`);
-
-      // Check if rent for this month already exists using createdAt
-      const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-      const currentMonthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 1);
-      
-      const alreadyExists = await prisma.rent.findFirst({
-        where: {
-          studentId: student.id,
-          createdAt: {
-            gte: currentMonthStart,
-            lt: currentMonthEnd,
-          },
-        },
-      });
-      if (alreadyExists) {
-        console.log(`  Rent already exists for current month. Skipping.`);
-        continue;
-      }
-
-      // Get category and amounts
-      const category = student.categoryRef;
-      if (!category) {
-        console.log(`  No category found for student. Skipping.`);
-        continue;
-      }
-      const rentAmount = category.rentAmount;
-      const externalAmount = category.externalAmount || 0;
-
-      // Check previous month's rent for due using createdAt
-      const prevRentQueryStart = new Date(prevMonth.getFullYear(), prevMonth.getMonth(), 1);
-      const prevRentQueryEnd = new Date(prevMonth.getFullYear(), prevMonth.getMonth() + 1, 1);
-
-      console.log(`  Querying for previous month rent for student ${student.id} between ${prevRentQueryStart.toISOString()} and ${prevRentQueryEnd.toISOString()}`);
-
-      const prevRent = await prisma.rent.findFirst({
-        where: {
-          studentId: student.id,
-          createdAt: {
-            gte: prevRentQueryStart,
-            lt: prevRentQueryEnd,
-          },
-        },
-      });
-      
-      let previousDue = 0;
-      let previousDuePaid = 0; // This is initialized to 0 for the new rent record
-      let carryForwardAdvance = 0;
-      if (prevRent) {
-        console.log(`  Found previous month rent (ID: ${prevRent.id}) for student ${student.id}. Details:`);
-        console.log(`    createdAt: ${prevRent.createdAt.toISOString()}`);
-        console.log(`    rentAmount: ${prevRent.rentAmount}, externalAmount: ${prevRent.externalAmount}`);
-        console.log(`    rentPaid: ${prevRent.rentPaid}, externalPaid: ${prevRent.externalPaid}`);
-        console.log(`    advancePaid: ${prevRent.advancePaid}, advanceAmount: ${prevRent.advanceAmount}`);
-        
-        // Calculate unpaid amount from previous month's rent for this student
-        const totalAmount = (prevRent.rentAmount || 0) + (prevRent.externalAmount || 0) + (prevRent.previousDue || 0);
-        const totalPaid = (prevRent.rentPaid || 0) + (prevRent.externalPaid || 0) + (prevRent.previousDuePaid || 0);
-        previousDue = Math.max(0, totalAmount - totalPaid);
-        
-        // Calculate carry-forward advance (advanceAmount - advancePaid)
-        carryForwardAdvance = (prevRent.advanceAmount || 0) - (prevRent.advancePaid || 0);
-        if (carryForwardAdvance < 0) carryForwardAdvance = 0;
-        console.log(`  Calculated previous due: totalAmount=${totalAmount}, totalPaid=${totalPaid}, previousDue=${previousDue}`);
-        console.log(`  Carry forward advance: ${carryForwardAdvance}`);
-        console.log(`  [DEBUG] For student ${student.id}, prevRent.advancePaid=${prevRent.advancePaid}, prevRent.advanceAmount=${prevRent.advanceAmount}, carryForwardAdvance=${carryForwardAdvance}`);
-      } else {
-        console.log(`  No previous month rent found for student ${student.id}. Previous due remains 0.`);
-        carryForwardAdvance = 0;
-      }
-
-      // Check if this student is a reference (has invited others) and calculate discount
-      let discountAmount = 0;
-      let discountInfo = null;
-      
-      console.log(`  Student ${student.name} (ID: ${student.id}) details:`);
-      console.log(`    Reference ID: ${student.referenceId}`);
-      console.log(`    Discount ID: ${student.discountId}`);
-      
-      // Check if this student has invited others (is a reference)
-      const invitedStudents = await prisma.student.findMany({
-        where: {
-          referenceId: student.id,
-          status: 'living'
-        },
-        include: {
-          discountRef: true
-        }
-      });
-      
-      console.log(`  Students invited by ${student.name}: ${invitedStudents.length}`);
-      
-      if (invitedStudents.length > 0) {
-        console.log(`  This student (${student.name}) is a reference and has invited ${invitedStudents.length} students`);
-        
-        // Calculate total discount amount from all invited students
-        let totalDiscountAmount = 0;
-        let discountDetails = [];
-        
-        for (const invitedStudent of invitedStudents) {
-          if (invitedStudent.discountRef) {
-            const discount = invitedStudent.discountRef;
-            console.log(`  Invited student ${invitedStudent.name} has discount: ${discount.title} - ${discount.discountAmount}${discount.discountType === 'percent' ? '%' : '৳'}`);
-            
-            // Calculate discount amount based on this student's rent amount
-            let studentDiscountAmount = 0;
-            if (discount.discountType === 'percent') {
-              studentDiscountAmount = (rentAmount * discount.discountAmount) / 100;
-            } else {
-              studentDiscountAmount = discount.discountAmount;
-            }
-            
-            totalDiscountAmount += studentDiscountAmount;
-            discountDetails.push({
-              invitedStudentId: invitedStudent.id,
-              invitedStudentName: invitedStudent.name,
-              discountId: invitedStudent.discountId,
-              discountTitle: discount.title,
-              discountType: discount.discountType,
-              discountAmount: studentDiscountAmount
-            });
-            
-            console.log(`  Calculated discount amount for this invitation: ${studentDiscountAmount}`);
-          }
-        }
-        
-        if (totalDiscountAmount > 0) {
-          discountAmount = totalDiscountAmount;
-          console.log(`  Total discount amount for reference student ${student.name}: ${discountAmount}`);
-          
-          discountInfo = {
-            referenceStudentId: student.id,
-            referenceStudentName: student.name,
-            totalDiscountAmount: discountAmount,
-            invitedStudentsCount: invitedStudents.length,
-            discountDetails: discountDetails,
-            note: `Reference student gets discount for inviting ${invitedStudents.length} students`
-          };
-        }
-      } else {
-        console.log(`  Student is not a reference (hasn't invited anyone)`);
-      }
-
-      // Compose new rent preview
-      previewRents.push({
-        studentId: student.id,
-        studentName: student.name,
-        categoryId: category.id,
-        categoryTitle: category.title,
-        rentAmount,
-        externalAmount,
-        previousDue,
-        previousDuePaid,
-        advanceAmount: carryForwardAdvance,
-        discountAmount, // Add discount amount to preview
-        status: 'unpaid',
-        rentPaid: 0,
-        advancePaid: 0,
-        externalPaid: 0,
-        paidDate: null,
-        paidType: null,
-        discountInfo
-      });
-    }
-    console.log('--- End Rent Cron GET (Preview) Debug ---');
-    return new Response(JSON.stringify({ message: 'Preview rents to be generated', count: previewRents.length, rents: previewRents }), { status: 200 });
-  } catch (err) {
-    console.error('Error in Rent Cron GET (Preview):', err);
-    return new Response(JSON.stringify({ message: 'Server error', error: err.message }), { status: 500 });
+  // First, deduct from rent amount
+  if (remainingBookingAmount > 0 && adjustedRentAmount > 0) {
+    const deductionFromRent = Math.min(remainingBookingAmount, adjustedRentAmount);
+    adjustedRentAmount -= deductionFromRent;
+    remainingBookingAmount -= deductionFromRent;
   }
+
+  // Then, deduct from external amount
+  if (remainingBookingAmount > 0 && adjustedExternalAmount > 0) {
+    const deductionFromExternal = Math.min(remainingBookingAmount, adjustedExternalAmount);
+    adjustedExternalAmount -= deductionFromExternal;
+    remainingBookingAmount -= deductionFromExternal;
+  }
+
+  // Finally, deduct from advance amount
+  if (remainingBookingAmount > 0 && adjustedAdvanceAmount > 0) {
+    const deductionFromAdvance = Math.min(remainingBookingAmount, adjustedAdvanceAmount);
+    adjustedAdvanceAmount -= deductionFromAdvance;
+    remainingBookingAmount -= deductionFromAdvance;
+  }
+
+  return {
+    adjustedRentAmount: Math.max(0, adjustedRentAmount),
+    adjustedExternalAmount: Math.max(0, adjustedExternalAmount),
+    adjustedAdvanceAmount: Math.max(0, adjustedAdvanceAmount),
+    remainingBookingAmount: Math.max(0, remainingBookingAmount)
+  };
 }
 
 export async function POST(request) {
@@ -232,53 +56,47 @@ export async function POST(request) {
     const prevMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
     const prevMonthYear = getMonthYear(prevMonth);
 
-    console.log('--- Rent Cron POST (Execute) Debug ---');
-    console.log('Starting rent generation for month:', currentMonthYear);
-    console.log('Current Date:', now.toISOString());
-    console.log('Previous Month Start Date:', prevMonth.toISOString());
-
-    // Get all discounts (like categories)
+    // Get all active discounts
     const discounts = await prisma.discount.findMany({
-      where: { status: 1 }, // Only active discounts
+      where: { status: 1 },
       orderBy: { createdAt: 'desc' }
     });
-    console.log(`Found ${discounts.length} active discounts`);
 
-    // Get all living students whose joiningDate is in the past
+    // Get all living students with joining date in the past or present
     const students = await prisma.student.findMany({
       where: {
         status: 'living',
-        // Remove the joiningDate filter to include all living students
-        // joiningDate: { lte: now },
+        joiningDate: { lte: now }, // Only include students who have already joined
       },
       include: { 
         categoryRef: true,
         discountRef: true,
-        references: {
-          select: {
-            id: true,
-            name: true,
-            discountAmount: true
-          }
-        }
       },
     });
 
-    console.log(`Found ${students.length} living students`);
-    students.forEach(student => {
-      console.log(`  Student: ${student.name} (ID: ${student.id}), Joining Date: ${student.joiningDate}, Status: ${student.status}`);
-    });
-
     let createdRents = [];
+    let skippedStudents = [];
+    let errorStudents = [];
+
     for (const student of students) {
       try {
-        console.log(`Processing student: ${student.name} (ID: ${student.id})`);
 
-        // Check if rent for this month already exists using createdAt
+        // 1. Check if joining date is in the future (should not happen due to query filter, but double-check)
+        if (student.joiningDate > now) {
+          skippedStudents.push({
+            studentId: student.id,
+            studentName: student.name,
+            reason: 'Future joining date',
+            joiningDate: student.joiningDate
+          });
+          continue;
+        }
+
+        // 2. Check if rent for this month already exists
         const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
         const currentMonthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 1);
         
-        const alreadyExists = await prisma.rent.findFirst({
+        const existingRent = await prisma.rent.findFirst({
           where: {
             studentId: student.id,
             createdAt: {
@@ -288,26 +106,31 @@ export async function POST(request) {
           },
         });
         
-        if (alreadyExists) {
-          console.log(`  Rent already exists for current month. Skipping.`);
+        if (existingRent) {
+          skippedStudents.push({
+            studentId: student.id,
+            studentName: student.name,
+            reason: 'Rent already exists for current month',
+            existingRentId: existingRent.id
+          });
           continue;
         }
 
-        // Get category and amounts
+        // 3. Validate category exists
         const category = student.categoryRef;
         if (!category) {
-          console.log(`  No category found for student. Skipping.`);
+          skippedStudents.push({
+            studentId: student.id,
+            studentName: student.name,
+            reason: 'No category assigned'
+          });
           continue;
         }
-        
-        const rentAmount = category.rentAmount;
-        const externalAmount = category.externalAmount || 0;
 
-        // Check previous month's rent for due using createdAt
+        // 4. Get previous month's rent for due calculation
         const prevRentQueryStart = new Date(prevMonth.getFullYear(), prevMonth.getMonth(), 1);
         const prevRentQueryEnd = new Date(prevMonth.getFullYear(), prevMonth.getMonth() + 1, 1);
-        console.log(`  Querying for previous month rent for student ${student.id} between ${prevRentQueryStart.toISOString()} and ${prevRentQueryEnd.toISOString()}`);
-
+        
         const prevRent = await prisma.rent.findFirst({
           where: {
             studentId: student.id,
@@ -319,40 +142,26 @@ export async function POST(request) {
         });
         
         let previousDue = 0;
-        let previousDuePaid = 0; // This is initialized to 0 for the new rent record
+        let previousDuePaid = 0;
         let carryForwardAdvance = 0;
+        
         if (prevRent) {
-          console.log(`  Found previous month rent (ID: ${prevRent.id}) for student ${student.id}. Details:`);
-          console.log(`    createdAt: ${prevRent.createdAt.toISOString()}`);
-          console.log(`    rentAmount: ${prevRent.rentAmount}, externalAmount: ${prevRent.externalAmount}`);
-          console.log(`    rentPaid: ${prevRent.rentPaid}, externalPaid: ${prevRent.externalPaid}`);
-          console.log(`    advancePaid: ${prevRent.advancePaid}, advanceAmount: ${prevRent.advanceAmount}`);
           
-          // Calculate unpaid amount from previous month's rent for this student
+          // Calculate unpaid amount from previous month
           const totalAmount = (prevRent.rentAmount || 0) + (prevRent.externalAmount || 0) + (prevRent.previousDue || 0);
           const totalPaid = (prevRent.rentPaid || 0) + (prevRent.externalPaid || 0) + (prevRent.previousDuePaid || 0);
           previousDue = Math.max(0, totalAmount - totalPaid);
           
-          // Calculate carry-forward advance (advanceAmount - advancePaid)
-          carryForwardAdvance = (prevRent.advanceAmount || 0) - (prevRent.advancePaid || 0);
-          if (carryForwardAdvance < 0) carryForwardAdvance = 0;
-          console.log(`  Calculated previous due: totalAmount=${totalAmount}, totalPaid=${totalPaid}, previousDue=${previousDue}`);
-          console.log(`  Carry forward advance: ${carryForwardAdvance}`);
-          console.log(`  [DEBUG] For student ${student.id}, prevRent.advancePaid=${prevRent.advancePaid}, prevRent.advanceAmount=${prevRent.advanceAmount}, carryForwardAdvance=${carryForwardAdvance}`);
+          // Calculate carry-forward advance
+          carryForwardAdvance = Math.max(0, (prevRent.advanceAmount || 0) - (prevRent.advancePaid || 0));
+          
         } else {
-          console.log(`  No previous month rent found for student ${student.id}. Previous due remains 0.`);
-          carryForwardAdvance = 0;
         }
 
-        // Check if this student is a reference (has invited others) and calculate discount
+        // 5. Calculate reference discount
         let discountAmount = 0;
         let discountInfo = null;
         
-        console.log(`  Student ${student.name} (ID: ${student.id}) details:`);
-        console.log(`    Reference ID: ${student.referenceId}`);
-        console.log(`    Discount ID: ${student.discountId}`);
-        
-        // Check if this student has invited others (is a reference)
         const invitedStudents = await prisma.student.findMany({
           where: {
             referenceId: student.id,
@@ -363,24 +172,18 @@ export async function POST(request) {
           }
         });
         
-        console.log(`  Students invited by ${student.name}: ${invitedStudents.length}`);
-        
         if (invitedStudents.length > 0) {
-          console.log(`  This student (${student.name}) is a reference and has invited ${invitedStudents.length} students`);
           
-          // Calculate total discount amount from all invited students
           let totalDiscountAmount = 0;
           let discountDetails = [];
           
           for (const invitedStudent of invitedStudents) {
             if (invitedStudent.discountRef) {
               const discount = invitedStudent.discountRef;
-              console.log(`  Invited student ${invitedStudent.name} has discount: ${discount.title} - ${discount.discountAmount}${discount.discountType === 'percent' ? '%' : '৳'}`);
-              
-              // Calculate discount amount based on this student's rent amount
               let studentDiscountAmount = 0;
+              
               if (discount.discountType === 'percent') {
-                studentDiscountAmount = (rentAmount * discount.discountAmount) / 100;
+                studentDiscountAmount = (category.rentAmount * discount.discountAmount) / 100;
               } else {
                 studentDiscountAmount = discount.discountAmount;
               }
@@ -394,83 +197,118 @@ export async function POST(request) {
                 discountType: discount.discountType,
                 discountAmount: studentDiscountAmount
               });
-              
-              console.log(`  Calculated discount amount for this invitation: ${studentDiscountAmount}`);
             }
           }
           
           if (totalDiscountAmount > 0) {
             discountAmount = totalDiscountAmount;
-            console.log(`  Total discount amount for reference student ${student.name}: ${discountAmount}`);
-            
             discountInfo = {
               referenceStudentId: student.id,
               referenceStudentName: student.name,
               totalDiscountAmount: discountAmount,
               invitedStudentsCount: invitedStudents.length,
               discountDetails: discountDetails,
-              note: `Reference student gets discount for inviting ${invitedStudents.length} students`
+              note: `Reference discount for inviting ${invitedStudents.length} students`
             };
           }
-        } else {
-          console.log(`  Student is not a reference (hasn't invited anyone)`);
         }
 
-        console.log(`Creating rent for student ${student.name}: rentAmount=${rentAmount}, externalAmount=${externalAmount}, previousDue=${previousDue}, discountAmount=${discountAmount}`);
+        // 6. Calculate booking amount deduction
+        const bookingAmount = student.bookingAmount || 0;
+        
+        const deductionResult = calculateBookingDeduction(
+          bookingAmount,
+          category.rentAmount,
+          category.externalAmount || 0,
+          carryForwardAdvance
+        );
 
-        // Create new rent record with discount amount
+        // 7. Update student's booking amount if needed
+        if (bookingAmount !== deductionResult.remainingBookingAmount) {
+          await prisma.student.update({
+            where: { id: student.id },
+            data: { bookingAmount: deductionResult.remainingBookingAmount }
+          });
+        }
+
+        // 8. Create new rent record
         const newRent = await prisma.rent.create({
           data: {
             studentId: student.id,
             categoryId: category.id,
-            rentAmount,
-            externalAmount,
+            rentAmount: deductionResult.adjustedRentAmount,
+            externalAmount: deductionResult.adjustedExternalAmount,
             previousDue,
             previousDuePaid,
-            advanceAmount: carryForwardAdvance,
+            advanceAmount: deductionResult.adjustedAdvanceAmount,
             status: 'unpaid',
             rentPaid: 0,
             advancePaid: 0,
             externalPaid: 0,
             paidDate: null,
             paidType: null,
-            discountAmount: discountAmount, // Add discount amount to rent record
+            discountAmount: discountAmount,
           },
         });
-
-        console.log(`Created rent ID: ${newRent.id} for student ${student.name}`);
 
         createdRents.push({
           ...newRent,
           studentName: student.name,
           categoryTitle: category.title,
-          discountAmount, // Add discount amount to response
+          originalBookingAmount: bookingAmount,
+          remainingBookingAmount: deductionResult.remainingBookingAmount,
+          discountAmount,
           discountInfo
         });
 
       } catch (studentError) {
-        console.error(`Error processing student ${student.name} (ID: ${student.id}):`, studentError);
-        // Continue with other students even if one fails
+        console.error(`  ✗ Error processing student ${student.name} (ID: ${student.id}):`, studentError);
+        errorStudents.push({
+          studentId: student.id,
+          studentName: student.name,
+          error: studentError.message
+        });
       }
     }
 
-    console.log(`Successfully created ${createdRents.length} rent records`);
-    console.log('--- End Rent Cron POST (Execute) Debug ---');
+    if (skippedStudents.length > 0) {
+      skippedStudents.forEach(skip => {
+        console.log(`  - ${skip.studentName} (ID: ${skip.studentId}): ${skip.reason}`);
+      });
+    }
+
+    if (errorStudents.length > 0) {
+      errorStudents.forEach(error => {
+        console.log(`  - ${error.studentName} (ID: ${error.studentId}): ${error.error}`);
+      });
+    }
+
 
     return new Response(JSON.stringify({ 
-      message: 'Rents generated successfully', 
-      count: createdRents.length, 
-      rents: createdRents 
+      message: 'Rent generation completed successfully', 
+      summary: {
+        totalStudents: students.length,
+        createdRents: createdRents.length,
+        skippedStudents: skippedStudents.length,
+        errorStudents: errorStudents.length
+      },
+      createdRents,
+      skippedStudents,
+      errorStudents
     }), { 
       status: 200,
       headers: { 'Content-Type': 'application/json' }
     });
 
   } catch (err) {
-    console.error('Error in Rent Cron POST (Execute):', err);
+    console.error('=== Rent Cron Job Error ===');
+    console.error('Error:', err);
+    console.error('Stack:', err.stack);
+    
     return new Response(JSON.stringify({ 
-      message: 'Server error', 
-      error: err.message 
+      message: 'Rent generation failed', 
+      error: err.message,
+      stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
     }), { 
       status: 500,
       headers: { 'Content-Type': 'application/json' }
