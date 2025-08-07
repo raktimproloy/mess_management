@@ -107,11 +107,11 @@ export async function POST(request) {
         profileImage: '',
         hideRanking: 0,
         status: data.status || 'living',
-        category: parseInt(data.categoryId),
         categoryId: parseInt(data.categoryId),
         joiningDate: new Date(data.joiningDate),
         discountId: data.discountId ? parseInt(data.discountId) : null,
         referenceId: data.referenceId ? parseInt(data.referenceId) : null,
+        bookingAmount: data.bookingAmount ? parseFloat(data.bookingAmount) : 0,
       },
     });
     

@@ -48,11 +48,11 @@ model Student {
   profileImage String?  @map("profile_image")
   hideRanking  Int      @default(0) @map("hide_ranking")
   status       String   @default("living") // living, leave
-  category     Int
   categoryId   Int      @map("category_id")
   referenceId  Int?     @map("reference_id") // NEW: reference student ID
   discountId   Int?     @map("discount_id") // NEW: discount ID
   discountAmount Float  @default(0) @map("discount_amount") // NEW: total discount amount for reference students
+  bookingAmount Float   @default(0) @map("booking_amount") // NEW: booking amount
   joiningDate  DateTime @map("joining_date")
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt

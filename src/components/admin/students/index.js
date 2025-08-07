@@ -385,6 +385,7 @@ export default function StudentList() {
               <th className="px-4 py-2 text-left text-xs font-semibold text-white uppercase">SMS Phone</th>
               <th className="px-4 py-2 text-left text-xs font-semibold text-white uppercase">Category</th>
               <th className="px-4 py-2 text-left text-xs font-semibold text-white uppercase">Joining Date</th>
+              <th className="px-4 py-2 text-left text-xs font-semibold text-white uppercase">Booking Amount</th>
               <th className="px-4 py-2 text-left text-xs font-semibold text-white uppercase">Status</th>
               <th className="px-4 py-2 text-left text-xs font-semibold text-white uppercase">Actions</th>
             </tr>
@@ -392,7 +393,7 @@ export default function StudentList() {
           <tbody className="divide-y divide-gray-800">
             {students.length === 0 ? (
               <tr>
-                <td colSpan={7} className="px-4 py-6 text-center text-white">
+                <td colSpan={8} className="px-4 py-6 text-center text-white">
                   {loading ? "Loading students..." : "No students found."}
                 </td>
               </tr>
@@ -407,6 +408,9 @@ export default function StudentList() {
                   </td>
                   <td className="px-4 py-2 text-sm text-white">
                     {new Date(student.joiningDate).toLocaleDateString()}
+                  </td>
+                  <td className="px-4 py-2 text-sm text-white">
+                    {student.bookingAmount ? `₹${student.bookingAmount}` : 'N/A'}
                   </td>
                   <td className="px-4 py-2 text-sm">
                     <span className={`inline-block px-2 py-1 rounded text-xs font-medium ${student.status === 'living' ? 'bg-green-700 text-white' : 'bg-red-700 text-white'}`}>
@@ -442,13 +446,13 @@ export default function StudentList() {
                           Delete
                         </button>
                       )}
-                      <button
+                      {/* <button
                         onClick={() => toast.info(`Opening rent for ${student.name}`)}
                         className="px-2 py-1 border border-blue-400 rounded hover:bg-blue-700 text-blue-300 transition"
                         title="Rent"
                       >
                         Rent
-                      </button>
+                      </button> */}
                     </div>
                   </td>
                 </tr>

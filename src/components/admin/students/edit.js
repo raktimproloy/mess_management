@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import toast, { Toaster } from 'react-hot-toast';
+import { usePreventScroll } from '../../../hooks/usePreventScroll';
 
 function getToken() {
   if (typeof window === 'undefined') return null;
@@ -22,14 +23,19 @@ export default function EditStudent({ student }) {
     phone: "",
     smsPhone: "",
     password: "",
-    category: "",
+    categoryId: "",
     joiningDate: "",
     type: "new",
     dueRent: "",
+    bookingAmount: 0, // NEW: booking amount
   });
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
   const [role, setRole] = useState(null);
+  
+  // Hook to prevent scroll wheel changes on number inputs
+  const bookingAmountRef = usePreventScroll();
+  const dueRentRef = usePreventScroll();
 
   useEffect(() => {
     setRole(getRole());
@@ -57,10 +63,11 @@ export default function EditStudent({ student }) {
         phone: student.phone || "",
         smsPhone: student.smsPhone || student.phone || "",
         password: student.password || student.phone || "",
-        category: student.categoryId || "",
+        categoryId: student.categoryId || "",
         joiningDate: student.joiningDate ? new Date(student.joiningDate).toISOString().split('T')[0] : "",
         type: student.type || "new",
         dueRent: student.dueRent || "",
+        bookingAmount: student.bookingAmount || 0,
       });
     }
   }, [student]);
@@ -89,7 +96,7 @@ export default function EditStudent({ student }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (!form.name || !form.phone || !form.category || !form.joiningDate) {
+    if (!form.name || !form.phone || !form.categoryId || !form.joiningDate) {
       toast.error("Please fill in all required fields");
       return;
     }
@@ -107,9 +114,10 @@ export default function EditStudent({ student }) {
             phone: form.phone,
             smsPhone: form.smsPhone,
             password: form.password,
-            categoryId: form.category,
+            categoryId: form.categoryId,
             joiningDate: form.joiningDate,
-            status: form.type === "old" ? "living" : "living"
+            status: form.type === "old" ? "living" : "living",
+            bookingAmount: form.bookingAmount
           };
         } else if (role === 'student') {
           // Students can only update certain fields
@@ -262,8 +270,8 @@ export default function EditStudent({ student }) {
         <div className="mb-4">
           <label className="block mb-1 text-gray-700 dark:text-gray-300">Category *</label>
           <select
-            name="category"
-            value={form.category}
+            name="categoryId"
+            value={form.categoryId}
             onChange={handleChange}
             className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-[#18181b] dark:text-white dark:border-gray-600"
             required
@@ -291,6 +299,23 @@ export default function EditStudent({ student }) {
             disabled={loading || role === 'student'}
           />
         </div>
+
+        {/* Booking Amount */}
+        <div className="mb-4">
+          <label className="block mb-1 text-gray-700 dark:text-gray-300">Booking Amount</label>
+          <input
+            type="number"
+            name="bookingAmount"
+            value={form.bookingAmount}
+            onChange={handleChange}
+            className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-[#18181b] dark:text-white dark:border-gray-600"
+            placeholder="Enter booking amount"
+            min="0"
+            step="0.01"
+            disabled={loading || role === 'student'}
+            ref={bookingAmountRef}
+          />
+        </div>
         
         {/* Current Due Rent (only if old) */}
         {form.type === "old" && (
@@ -304,6 +329,7 @@ export default function EditStudent({ student }) {
               className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-[#18181b] dark:text-white dark:border-gray-600"
               placeholder="Enter current due rent"
               disabled={loading || role === 'student'}
+              ref={dueRentRef}
             />
           </div>
         )}

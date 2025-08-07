@@ -2,6 +2,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import toast, { Toaster } from "react-hot-toast";
 import { getStudentData } from "../../../lib/auth";
+import { usePreventScroll } from '../../../hooks/usePreventScroll';
 
 const CLOUDINARY_UPLOAD_URL = process.env.NEXT_PUBLIC_CLOUDINARY_URL || "https://api.cloudinary.com/v1_1/dxyneuwlb/image/upload";
 const CLOUDINARY_UPLOAD_PRESET = "mess_management_student"; // You may want to create this preset in Cloudinary
@@ -16,6 +17,9 @@ export default function StudentProfile() {
   const [uploading, setUploading] = useState(false);
   const [loading, setLoading] = useState(true);
   const fileInputRef = useRef();
+  
+  // Hook to prevent scroll wheel changes on number inputs
+  const bookingAmountRef = usePreventScroll();
 
   // Fetch student profile on mount
   useEffect(() => {
@@ -243,6 +247,17 @@ export default function StudentProfile() {
             onChange={handleChange}
             disabled={!editMode}
             className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black dark:text-white dark:bg-[#18181b] disabled:bg-gray-100 dark:disabled:bg-gray-800"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-black dark:text-white mb-1">Booking Amount</label>
+          <input
+            type="number"
+            name="bookingAmount"
+            value={profile.bookingAmount || 0}
+            disabled
+            className="w-full px-3 py-2 border rounded-md text-black dark:text-white bg-gray-100 dark:bg-gray-800 cursor-not-allowed"
+            ref={bookingAmountRef}
           />
         </div>
         <div className="flex items-center gap-3">

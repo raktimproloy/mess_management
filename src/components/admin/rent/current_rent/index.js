@@ -271,20 +271,17 @@ export default function CurrentRent() {
               <th className="px-4 py-2 text-left text-xs font-semibold text-white uppercase">ID</th>
               <th className="px-4 py-2 text-left text-xs font-semibold text-white uppercase">Student</th>
               <th className="px-4 py-2 text-left text-xs font-semibold text-white uppercase">Category</th>
-              <th className="px-4 py-2 text-left text-xs font-semibold text-white uppercase">Month</th>
               <th className="px-4 py-2 text-left text-xs font-semibold text-white uppercase">Rent Amount</th>
+              <th className="px-4 py-2 text-left text-xs font-semibold text-white uppercase">Rent Paid</th>
               <th className="px-4 py-2 text-left text-xs font-semibold text-white uppercase">Advance Amount</th>
+              <th className="px-4 py-2 text-left text-xs font-semibold text-white uppercase">Advance Paid</th>
               <th className="px-4 py-2 text-left text-xs font-semibold text-white uppercase">External Amount</th>
+              <th className="px-4 py-2 text-left text-xs font-semibold text-white uppercase">External Paid</th>
               <th className="px-4 py-2 text-left text-xs font-semibold text-white uppercase">Previous Due</th>
               <th className="px-4 py-2 text-left text-xs font-semibold text-white uppercase">Previous Due Paid</th>
               <th className="px-4 py-2 text-left text-xs font-semibold text-white uppercase">Status</th>
-              <th className="px-4 py-2 text-left text-xs font-semibold text-white uppercase">Rent Paid</th>
-              <th className="px-4 py-2 text-left text-xs font-semibold text-white uppercase">Advance Paid</th>
-              <th className="px-4 py-2 text-left text-xs font-semibold text-white uppercase">External Paid</th>
               <th className="px-4 py-2 text-left text-xs font-semibold text-white uppercase">Paid Date</th>
               <th className="px-4 py-2 text-left text-xs font-semibold text-white uppercase">Paid Type</th>
-              <th className="px-4 py-2 text-left text-xs font-semibold text-white uppercase">Created At</th>
-              <th className="px-4 py-2 text-left text-xs font-semibold text-white uppercase">Updated At</th>
               <th className="px-4 py-2 text-left text-xs font-semibold text-white uppercase">Actions</th>
             </tr>
           </thead>
@@ -300,24 +297,22 @@ export default function CurrentRent() {
                     <td className="px-4 py-2 text-sm text-white">{rent.id}</td>
                     <td className="px-4 py-2 text-sm text-white">{rent.student?.name} <br/><span className="text-xs text-gray-400">ID: {rent.studentId}</span></td>
                     <td className="px-4 py-2 text-sm text-white">{rent.category?.title} <br/><span className="text-xs text-gray-400">ID: {rent.categoryId}</span></td>
-                    <td className="px-4 py-2 text-sm text-white">{rent.monthYear ? new Date(rent.monthYear).toLocaleDateString() : "-"}</td>
-                    <td className="px-4 py-2 text-sm text-white">৳{rent.rentAmount}</td>
-                    <td className="px-4 py-2 text-sm text-white">৳{rent.advanceAmount}</td>
-                    <td className="px-4 py-2 text-sm text-white">৳{rent.externalAmount}</td>
-                    <td className="px-4 py-2 text-sm text-white">৳{rent.previousDue}</td>
-                    <td className="px-4 py-2 text-sm text-white">৳{rent.previousDuePaid}</td>
+                    <td className="px-4 py-2 text-sm text-red-500">৳{rent.rentAmount}</td>
+                    <td className="px-4 py-2 text-sm text-green-500">৳{rent.rentPaid}</td>
+                    <td className="px-4 py-2 text-sm text-red-500">৳{rent.advanceAmount}</td>
+                    <td className="px-4 py-2 text-sm text-green-500">৳{rent.advancePaid}</td>
+                    <td className="px-4 py-2 text-sm text-red-500">৳{rent.externalAmount}</td>
+                    <td className="px-4 py-2 text-sm text-green-500">৳{rent.externalPaid}</td>
+                    <td className="px-4 py-2 text-sm text-red-500">৳{rent.previousDue}</td>
+                    <td className="px-4 py-2 text-sm text-green-500">৳{rent.previousDuePaid}</td>
                     <td className="px-4 py-2 text-sm">
                       <span className={`inline-block px-2 py-1 rounded text-xs font-medium ${rent.status === 'paid' ? 'bg-green-700 text-white' : rent.status === 'partial' ? 'bg-yellow-700 text-white' : 'bg-red-700 text-white'}`}>
                         {rent.status.charAt(0).toUpperCase() + rent.status.slice(1)}
                       </span>
                     </td>
-                    <td className="px-4 py-2 text-sm text-white">৳{rent.rentPaid}</td>
-                    <td className="px-4 py-2 text-sm text-white">৳{rent.advancePaid}</td>
-                    <td className="px-4 py-2 text-sm text-white">৳{rent.externalPaid}</td>
+                    
                     <td className="px-4 py-2 text-sm text-white">{rent.paidDate ? new Date(rent.paidDate).toLocaleString() : "-"}</td>
                     <td className="px-4 py-2 text-sm text-white">{rent.paidType || "-"}</td>
-                    <td className="px-4 py-2 text-sm text-white">{rent.createdAt ? new Date(rent.createdAt).toLocaleString() : "-"}</td>
-                    <td className="px-4 py-2 text-sm text-white">{rent.updatedAt ? new Date(rent.updatedAt).toLocaleString() : "-"}</td>
                     <td className="px-4 py-2 text-sm text-white">
                       <div className="flex gap-2">
                         <button
@@ -334,13 +329,13 @@ export default function CurrentRent() {
                         >
                           Pay
                         </button>
-                        <button
+                        {/* <button
                           onClick={() => toast.info(`Profile: ${rent.student?.name}`)}
                           className="px-2 py-1 border border-gray-400 rounded hover:bg-gray-700 text-gray-300 transition"
                           title="Profile"
                         >
                           Profile
-                        </button>
+                        </button> */}
                       </div>
                     </td>
                   </tr>

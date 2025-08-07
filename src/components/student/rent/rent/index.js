@@ -361,15 +361,19 @@ export default function DueRent() {
               <tr>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-300 uppercase">Month/Year</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-300 uppercase">Rent</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-300 uppercase">Paid Rent</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-300 uppercase">Advance</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-300 uppercase">Paid Advance</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-300 uppercase">External</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-300 uppercase">Paid External</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-300 uppercase">Previous Due</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-300 uppercase">Paid Previous Due</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-300 uppercase">Total Due</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-300 uppercase">Status</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-300 uppercase">Paid Rent</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-300 uppercase">Paid Advance</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-300 uppercase">Paid External</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-300 uppercase">Paid Previous Due</th>
+                
+                
+                
+                
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-300 uppercase">Paid Date</th>
               </tr>
             </thead>
@@ -383,18 +387,18 @@ export default function DueRent() {
                   <React.Fragment key={rent.id}>
                     <tr>
                       <td className="px-4 py-3 text-sm text-white">{formatDate(rent.createdAt)}</td>
-                      <td className="px-4 py-3 text-sm text-white">₹{rent.rentAmount || 0}</td>
-                      <td className="px-4 py-3 text-sm text-white">₹{rent.advanceAmount || 0}</td>
-                      <td className="px-4 py-3 text-sm text-white">₹{rent.externalAmount || 0}</td>
-                      <td className="px-4 py-3 text-sm text-white">₹{rent.previousDue || 0}</td>
+                      <td className="px-4 py-3 text-sm text-red-500">₹{rent.rentAmount || 0}</td>
+                      <td className="px-4 py-3 text-sm text-green-500">₹{rent.rentPaid || 0}</td>
+                      <td className="px-4 py-3 text-sm text-red-500">₹{rent.advanceAmount || 0}</td>
+                      <td className="px-4 py-3 text-sm text-green-500">₹{rent.advancePaid || 0}</td>
+                      <td className="px-4 py-3 text-sm text-red-500">₹{rent.externalAmount || 0}</td>
+                      <td className="px-4 py-3 text-sm text-green-500">₹{rent.externalPaid || 0}</td>
+                      <td className="px-4 py-3 text-sm text-red-500">₹{rent.previousDue || 0}</td>
+                      <td className="px-4 py-3 text-sm text-green-500">₹{rent.previousDuePaid || 0}</td>
                       <td className="px-4 py-3 text-sm text-white">₹{rent.totalDue || 0}</td>
                       <td className="px-4 py-3 text-sm">
                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(rent.status)}`}>{rent.status}</span>
                       </td>
-                      <td className="px-4 py-3 text-sm text-white">₹{rent.rentPaid || 0}</td>
-                      <td className="px-4 py-3 text-sm text-white">₹{rent.advancePaid || 0}</td>
-                      <td className="px-4 py-3 text-sm text-white">₹{rent.externalPaid || 0}</td>
-                      <td className="px-4 py-3 text-sm text-white">₹{rent.previousDuePaid || 0}</td>
                       <td className="px-4 py-3 text-sm text-white">{rent.paidDate ? new Date(rent.paidDate).toLocaleString() : '-'}</td>
                     </tr>
                     {expandedRentId === rent.id && (

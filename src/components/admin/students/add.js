@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import toast, { Toaster } from 'react-hot-toast';
+import { usePreventScroll } from '../../../hooks/usePreventScroll';
 
 function getToken() {
   if (typeof window === 'undefined') return null;
@@ -14,7 +15,7 @@ export default function AddStudent() {
     phone: "",
     smsPhone: "",
     password: "",
-    category: "",
+    categoryId: "",
     joiningDate: "",
     type: "new",
     dueRent: "",
@@ -24,11 +25,19 @@ export default function AddStudent() {
     previousDue: 0,
     referenceId: "", // NEW: reference student ID
     discountId: "", // NEW: discount ID
+    bookingAmount: 0, // NEW: booking amount
   });
   const [categories, setCategories] = useState([]);
   const [livingStudents, setLivingStudents] = useState([]); // NEW: living students for reference
   const [discounts, setDiscounts] = useState([]); // NEW: discounts list
   const [loading, setLoading] = useState(false);
+  
+  // Hook to prevent scroll wheel changes on number inputs
+  const bookingAmountRef = usePreventScroll();
+  const currentMonthRentDueRef = usePreventScroll();
+  const currentMonthExternalDueRef = usePreventScroll();
+  const currentMonthAdvanceDueRef = usePreventScroll();
+  const previousDueRef = usePreventScroll();
 
   useEffect(() => {
     async function fetchCategories() {
@@ -38,7 +47,7 @@ export default function AddStudent() {
         const data = await res.json();
         setCategories(data.categories || []);
         if (data.categories && data.categories.length > 0) {
-          setForm((prev) => ({ ...prev, category: data.categories[0].id }));
+          setForm((prev) => ({ ...prev, categoryId: data.categories[0].id }));
         }
       } catch (error) {
         toast.error("Error loading categories");
@@ -139,7 +148,7 @@ export default function AddStudent() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (!form.name || !form.phone || !form.category || !form.joiningDate) {
+    if (!form.name || !form.phone || !form.categoryId || !form.joiningDate) {
       toast.error("Please fill in all required fields");
       return;
     }
@@ -160,11 +169,12 @@ export default function AddStudent() {
             phone: form.phone,
             smsPhone: form.smsPhone,
             password: form.password,
-            categoryId: form.category,
+            categoryId: form.categoryId,
             joiningDate: form.joiningDate,
             status: form.type === "old" ? "living" : "living",
             referenceId: form.referenceId || null,
-            discountId: form.discountId || null
+            discountId: form.discountId || null,
+            bookingAmount: form.bookingAmount
           }),
         });
 
@@ -186,7 +196,7 @@ export default function AddStudent() {
             },
             body: JSON.stringify({
               studentId: newStudent.id,
-              categoryId: form.category,
+              categoryId: form.categoryId,
               rentAmount: form.currentMonthRentDue,
               externalAmount: form.currentMonthExternalDue,
               advanceAmount: form.currentMonthAdvanceDue,
@@ -214,7 +224,7 @@ export default function AddStudent() {
           phone: "",
           smsPhone: "",
           password: "",
-          category: categories.length > 0 ? categories[0].id : "",
+          categoryId: categories.length > 0 ? categories[0].id : "",
           joiningDate: "",
           type: "new",
           dueRent: "",
@@ -224,6 +234,7 @@ export default function AddStudent() {
           previousDue: 0,
           referenceId: "",
           discountId: "",
+          bookingAmount: 0,
         });
         resolve("Student created successfully");
       } catch (error) {
@@ -350,8 +361,8 @@ export default function AddStudent() {
         <div className="mb-4">
           <label className="block mb-1 text-gray-700 dark:text-gray-300">Category *</label>
           <select
-            name="category"
-            value={form.category}
+            name="categoryId"
+            value={form.categoryId}
             onChange={handleChange}
             className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-[#18181b] dark:text-white dark:border-gray-600"
             required
@@ -378,6 +389,21 @@ export default function AddStudent() {
             placeholder="Enter joining date"
             required
             disabled={loading}
+          />
+        </div>
+
+        {/* Booking Amount */}
+        <div className="mb-4">
+          <label className="block mb-1 text-gray-700 dark:text-gray-300">Booking Amount</label>
+          <input
+            type="number"
+            name="bookingAmount"
+            value={form.bookingAmount || 0}
+            onChange={handleChange}
+            className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-[#18181b] dark:text-white dark:border-gray-600"
+            placeholder="Enter booking amount"
+            disabled={loading}
+            ref={bookingAmountRef}
           />
         </div>
 
@@ -452,6 +478,7 @@ export default function AddStudent() {
                 placeholder="Enter current month rent due"
                 min="0"
                 disabled={loading}
+                ref={currentMonthRentDueRef}
               />
             </div>
             <div className="mb-4">
@@ -465,6 +492,7 @@ export default function AddStudent() {
                 placeholder="Enter current month external due"
                 min="0"
                 disabled={loading}
+                ref={currentMonthExternalDueRef}
               />
             </div>
             <div className="mb-4">
@@ -478,6 +506,7 @@ export default function AddStudent() {
                 placeholder="Enter current month advance due"
                 min="0"
                 disabled={loading}
+                ref={currentMonthAdvanceDueRef}
               />
             </div>
             <div className="mb-4">
@@ -491,6 +520,7 @@ export default function AddStudent() {
                 placeholder="Enter previous due"
                 min="0"
                 disabled={loading}
+                ref={previousDueRef}
               />
             </div>
           </>

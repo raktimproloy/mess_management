@@ -30,6 +30,14 @@ export async function POST(request) {
       });
     }
 
+    // Check if student status is 'leave' - prevent login
+    if (student.status === 'leave') {
+      return new Response(JSON.stringify({ message: 'Account is deactivated. Please contact administrator.' }), {
+        status: 403,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
     // Verify password - support both hashed and plain text passwords for backward compatibility
     let passwordMatch = false;
     if (student.password.startsWith('$2b$')) {

@@ -42,15 +42,43 @@ export async function PUT(request, context) {
     let updateData = {};
     
     if (user.role === 'admin') {
-      updateData = { ...data };
-      delete updateData.id;
+      // Only allow specific fields to be updated
+      const allowedFields = [
+        'name', 'phone', 'smsPhone', 'password', 'profileImage', 'hideRanking',
+        'status', 'categoryId', 'referenceId', 'discountId', 'discountAmount',
+        'bookingAmount', 'joiningDate'
+      ];
+      
+      updateData = {};
+      for (const key of Object.keys(data)) {
+        if (allowedFields.includes(key)) {
+          updateData[key] = data[key];
+        }
+      }
       
       // Convert categoryId to integer if present
       if (updateData.categoryId) {
         updateData.categoryId = parseInt(updateData.categoryId);
       }
-      if (updateData.category) {
-        updateData.category = parseInt(updateData.category);
+      
+      // Convert bookingAmount to float if present
+      if (updateData.bookingAmount !== undefined) {
+        updateData.bookingAmount = parseFloat(updateData.bookingAmount);
+      }
+      
+      // Convert discountAmount to float if present
+      if (updateData.discountAmount !== undefined) {
+        updateData.discountAmount = parseFloat(updateData.discountAmount);
+      }
+      
+      // Convert referenceId to integer if present
+      if (updateData.referenceId !== undefined) {
+        updateData.referenceId = updateData.referenceId ? parseInt(updateData.referenceId) : null;
+      }
+      
+      // Convert discountId to integer if present
+      if (updateData.discountId !== undefined) {
+        updateData.discountId = updateData.discountId ? parseInt(updateData.discountId) : null;
       }
       
       // If status is being changed from leave to living, update joiningDate
