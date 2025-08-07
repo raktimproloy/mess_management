@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { toast } from "react-hot-toast";
 import { getStudentData } from "../../../../lib/auth";
 
@@ -21,10 +21,9 @@ export default function DueRent() {
     bikashNumber: "",
     trxId: ""
   });
-  // Add state to store payment requests
   const [paymentRequests, setPaymentRequests] = useState([]);
-  const [expandedRentId, setExpandedRentId] = useState(null);
   const [currentMonthHistory, setCurrentMonthHistory] = useState([]);
+  const [selectedTab, setSelectedTab] = useState('current');
 
   const studentData = getStudentData();
 
@@ -47,7 +46,6 @@ export default function DueRent() {
       }
     }
     fetchPaymentRequests();
-    // Optionally, refetch when rent data changes
   }, [currentRent, previousRents]);
 
   // Fetch current month's rent history for the student
@@ -130,7 +128,6 @@ export default function DueRent() {
   const openModal = (type, rent = null) => {
     setModal({ open: true, type, rent });
     if (rent) {
-      // Calculate remaining due for each field
       const remainingRent = (rent.rentAmount || 0) - (rent.rentPaid || 0);
       const remainingAdvance = (rent.advanceAmount || 0) - (rent.advancePaid || 0);
       const remainingExternal = (rent.externalAmount || 0) - (rent.externalPaid || 0);
@@ -193,7 +190,7 @@ export default function DueRent() {
 
       toast.success('Payment request created successfully!');
       closeModal();
-      fetchRentData(); // Refresh data
+      fetchRentData();
     } catch (error) {
       console.error('Error creating payment request:', error);
       toast.error('Failed to create payment request');
@@ -202,10 +199,10 @@ export default function DueRent() {
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'paid': return 'text-green-600 bg-green-100 dark:bg-green-900 dark:text-green-300';
-      case 'partial': return 'text-yellow-600 bg-yellow-100 dark:bg-yellow-900 dark:text-yellow-300';
-      case 'unpaid': return 'text-red-600 bg-red-100 dark:bg-red-900 dark:text-red-300';
-      default: return 'text-gray-600 bg-gray-100 dark:bg-gray-700 dark:text-gray-300';
+      case 'paid': return 'bg-green-500/20 text-green-400 border-green-500/30';
+      case 'partial': return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30';
+      case 'unpaid': return 'bg-red-500/20 text-red-400 border-red-500/30';
+      default: return 'bg-gray-500/20 text-gray-400 border-gray-500/30';
     }
   };
 
@@ -216,389 +213,388 @@ export default function DueRent() {
     });
   };
 
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(amount || 0);
+  };
+
   if (loading) {
     return (
-      <div className="p-6 bg-gray-900 min-h-screen flex items-center justify-center">
-        <div className="text-white text-xl">Loading...</div>
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 flex items-center justify-center p-4">
+        <div className="bg-white/10 backdrop-blur-lg rounded-3xl p-8 border border-white/20 shadow-2xl text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+          <p className="text-white text-lg">Loading your rent information...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="p-6 bg-gray-900 min-h-screen">
-      {currentMonthHistory.length > 0 && (
-        <div className="bg-green-900 rounded-lg p-4 mb-6">
-          <h3 className="text-lg font-semibold text-white mb-2">Current Month Paid Rent History</h3>
-          <table className="min-w-full divide-y divide-green-700 text-sm">
-            <thead>
-              <tr>
-                <th className="px-2 py-1 text-left text-green-200">Paid Date</th>
-                <th className="px-2 py-1 text-left text-green-200">Paid Rent</th>
-                <th className="px-2 py-1 text-left text-green-200">Paid Advance</th>
-                <th className="px-2 py-1 text-left text-green-200">Paid External</th>
-                <th className="px-2 py-1 text-left text-green-200">Payment Type</th>
-                <th className="px-2 py-1 text-left text-green-200">Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {currentMonthHistory.map((h) => (
-                <tr key={h.id}>
-                  <td className="px-2 py-1 text-green-100">{new Date(h.paidDate).toLocaleString()}</td>
-                  <td className="px-2 py-1 text-green-100">₹{h.paidRent}</td>
-                  <td className="px-2 py-1 text-green-100">₹{h.paidAdvance}</td>
-                  <td className="px-2 py-1 text-green-100">₹{h.paidExternal}</td>
-                  <td className="px-2 py-1 text-green-100">{h.paymentType}</td>
-                  <td className="px-2 py-1 text-green-100">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${h.status === 'approved' ? 'bg-green-600 text-white' : h.status === 'rejected' ? 'bg-red-600 text-white' : 'bg-yellow-600 text-white'}`}>{h.status}</span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-      {/* Current Month Summary */}
-      {currentRent ? (
-        <div className="bg-gray-800 rounded-lg shadow-lg p-6 mb-6 border border-gray-700">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div className="text-xl font-bold text-white">
-              Current Month: {formatDate(currentRent.createdAt)}
-            </div>
-            <div className="flex gap-6 flex-wrap text-gray-300">
-              <div>Rent: <span className="font-bold text-white">₹{currentRent.rentAmount || 0}</span></div>
-              <div>Advance: <span className="font-bold text-white">₹{currentRent.advanceAmount || 0}</span></div>
-              <div>External: <span className="font-bold text-white">₹{currentRent.externalAmount || 0}</span></div>
-              <div>Previous Due: <span className="font-bold text-white">₹{currentRent.previousDue || 0}</span></div>
-              <div>Total Due: <span className="font-bold text-white">₹{currentRent.totalDue || 0}</span></div>
-            </div>
-            <div className="flex gap-2">
-              <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(currentRent.status)}`}>
-                {currentRent.status}
-              </span>
-              {currentRent.status !== 'paid' && (
-                getPendingRequestForRent(currentRent.id) ? (
-                  <>
-                    <button className="px-4 py-2 rounded-md bg-yellow-500 text-white font-semibold cursor-not-allowed" disabled>Pending</button>
-                    <button
-                      className="px-4 py-2 rounded-md bg-red-600 text-white font-semibold ml-2"
-                      onClick={async () => {
-                        const token = localStorage.getItem('studentToken');
-                        const req = getPendingRequestForRent(currentRent.id);
-                        if (!req) return;
-                        const res = await fetch(`/api/payment-request?id=${req.id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
-                        if (res.ok) {
-                          toast.success('Request cancelled');
-                          // Refetch payment requests and rent data
-                          fetchRentData();
-                        } else {
-                          toast.error('Failed to cancel request');
-                        }
-                      }}
-                    >Cancel Request</button>
-                  </>
-                ) : (
-                  <button
-                    onClick={() => openModal("payment", currentRent)}
-                    className="px-4 py-2 rounded-md bg-blue-600 text-white font-semibold hover:bg-blue-700 transition"
-                  >
-                    Request Payment
-                  </button>
-                )
-              )}
-            </div>
-          </div>
-          {currentRent && (
-            <div className="bg-gray-700 rounded-lg p-4 mb-6">
-              <h3 className="text-lg font-semibold text-white mb-2">Payment Requests for This Month</h3>
-              {getRequestsForRent(currentRent.id).length === 0 ? (
-                <div className="text-gray-300">No payment requests for this month.</div>
-              ) : (
-                <table className="min-w-full divide-y divide-gray-600 text-sm">
-                  <thead>
-                    <tr>
-                      <th className="px-2 py-1 text-left text-gray-300">Date</th>
-                      <th className="px-2 py-1 text-left text-gray-300">Amount</th>
-                      <th className="px-2 py-1 text-left text-gray-300">Method</th>
-                      <th className="px-2 py-1 text-left text-gray-300">Status</th>
-                      <th className="px-2 py-1 text-left text-gray-300">TRX ID</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {getRequestsForRent(currentRent.id).map(req => (
-                      <tr key={req.id}>
-                        <td className="px-2 py-1 text-gray-200">{new Date(req.createdAt).toLocaleString()}</td>
-                        <td className="px-2 py-1 text-gray-200">₹{req.totalAmount}</td>
-                        <td className="px-2 py-1 text-gray-200">{req.paymentMethod}</td>
-                        <td className="px-2 py-1 text-gray-200">
-                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${req.status === 'pending' ? 'bg-yellow-600 text-white' : req.status === 'approved' ? 'bg-green-600 text-white' : req.status === 'rejected' ? 'bg-red-600 text-white' : req.status === 'cancelled' ? 'bg-gray-500 text-white' : 'bg-gray-700 text-gray-300'}`}>{req.status}</span>
-                        </td>
-                        <td className="px-2 py-1 text-gray-200">{req.trxId || '-'}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              )}
-            </div>
-          )}
-        </div>
-      ) : (
-        <div className="bg-gray-800 rounded-lg shadow-lg p-6 mb-6 border border-gray-700">
-          <div className="text-center text-gray-400">
-            <div className="text-xl font-bold text-white mb-2">Current Month</div>
-            <div>No rent data available for current month</div>
-          </div>
-        </div>
-      )}
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 p-4">
+      {/* Header */}
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-white mb-2">💰 Rent Management</h1>
+        <p className="text-gray-300 text-sm">Track your rent payments and requests</p>
+      </div>
 
-      {/* Previous Months Table */}
-      <div className="bg-gray-800 rounded-lg shadow-lg border border-gray-700">
-        <div className="px-6 py-4 border-b border-gray-700">
-          <h2 className="text-xl font-semibold text-white">Previous Months</h2>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-700">
-            <thead className="bg-gray-700">
-              <tr>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-300 uppercase">Month/Year</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-300 uppercase">Rent</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-300 uppercase">Paid Rent</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-300 uppercase">Advance</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-300 uppercase">Paid Advance</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-300 uppercase">External</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-300 uppercase">Paid External</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-300 uppercase">Previous Due</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-300 uppercase">Paid Previous Due</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-300 uppercase">Total Due</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-300 uppercase">Status</th>
-                
-                
-                
-                
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-300 uppercase">Paid Date</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-700">
-              {previousRents.length === 0 ? (
-                <tr>
-                  <td colSpan={12} className="px-4 py-6 text-center text-gray-400">No previous rent data found.</td>
-                </tr>
-              ) : (
-                previousRents.map((rent) => (
-                  <React.Fragment key={rent.id}>
-                    <tr>
-                      <td className="px-4 py-3 text-sm text-white">{formatDate(rent.createdAt)}</td>
-                      <td className="px-4 py-3 text-sm text-red-500">₹{rent.rentAmount || 0}</td>
-                      <td className="px-4 py-3 text-sm text-green-500">₹{rent.rentPaid || 0}</td>
-                      <td className="px-4 py-3 text-sm text-red-500">₹{rent.advanceAmount || 0}</td>
-                      <td className="px-4 py-3 text-sm text-green-500">₹{rent.advancePaid || 0}</td>
-                      <td className="px-4 py-3 text-sm text-red-500">₹{rent.externalAmount || 0}</td>
-                      <td className="px-4 py-3 text-sm text-green-500">₹{rent.externalPaid || 0}</td>
-                      <td className="px-4 py-3 text-sm text-red-500">₹{rent.previousDue || 0}</td>
-                      <td className="px-4 py-3 text-sm text-green-500">₹{rent.previousDuePaid || 0}</td>
-                      <td className="px-4 py-3 text-sm text-white">₹{rent.totalDue || 0}</td>
-                      <td className="px-4 py-3 text-sm">
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(rent.status)}`}>{rent.status}</span>
-                      </td>
-                      <td className="px-4 py-3 text-sm text-white">{rent.paidDate ? new Date(rent.paidDate).toLocaleString() : '-'}</td>
-                    </tr>
-                    {expandedRentId === rent.id && (
-                      <tr>
-                        <td colSpan={8} className="bg-gray-700 p-3">
-                          <h4 className="text-sm font-semibold text-white mb-2">Payment Requests</h4>
-                          {getRequestsForRent(rent.id).length === 0 ? (
-                            <div className="text-gray-300">No payment requests for this month.</div>
-                          ) : (
-                            <table className="min-w-full divide-y divide-gray-600 text-xs">
-                              <thead>
-                                <tr>
-                                  <th className="px-2 py-1 text-left text-gray-300">Date</th>
-                                  <th className="px-2 py-1 text-left text-gray-300">Amount</th>
-                                  <th className="px-2 py-1 text-left text-gray-300">Method</th>
-                                  <th className="px-2 py-1 text-left text-gray-300">Status</th>
-                                  <th className="px-2 py-1 text-left text-gray-300">TRX ID</th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {getRequestsForRent(rent.id).map(req => (
-                                  <tr key={req.id}>
-                                    <td className="px-2 py-1 text-gray-200">{new Date(req.createdAt).toLocaleString()}</td>
-                                    <td className="px-2 py-1 text-gray-200">₹{req.totalAmount}</td>
-                                    <td className="px-2 py-1 text-gray-200">{req.paymentMethod}</td>
-                                    <td className="px-2 py-1 text-gray-200">
-                                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${req.status === 'pending' ? 'bg-yellow-600 text-white' : req.status === 'approved' ? 'bg-green-600 text-white' : req.status === 'rejected' ? 'bg-red-600 text-white' : req.status === 'cancelled' ? 'bg-gray-500 text-white' : 'bg-gray-700 text-gray-300'}`}>{req.status}</span>
-                                    </td>
-                                    <td className="px-2 py-1 text-gray-200">{req.trxId || '-'}</td>
-                                  </tr>
-                                ))}
-                              </tbody>
-                            </table>
-                          )}
-                        </td>
-                      </tr>
-                    )}
-                  </React.Fragment>
-                ))
-              )}
-            </tbody>
-          </table>
+      {/* Tab Navigation */}
+      <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-1 mb-6 border border-white/20">
+        <div className="flex">
+          <button
+            onClick={() => setSelectedTab('current')}
+            className={`flex-1 py-3 px-4 rounded-xl text-sm font-medium transition-all duration-300 ${
+              selectedTab === 'current'
+                ? 'bg-white/20 text-white shadow-lg'
+                : 'text-gray-300 hover:text-white'
+            }`}
+          >
+            📅 Current Month
+          </button>
+          <button
+            onClick={() => setSelectedTab('history')}
+            className={`flex-1 py-3 px-4 rounded-xl text-sm font-medium transition-all duration-300 ${
+              selectedTab === 'history'
+                ? 'bg-white/20 text-white shadow-lg'
+                : 'text-gray-300 hover:text-white'
+            }`}
+          >
+            📚 Payment History
+          </button>
         </div>
       </div>
 
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex justify-between items-center mt-6">
-          <div className="text-sm text-gray-400">Page {page} of {totalPages}</div>
-          <div className="flex gap-2">
-            <button
-              onClick={() => handlePageChange(page - 1)}
-              disabled={page === 1}
-              className="px-3 py-1 rounded bg-gray-700 text-white hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Previous
-            </button>
-            {Array.from({ length: totalPages }, (_, i) => (
-              <button
-                key={i + 1}
-                onClick={() => handlePageChange(i + 1)}
-                className={`px-3 py-1 rounded ${
-                  page === i + 1 
-                    ? "bg-blue-600 text-white" 
-                    : "bg-gray-700 text-white hover:bg-gray-600"
-                }`}
-              >
-                {i + 1}
-              </button>
-            ))}
-            <button
-              onClick={() => handlePageChange(page + 1)}
-              disabled={page === totalPages}
-              className="px-3 py-1 rounded bg-gray-700 text-white hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Next
-            </button>
-          </div>
+      {/* Current Month Tab */}
+      {selectedTab === 'current' && (
+        <div className="space-y-6">
+          {/* Current Month Summary Card */}
+          {currentRent ? (
+            <div className="bg-white/10 backdrop-blur-lg rounded-3xl p-6 border border-white/20 shadow-2xl">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h2 className="text-xl font-bold text-white mb-1">
+                    {formatDate(currentRent.createdAt)}
+                  </h2>
+                  <p className="text-gray-300 text-sm">Current Month Rent</p>
+                </div>
+                <div className={`px-4 py-2 rounded-full text-sm font-medium border ${getStatusColor(currentRent.status)}`}>
+                  {currentRent.status.toUpperCase()}
+                </div>
+              </div>
+
+              {/* Amount Cards */}
+              <div className="grid grid-cols-2 gap-4 mb-6">
+                <div className="bg-red-500/20 rounded-2xl p-4 border border-red-500/30">
+                  <div className="text-red-300 text-sm mb-1">Total Due</div>
+                  <div className="text-white text-xl font-bold">{formatCurrency(currentRent.totalDue)}</div>
+                </div>
+                <div className="bg-green-500/20 rounded-2xl p-4 border border-green-500/30">
+                  <div className="text-green-300 text-sm mb-1">Total Paid</div>
+                  <div className="text-white text-xl font-bold">
+                    {formatCurrency((currentRent.rentPaid || 0) + (currentRent.advancePaid || 0) + (currentRent.externalPaid || 0) + (currentRent.previousDuePaid || 0))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Detailed Breakdown */}
+              <div className="space-y-3 mb-6">
+                <div className="flex justify-between items-center py-2 border-b border-white/10">
+                  <span className="text-gray-300">Rent Amount</span>
+                  <div className="text-right">
+                    <div className="text-white font-medium">{formatCurrency(currentRent.rentAmount)}</div>
+                    <div className="text-green-400 text-sm">Paid: {formatCurrency(currentRent.rentPaid)}</div>
+                  </div>
+                </div>
+                <div className="flex justify-between items-center py-2 border-b border-white/10">
+                  <span className="text-gray-300">Advance</span>
+                  <div className="text-right">
+                    <div className="text-white font-medium">{formatCurrency(currentRent.advanceAmount)}</div>
+                    <div className="text-green-400 text-sm">Paid: {formatCurrency(currentRent.advancePaid)}</div>
+                  </div>
+                </div>
+                <div className="flex justify-between items-center py-2 border-b border-white/10">
+                  <span className="text-gray-300">External</span>
+                  <div className="text-right">
+                    <div className="text-white font-medium">{formatCurrency(currentRent.externalAmount)}</div>
+                    <div className="text-green-400 text-sm">Paid: {formatCurrency(currentRent.externalPaid)}</div>
+                  </div>
+                </div>
+                <div className="flex justify-between items-center py-2">
+                  <span className="text-gray-300">Previous Due</span>
+                  <div className="text-right">
+                    <div className="text-white font-medium">{formatCurrency(currentRent.previousDue)}</div>
+                    <div className="text-green-400 text-sm">Paid: {formatCurrency(currentRent.previousDuePaid)}</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Button */}
+              {currentRent.status !== 'paid' && (
+                <div className="flex gap-3">
+                  {getPendingRequestForRent(currentRent.id) ? (
+                    <>
+                      <button className="flex-1 py-3 px-4 bg-yellow-500/20 text-yellow-400 rounded-xl border border-yellow-500/30 font-medium" disabled>
+                        ⏳ Pending Request
+                      </button>
+                      <button
+                        className="py-3 px-4 bg-red-500/20 text-red-400 rounded-xl border border-red-500/30 font-medium"
+                        onClick={async () => {
+                          const token = localStorage.getItem('studentToken');
+                          const req = getPendingRequestForRent(currentRent.id);
+                          if (!req) return;
+                          const res = await fetch(`/api/payment-request?id=${req.id}`, { 
+                            method: 'DELETE', 
+                            headers: { 'Authorization': `Bearer ${token}` } 
+                          });
+                          if (res.ok) {
+                            toast.success('Request cancelled');
+                            fetchRentData();
+                          } else {
+                            toast.error('Failed to cancel request');
+                          }
+                        }}
+                      >
+                        ❌ Cancel
+                      </button>
+                    </>
+                  ) : (
+                    <button
+                      onClick={() => openModal("payment", currentRent)}
+                      className="flex-1 py-3 px-4 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-xl font-medium hover:from-blue-600 hover:to-purple-600 transition-all duration-300 transform hover:scale-105"
+                    >
+                      💳 Request Payment
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="bg-white/10 backdrop-blur-lg rounded-3xl p-8 border border-white/20 shadow-2xl text-center">
+              <div className="text-4xl mb-4">📋</div>
+              <h3 className="text-xl font-bold text-white mb-2">No Current Rent</h3>
+              <p className="text-gray-300">No rent data available for the current month</p>
+            </div>
+          )}
+
+          {/* Current Month Payment History */}
+          {currentMonthHistory.length > 0 && (
+            <div className="bg-white/10 backdrop-blur-lg rounded-3xl p-6 border border-white/20 shadow-2xl">
+              <h3 className="text-lg font-bold text-white mb-4">📊 This Month's Payments</h3>
+              <div className="space-y-3">
+                {currentMonthHistory.map((h) => (
+                  <div key={h.id} className="bg-white/5 rounded-2xl p-4 border border-white/10">
+                    <div className="flex justify-between items-start mb-2">
+                      <div className="text-white font-medium">
+                        {new Date(h.paidDate).toLocaleDateString()}
+                      </div>
+                      <div className={`px-3 py-1 rounded-full text-xs font-medium ${
+                        h.status === 'approved' ? 'bg-green-500/20 text-green-400' : 
+                        h.status === 'rejected' ? 'bg-red-500/20 text-red-400' : 
+                        'bg-yellow-500/20 text-yellow-400'
+                      }`}>
+                        {h.status}
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-3 gap-2 text-sm">
+                      <div className="text-center">
+                        <div className="text-gray-300">Rent</div>
+                        <div className="text-white font-medium">{formatCurrency(h.paidRent)}</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-gray-300">Advance</div>
+                        <div className="text-white font-medium">{formatCurrency(h.paidAdvance)}</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-gray-300">External</div>
+                        <div className="text-white font-medium">{formatCurrency(h.paidExternal)}</div>
+                      </div>
+                    </div>
+                    <div className="mt-2 text-center">
+                      <div className="text-gray-300 text-xs">Payment Type: {h.paymentType}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Payment Requests */}
+          {currentRent && getRequestsForRent(currentRent.id).length > 0 && (
+            <div className="bg-white/10 backdrop-blur-lg rounded-3xl p-6 border border-white/20 shadow-2xl">
+              <h3 className="text-lg font-bold text-white mb-4">📝 Payment Requests</h3>
+              <div className="space-y-3">
+                {getRequestsForRent(currentRent.id).map(req => (
+                  <div key={req.id} className="bg-white/5 rounded-2xl p-4 border border-white/10">
+                    <div className="flex justify-between items-start mb-2">
+                      <div className="text-white font-medium">
+                        {new Date(req.createdAt).toLocaleDateString()}
+                      </div>
+                      <div className={`px-3 py-1 rounded-full text-xs font-medium ${
+                        req.status === 'pending' ? 'bg-yellow-500/20 text-yellow-400' : 
+                        req.status === 'approved' ? 'bg-green-500/20 text-green-400' : 
+                        req.status === 'rejected' ? 'bg-red-500/20 text-red-400' : 
+                        'bg-gray-500/20 text-gray-400'
+                      }`}>
+                        {req.status}
+                      </div>
+                    </div>
+                    <div className="space-y-1 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-gray-300">Amount:</span>
+                        <span className="text-white font-medium">{formatCurrency(req.totalAmount)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-300">Method:</span>
+                        <span className="text-white">{req.paymentMethod}</span>
+                      </div>
+                      {req.trxId && (
+                        <div className="flex justify-between">
+                          <span className="text-gray-300">TRX ID:</span>
+                          <span className="text-white text-xs">{req.trxId}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
 
+      {/* History Tab */}
+        {selectedTab === 'history' && <RentHistory />}
+
       {/* Payment Request Modal */}
       {modal.open && modal.type === "payment" && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-gray-800 rounded-lg shadow-lg w-full max-w-md p-6 relative border border-gray-700">
-            <button
-              onClick={closeModal}
-              className="absolute top-2 right-2 text-gray-400 text-xl font-bold hover:text-white"
-              title="Close"
-            >
-              ×
-            </button>
-            <h2 className="text-xl font-semibold mb-4 text-white text-center">Payment Request</h2>
-            <div className="mb-4 text-gray-300">
-              <div className="mb-4">
-                <div>Month: <span className="font-bold text-white">{formatDate(modal.rent.createdAt)}</span></div>
-                <div>Total Due: <span className="font-bold text-white">₹{modal.rent.totalDue || 0}</span></div>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <div className="bg-white/10 backdrop-blur-lg rounded-3xl w-full max-w-md p-6 border border-white/20 shadow-2xl">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-bold text-white">💳 Payment Request</h2>
+              <button
+                onClick={closeModal}
+                className="text-gray-400 hover:text-white text-2xl font-bold transition-colors"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="space-y-4 mb-6">
+              <div className="bg-white/5 rounded-2xl p-4 border border-white/10">
+                <div className="text-gray-300 text-sm mb-1">Month</div>
+                <div className="text-white font-medium">{formatDate(modal.rent.createdAt)}</div>
+                <div className="text-gray-300 text-sm mt-1">Total Due: {formatCurrency(modal.rent.totalDue)}</div>
               </div>
-              
-              <div className="space-y-3">
+
+              <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-1">Rent Amount</label>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Rent Amount</label>
                   <input
                     type="number"
                     value={paymentForm.rentAmount}
                     onChange={(e) => setPaymentForm(prev => ({ ...prev, rentAmount: parseFloat(e.target.value) || 0 }))}
-                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
                     max={modal.rent.rentAmount || 0}
                   />
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-1">Advance Amount</label>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Advance Amount</label>
                   <input
                     type="number"
                     value={paymentForm.advanceAmount}
                     onChange={(e) => setPaymentForm(prev => ({ ...prev, advanceAmount: parseFloat(e.target.value) || 0 }))}
-                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
                     max={modal.rent.advanceAmount || 0}
                   />
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-1">External Amount</label>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">External Amount</label>
                   <input
                     type="number"
                     value={paymentForm.externalAmount}
                     onChange={(e) => setPaymentForm(prev => ({ ...prev, externalAmount: parseFloat(e.target.value) || 0 }))}
-                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
                     max={modal.rent.externalAmount || 0}
                   />
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-1">Previous Due Amount</label>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Previous Due</label>
                   <input
                     type="number"
                     value={paymentForm.previousDueAmount}
                     onChange={(e) => setPaymentForm(prev => ({ ...prev, previousDueAmount: parseFloat(e.target.value) || 0 }))}
-                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
                     max={modal.rent.previousDue || 0}
                   />
                 </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-1">Payment Method</label>
-                  <select
-                    value={paymentForm.paymentMethod}
-                    onChange={(e) => setPaymentForm(prev => ({ ...prev, paymentMethod: e.target.value }))}
-                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="on hand">On Hand</option>
-                    <option value="online">Online</option>
-                  </select>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Payment Method</label>
+                <select
+                  value={paymentForm.paymentMethod}
+                  onChange={(e) => setPaymentForm(prev => ({ ...prev, paymentMethod: e.target.value }))}
+                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
+                >
+                  <option value="on hand">💵 On Hand</option>
+                  <option value="online">💳 Online</option>
+                </select>
+              </div>
+              
+              {paymentForm.paymentMethod === "online" && (
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">Bikash Number</label>
+                    <input
+                      type="text"
+                      value={paymentForm.bikashNumber}
+                      onChange={(e) => setPaymentForm(prev => ({ ...prev, bikashNumber: e.target.value }))}
+                      className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
+                      placeholder="Enter Bikash number"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">Transaction ID</label>
+                    <input
+                      type="text"
+                      value={paymentForm.trxId}
+                      onChange={(e) => setPaymentForm(prev => ({ ...prev, trxId: e.target.value }))}
+                      className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
+                      placeholder="Enter transaction ID"
+                    />
+                  </div>
                 </div>
-                
-                {paymentForm.paymentMethod === "online" && (
-                  <>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-1">Bikash Number</label>
-                      <input
-                        type="text"
-                        value={paymentForm.bikashNumber}
-                        onChange={(e) => setPaymentForm(prev => ({ ...prev, bikashNumber: e.target.value }))}
-                        className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="Enter Bikash number"
-                      />
-                    </div>
-                    
-                    <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-1">Transaction ID</label>
-                      <input
-                        type="text"
-                        value={paymentForm.trxId}
-                        onChange={(e) => setPaymentForm(prev => ({ ...prev, trxId: e.target.value }))}
-                        className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="Enter transaction ID"
-                      />
-                    </div>
-                  </>
-                )}
-                
-                <div className="mt-4 p-3 bg-gray-700 rounded-md">
-                  <div className="text-sm text-gray-300">Total Amount: <span className="font-bold text-white">₹{paymentForm.rentAmount + paymentForm.advanceAmount + paymentForm.externalAmount + paymentForm.previousDueAmount}</span></div>
+              )}
+              
+              <div className="bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-2xl p-4 border border-blue-500/30">
+                <div className="text-center">
+                  <div className="text-gray-300 text-sm">Total Amount</div>
+                  <div className="text-white text-2xl font-bold">
+                    {formatCurrency(paymentForm.rentAmount + paymentForm.advanceAmount + paymentForm.externalAmount + paymentForm.previousDueAmount)}
+                  </div>
                 </div>
               </div>
             </div>
             
-            <div className="flex gap-4 justify-center">
+            <div className="flex gap-3">
               <button
                 onClick={handlePaymentRequest}
-                className="px-6 py-2 rounded-md bg-blue-600 text-white font-semibold hover:bg-blue-700 transition"
+                className="flex-1 py-3 px-4 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-xl font-medium hover:from-blue-600 hover:to-purple-600 transition-all duration-300 transform hover:scale-105"
               >
-                Submit Request
+                ✅ Submit Request
               </button>
               <button
                 onClick={closeModal}
-                className="px-6 py-2 rounded-md bg-gray-600 text-white font-semibold hover:bg-gray-700 transition"
+                className="py-3 px-4 bg-white/10 text-white rounded-xl font-medium hover:bg-white/20 transition-all duration-300"
               >
-                Cancel
+                ❌ Cancel
               </button>
             </div>
           </div>
