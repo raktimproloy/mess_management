@@ -5,7 +5,7 @@ import { getStudentData } from "../../../lib/auth";
 import { usePreventScroll } from '../../../hooks/usePreventScroll';
 
 const CLOUDINARY_UPLOAD_URL = process.env.NEXT_PUBLIC_CLOUDINARY_URL || "https://api.cloudinary.com/v1_1/dxyneuwlb/image/upload";
-const CLOUDINARY_UPLOAD_PRESET = "mess_management_student"; // You may want to create this preset in Cloudinary
+const CLOUDINARY_UPLOAD_PRESET = "mess_management_student";
 
 export default function StudentProfile() {
   const [profile, setProfile] = useState(null);
@@ -18,10 +18,8 @@ export default function StudentProfile() {
   const [loading, setLoading] = useState(true);
   const fileInputRef = useRef();
   
-  // Hook to prevent scroll wheel changes on number inputs
   const bookingAmountRef = usePreventScroll();
 
-  // Fetch student profile on mount
   useEffect(() => {
     async function fetchProfile() {
       setLoading(true);
@@ -47,7 +45,6 @@ export default function StudentProfile() {
 
   const handleEdit = () => setEditMode(true);
   const handleCancel = () => {
-    // Reload profile from server
     setEditMode(false);
     setImgFile(null);
     setPasswords({ current: "", new: "", confirm: "" });
@@ -63,6 +60,7 @@ export default function StudentProfile() {
       })
       .finally(() => setLoading(false));
   };
+  
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     setProfile((prev) => ({
@@ -70,6 +68,7 @@ export default function StudentProfile() {
       [name]: type === "checkbox" ? checked : value,
     }));
   };
+  
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -77,6 +76,7 @@ export default function StudentProfile() {
       setImgPreview(URL.createObjectURL(file));
     }
   };
+  
   const handleSave = async (e) => {
     e.preventDefault();
     if (!profile) return;
@@ -87,7 +87,6 @@ export default function StudentProfile() {
         const formData = new FormData();
         formData.append("file", imgFile);
         formData.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
-        // Cloudinary URL from env or fallback
         const uploadUrl = CLOUDINARY_UPLOAD_URL.includes("cloudinary://")
           ? `https://api.cloudinary.com/v1_1/${CLOUDINARY_UPLOAD_URL.split("@")[1]}/image/upload`
           : CLOUDINARY_UPLOAD_URL;
@@ -128,17 +127,18 @@ export default function StudentProfile() {
       const updated = await res.json();
       setProfile(updated);
       setEditMode(false);
-      // Update localStorage studentData
       localStorage.setItem("studentData", JSON.stringify(updated));
       toast.success("Profile updated");
     } catch (err) {
       toast.error(err.message || "Failed to update profile");
     }
   };
+  
   const handlePasswordChange = (e) => {
     const { name, value } = e.target;
     setPasswords((prev) => ({ ...prev, [name]: value }));
   };
+  
   const handlePasswordSubmit = async (e) => {
     e.preventDefault();
     if (!passwords.new || passwords.new !== passwords.confirm) {
@@ -148,7 +148,6 @@ export default function StudentProfile() {
     try {
       const student = getStudentData();
       const token = localStorage.getItem("studentToken");
-      // Optionally, verify current password on backend
       const res = await fetch(`/api/student/${student.id}`, {
         method: "PUT",
         headers: {
@@ -168,204 +167,247 @@ export default function StudentProfile() {
 
   if (loading || !profile) {
     return (
-      <div className="flex items-center justify-center min-h-[300px]">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 flex items-center justify-center p-4">
+        <div className="bg-white/10 backdrop-blur-lg rounded-3xl p-8 border border-white/20 shadow-2xl text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+          <p className="text-white text-lg">Loading profile...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-xl mx-auto p-6 bg-white dark:bg-[#232329] rounded-lg shadow mt-8">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 p-4">
       <Toaster position="top-right" />
-      <div className="flex items-center gap-6 mb-6">
-        <div className="relative w-24 h-24">
-          <img
-            src={imgPreview}
-            alt="Profile"
-            className="w-24 h-24 rounded-full object-cover border"
-          />
-          {editMode && (
-            <>
-              <input
-                type="file"
-                accept="image/*"
-                className="hidden"
-                ref={fileInputRef}
-                onChange={handleImageChange}
+      
+      {/* Header */}
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-white mb-2">👤 My Profile</h1>
+        <p className="text-gray-300 text-sm">Manage your account information</p>
+      </div>
+
+      {/* Profile Card */}
+      <div className="bg-white/10 backdrop-blur-lg rounded-3xl border border-white/20 shadow-2xl overflow-hidden">
+        {/* Profile Header */}
+        <div className="p-6 bg-gradient-to-r from-blue-500/20 to-purple-500/20 border-b border-white/10">
+          <div className="flex items-center gap-4">
+            <div className="relative">
+              <img
+                src={imgPreview}
+                alt="Profile"
+                className="w-20 h-20 rounded-full object-cover border-2 border-white/20 shadow-lg"
               />
+              {editMode && (
+                <>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    ref={fileInputRef}
+                    onChange={handleImageChange}
+                  />
+                  <button
+                    type="button"
+                    className="absolute -bottom-1 -right-1 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-full p-2 shadow-lg hover:scale-110 transition-all duration-300"
+                    onClick={() => fileInputRef.current.click()}
+                    title="Change Profile Image"
+                    disabled={uploading}
+                  >
+                    {uploading ? (
+                      <div className="w-4 h-4 animate-spin border-2 border-white border-t-transparent rounded-full"></div>
+                    ) : (
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487a2.25 2.25 0 1 1 3.182 3.182L7.5 20.213l-4.182.545.545-4.182L16.862 4.487z" />
+                      </svg>
+                    )}
+                  </button>
+                </>
+              )}
+            </div>
+            <div className="flex-1">
+              <h2 className="text-xl font-bold text-white mb-1">{profile.name}</h2>
+              <p className="text-gray-300 text-sm">📱 {profile.phone}</p>
+            </div>
+            {!editMode && (
               <button
-                type="button"
-                className="absolute bottom-0 right-0 bg-blue-600 text-white rounded-full p-2 shadow hover:bg-blue-700"
-                onClick={() => fileInputRef.current.click()}
-                title="Change Profile Image"
-                disabled={uploading}
+                onClick={handleEdit}
+                className="px-4 py-2 bg-white/10 text-white rounded-xl border border-white/20 hover:bg-white/20 transition-all duration-300"
               >
-                {uploading ? (
-                  <span className="w-5 h-5 animate-spin border-b-2 border-white inline-block rounded-full"></span>
-                ) : (
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487a2.25 2.25 0 1 1 3.182 3.182L7.5 20.213l-4.182.545.545-4.182L16.862 4.487z" />
-                  </svg>
-                )}
+                ✏️ Edit
               </button>
-            </>
-          )}
+            )}
+          </div>
         </div>
-        <div>
-          <div className="text-2xl font-bold text-black dark:text-white mb-1">{profile.name}</div>
-          <div className="text-gray-500 dark:text-gray-300">{profile.phone}</div>
+
+        {/* Profile Form */}
+        <div className="p-6">
+          <form onSubmit={handleSave} className="space-y-4">
+            {/* Name Field */}
+            <div className="bg-white/5 rounded-2xl p-4 border border-white/10">
+              <label className="block text-sm font-medium text-gray-300 mb-2">👤 Full Name</label>
+              <input
+                type="text"
+                name="name"
+                value={profile.name}
+                onChange={handleChange}
+                disabled={!editMode}
+                className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-white/5 disabled:cursor-not-allowed transition-all duration-300"
+              />
+            </div>
+
+            {/* Phone Field */}
+            <div className="bg-white/5 rounded-2xl p-4 border border-white/10">
+              <label className="block text-sm font-medium text-gray-300 mb-2">📱 Phone Number</label>
+              <input
+                type="text"
+                name="phone"
+                value={profile.phone}
+                disabled
+                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-gray-400 cursor-not-allowed"
+              />
+            </div>
+
+            {/* SMS Phone Field */}
+            <div className="bg-white/5 rounded-2xl p-4 border border-white/10">
+              <label className="block text-sm font-medium text-gray-300 mb-2">📨 SMS Phone</label>
+              <input
+                type="text"
+                name="smsPhone"
+                value={profile.smsPhone || profile.sms_phone}
+                onChange={handleChange}
+                disabled={!editMode}
+                className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-white/5 disabled:cursor-not-allowed transition-all duration-300"
+                placeholder="Enter SMS phone number"
+              />
+            </div>
+
+            {/* Booking Amount Field */}
+            <div className="bg-white/5 rounded-2xl p-4 border border-white/10">
+              <label className="block text-sm font-medium text-gray-300 mb-2">💰 Booking Amount</label>
+              <input
+                type="number"
+                name="bookingAmount"
+                value={profile.bookingAmount || 0}
+                disabled
+                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-gray-400 cursor-not-allowed"
+                ref={bookingAmountRef}
+              />
+            </div>
+
+            {/* Hide Ranking Toggle */}
+            <div className="bg-white/5 rounded-2xl p-4 border border-white/10">
+              <div className="flex items-center justify-between">
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-1">🏆 Hide Ranking</label>
+                  <p className="text-gray-400 text-xs">Hide your ranking from other students</p>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    name="hideRanking"
+                    checked={profile.hideRanking ?? profile.hide_ranking}
+                    onChange={handleChange}
+                    disabled={!editMode}
+                    className="sr-only peer"
+                  />
+                  <div className={`w-12 h-6 bg-white/20 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-500 rounded-full transition-all duration-300 ${profile.hideRanking ?? profile.hide_ranking ? 'bg-blue-500' : ''}`}></div>
+                  <div className={`absolute left-0.5 top-0.5 w-5 h-5 bg-white border border-white/20 rounded-full shadow-md transition-transform duration-300 ${profile.hideRanking ?? profile.hide_ranking ? 'translate-x-6' : ''}`}></div>
+                </label>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex gap-3 pt-4">
+              {!editMode ? (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => setShowPasswordModal(true)}
+                    className="flex-1 py-3 px-4 bg-white/10 text-white rounded-xl border border-white/20 font-medium hover:bg-white/20 transition-all duration-300"
+                  >
+                    🔐 Change Password
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button
+                    type="submit"
+                    className="flex-1 py-3 px-4 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl font-medium hover:from-green-600 hover:to-emerald-600 transition-all duration-300 transform hover:scale-105"
+                    disabled={uploading}
+                  >
+                    {uploading ? "💾 Saving..." : "💾 Save Changes"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleCancel}
+                    className="py-3 px-4 bg-white/10 text-white rounded-xl border border-white/20 font-medium hover:bg-white/20 transition-all duration-300"
+                    disabled={uploading}
+                  >
+                    ❌ Cancel
+                  </button>
+                </>
+              )}
+            </div>
+          </form>
         </div>
       </div>
-      <form onSubmit={handleSave} className="space-y-5">
-        <div>
-          <label className="block text-sm font-medium text-black dark:text-white mb-1">Name</label>
-          <input
-            type="text"
-            name="name"
-            value={profile.name}
-            onChange={handleChange}
-            disabled={!editMode}
-            className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black dark:text-white dark:bg-[#18181b] disabled:bg-gray-100 dark:disabled:bg-gray-800"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-black dark:text-white mb-1">Phone</label>
-          <input
-            type="text"
-            name="phone"
-            value={profile.phone}
-            disabled
-            className="w-full px-3 py-2 border rounded-md text-black dark:text-white bg-gray-100 dark:bg-gray-800 cursor-not-allowed"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-black dark:text-white mb-1">SMS Phone</label>
-          <input
-            type="text"
-            name="smsPhone"
-            value={profile.smsPhone || profile.sms_phone}
-            onChange={handleChange}
-            disabled={!editMode}
-            className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black dark:text-white dark:bg-[#18181b] disabled:bg-gray-100 dark:disabled:bg-gray-800"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-black dark:text-white mb-1">Booking Amount</label>
-          <input
-            type="number"
-            name="bookingAmount"
-            value={profile.bookingAmount || 0}
-            disabled
-            className="w-full px-3 py-2 border rounded-md text-black dark:text-white bg-gray-100 dark:bg-gray-800 cursor-not-allowed"
-            ref={bookingAmountRef}
-          />
-        </div>
-        <div className="flex items-center gap-3">
-          <label className="block text-sm font-medium text-black dark:text-white mb-1">Hide Ranking</label>
-          <label className="relative inline-flex items-center cursor-pointer">
-            <input
-              type="checkbox"
-              name="hideRanking"
-              checked={profile.hideRanking ?? profile.hide_ranking}
-              onChange={handleChange}
-              disabled={!editMode}
-              className="sr-only peer"
-            />
-            <div className={`w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-500 rounded-full transition-colors duration-200 ${profile.hideRanking ?? profile.hide_ranking ? 'bg-blue-600' : ''}`}></div>
-            <div className={`absolute left-0.5 top-0.5 w-5 h-5 bg-white border border-gray-300 rounded-full shadow-md transition-transform duration-200 ${profile.hideRanking ?? profile.hide_ranking ? 'translate-x-5' : ''}`}></div>
-          </label>
-        </div>
-        <div className="flex gap-3 mt-6">
-          {!editMode && (
-            <>
-              <button
-                type="button"
-                className="px-6 py-2 rounded-md bg-blue-600 text-white font-medium shadow hover:bg-blue-700 transition"
-                onClick={handleEdit}
-              >
-                Edit
-              </button>
-              <button
-                type="button"
-                className="px-6 py-2 rounded-md bg-gray-200 dark:bg-gray-700 text-black dark:text-white font-medium shadow hover:bg-gray-300 dark:hover:bg-gray-600 transition"
-                onClick={() => setShowPasswordModal(true)}
-              >
-                Change Password
-              </button>
-            </>
-          )}
-          {editMode && (
-            <>
-              <button
-                type="submit"
-                className="px-6 py-2 rounded-md bg-green-600 text-white font-medium shadow hover:bg-green-700 transition"
-                disabled={uploading}
-              >
-                {uploading ? "Saving..." : "Save"}
-              </button>
-              <button
-                type="button"
-                className="px-6 py-2 rounded-md bg-gray-200 dark:bg-gray-700 text-black dark:text-white font-medium shadow hover:bg-gray-300 dark:hover:bg-gray-600 transition"
-                onClick={handleCancel}
-                disabled={uploading}
-              >
-                Cancel
-              </button>
-            </>
-          )}
-        </div>
-      </form>
+
       {/* Change Password Modal */}
       {showPasswordModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-          <div className="bg-white dark:bg-[#232329] rounded-lg shadow-lg w-full max-w-md p-6 relative animate-fadeIn">
-            <button
-              onClick={() => setShowPasswordModal(false)}
-              className="absolute top-2 right-2 text-black dark:text-white text-xl font-bold hover:text-red-500"
-              title="Close"
-            >
-              ×
-            </button>
-            <h2 className="text-xl font-semibold mb-4 text-black dark:text-white text-center">Change Password</h2>
-            <form onSubmit={handlePasswordSubmit} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-black dark:text-white mb-1">New Password</label>
-                <input
-                  type="password"
-                  name="new"
-                  value={passwords.new}
-                  onChange={handlePasswordChange}
-                  className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black dark:text-white dark:bg-[#18181b]"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-black dark:text-white mb-1">Confirm New Password</label>
-                <input
-                  type="password"
-                  name="confirm"
-                  value={passwords.confirm}
-                  onChange={handlePasswordChange}
-                  className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black dark:text-white dark:bg-[#18181b]"
-                  required
-                />
-              </div>
-              <div className="flex gap-3 mt-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <div className="bg-white/10 backdrop-blur-lg rounded-3xl shadow-2xl w-full max-w-md border border-white/20">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-bold text-white">🔐 Change Password</h2>
                 <button
-                  type="submit"
-                  className="px-6 py-2 rounded-md bg-green-600 text-white font-medium shadow hover:bg-green-700 transition"
-                >
-                  Change Password
-                </button>
-                <button
-                  type="button"
-                  className="px-6 py-2 rounded-md bg-gray-200 dark:bg-gray-700 text-black dark:text-white font-medium shadow hover:bg-gray-300 dark:hover:bg-gray-600 transition"
                   onClick={() => setShowPasswordModal(false)}
+                  className="text-gray-400 hover:text-white text-2xl font-bold transition-colors"
                 >
-                  Cancel
+                  ×
                 </button>
               </div>
-            </form>
+              <form onSubmit={handlePasswordSubmit} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">🔑 New Password</label>
+                  <input
+                    type="password"
+                    name="new"
+                    value={passwords.new}
+                    onChange={handlePasswordChange}
+                    className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
+                    placeholder="Enter new password"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">✅ Confirm Password</label>
+                  <input
+                    type="password"
+                    name="confirm"
+                    value={passwords.confirm}
+                    onChange={handlePasswordChange}
+                    className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
+                    placeholder="Confirm new password"
+                    required
+                  />
+                </div>
+                <div className="flex gap-3 pt-4">
+                  <button
+                    type="submit"
+                    className="flex-1 py-3 px-4 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-xl font-medium hover:from-blue-600 hover:to-purple-600 transition-all duration-300 transform hover:scale-105"
+                  >
+                    🔐 Change Password
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowPasswordModal(false)}
+                    className="py-3 px-4 bg-white/10 text-white rounded-xl border border-white/20 font-medium hover:bg-white/20 transition-all duration-300"
+                  >
+                    ❌ Cancel
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
         </div>
       )}

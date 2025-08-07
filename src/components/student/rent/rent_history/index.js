@@ -115,10 +115,12 @@ export default function StudentRentHistory() {
   };
 
   const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat('en-IN', {
       style: 'currency',
-      currency: 'BDT'
-    }).format(amount);
+      currency: 'INR',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(amount || 0);
   };
 
   // Get category title from rent record
@@ -129,8 +131,17 @@ export default function StudentRentHistory() {
     return 'N/A';
   };
 
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'approved': return 'bg-green-500/20 text-green-400 border-green-500/30';
+      case 'rejected': return 'bg-red-500/20 text-red-400 border-red-500/30';
+      case 'pending': return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30';
+      default: return 'bg-gray-500/20 text-gray-400 border-gray-500/30';
+    }
+  };
+
   return (
-    <div className="p-6 min-h-screen bg-[#18181b] dark:bg-[#18181b]">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 p-4">
       <Toaster 
         position="top-right"
         toastOptions={{
@@ -155,41 +166,43 @@ export default function StudentRentHistory() {
         }}
       />
       
+      {/* Header */}
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-white mb-2">My Rent History</h1>
-        <p className="text-gray-400">View your rent payment history</p>
+        <h1 className="text-2xl font-bold text-white mb-2">📚 My Rent History</h1>
+        <p className="text-gray-300 text-sm">View your detailed rent payment history</p>
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <div className="bg-[#232329] p-4 rounded-lg">
-          <h3 className="text-gray-400 text-sm">Total Records</h3>
-          <p className="text-2xl font-bold text-white">{summary.totalRecords || 0}</p>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-4 border border-white/20 shadow-2xl">
+          <div className="text-gray-300 text-sm mb-1">Total Records</div>
+          <div className="text-2xl font-bold text-white">{summary.totalRecords || 0}</div>
         </div>
-        <div className="bg-[#232329] p-4 rounded-lg">
-          <h3 className="text-gray-400 text-sm">Total Paid</h3>
-          <p className="text-2xl font-bold text-green-400">{formatCurrency(summary.totalPaid || 0)}</p>
+        <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-4 border border-white/20 shadow-2xl">
+          <div className="text-gray-300 text-sm mb-1">Total Paid</div>
+          <div className="text-2xl font-bold text-green-400">{formatCurrency(summary.totalPaid || 0)}</div>
         </div>
-        <div className="bg-[#232329] p-4 rounded-lg">
-          <h3 className="text-gray-400 text-sm">Total Due</h3>
-          <p className="text-2xl font-bold text-red-400">{formatCurrency(summary.totalDue || 0)}</p>
+        <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-4 border border-white/20 shadow-2xl">
+          <div className="text-gray-300 text-sm mb-1">Total Due</div>
+          <div className="text-2xl font-bold text-red-400">{formatCurrency(summary.totalDue || 0)}</div>
         </div>
-        <div className="bg-[#232329] p-4 rounded-lg">
-          <h3 className="text-gray-400 text-sm">Average Payment</h3>
-          <p className="text-2xl font-bold text-blue-400">{formatCurrency(summary.averagePayment || 0)}</p>
+        <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-4 border border-white/20 shadow-2xl">
+          <div className="text-gray-300 text-sm mb-1">Average Payment</div>
+          <div className="text-2xl font-bold text-blue-400">{formatCurrency(summary.averagePayment || 0)}</div>
         </div>
       </div>
       
       {/* Filters */}
-      <div className="bg-[#232329] p-4 rounded-lg mb-6">
+      <div className="bg-white/10 backdrop-blur-lg rounded-3xl p-6 border border-white/20 shadow-2xl mb-6">
+        <h3 className="text-lg font-bold text-white mb-4">🔍 Filter Options</h3>
         <form onSubmit={handleSearch} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
           <div>
-            <label className="block text-sm font-medium text-white mb-1">Category</label>
+            <label className="block text-sm font-medium text-gray-300 mb-2">Category</label>
             <select
               name="category"
               value={filters.category}
               onChange={handleFilterChange}
-              className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-[#18181b] text-white border-gray-600"
+              className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
             >
               <option value="">All Categories</option>
               {categories.map((cat) => (
@@ -201,12 +214,12 @@ export default function StudentRentHistory() {
           </div>
           
           <div>
-            <label className="block text-sm font-medium text-white mb-1">Month</label>
+            <label className="block text-sm font-medium text-gray-300 mb-2">Month</label>
             <select
               name="month"
               value={filters.month}
               onChange={handleFilterChange}
-              className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-[#18181b] text-white border-gray-600"
+              className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
             >
               <option value="">All Months</option>
               {Array.from({ length: 12 }, (_, i) => i + 1).map(month => (
@@ -218,12 +231,12 @@ export default function StudentRentHistory() {
           </div>
           
           <div>
-            <label className="block text-sm font-medium text-white mb-1">Year</label>
+            <label className="block text-sm font-medium text-gray-300 mb-2">Year</label>
             <select
               name="year"
               value={filters.year}
               onChange={handleFilterChange}
-              className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-[#18181b] text-white border-gray-600"
+              className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
             >
               <option value="">All Years</option>
               {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i).map(year => (
@@ -233,12 +246,12 @@ export default function StudentRentHistory() {
           </div>
           
           <div>
-            <label className="block text-sm font-medium text-white mb-1">Payment Type</label>
+            <label className="block text-sm font-medium text-gray-300 mb-2">Payment Type</label>
             <select
               name="paymentType"
               value={filters.paymentType}
               onChange={handleFilterChange}
-              className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-[#18181b] text-white border-gray-600"
+              className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
             >
               <option value="">All Types</option>
               {paymentTypes.map((type) => (
@@ -250,9 +263,9 @@ export default function StudentRentHistory() {
           <div className="flex items-end">
             <button
               type="submit"
-              className="w-full px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+              className="w-full px-4 py-3 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-xl font-medium hover:from-blue-600 hover:to-purple-600 transition-all duration-300 transform hover:scale-105"
             >
-              Filter
+              🔍 Filter
             </button>
           </div>
         </form>
@@ -260,116 +273,120 @@ export default function StudentRentHistory() {
       
       {/* Loading and Error States */}
       {loading && (
-        <div className="flex items-center justify-center mb-4">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-          <span className="ml-2 text-blue-400">Loading...</span>
+        <div className="bg-white/10 backdrop-blur-lg rounded-3xl p-8 border border-white/20 shadow-2xl text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+          <p className="text-white text-lg">Loading your rent history...</p>
         </div>
       )}
       
       {error && (
-        <div className="text-red-400 mb-4 p-4 bg-red-900/20 rounded-lg">
-          {error}
+        <div className="bg-red-500/20 backdrop-blur-lg rounded-3xl p-6 border border-red-500/30 shadow-2xl">
+          <div className="flex items-center">
+            <span className="text-red-400 text-lg mr-2">⚠️</span>
+            <p className="text-red-300">{error}</p>
+          </div>
         </div>
       )}
       
-      {/* History Table */}
-      <div className="bg-[#232329] rounded-lg shadow overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-700">
-            <thead className="bg-[#18181b]">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                  Category
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                  Month
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                  Payment Type
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                  Due Amount
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                  Paid Amount
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                  Date
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                  Status
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-[#232329] divide-y divide-gray-700">
-              {history.map((record) => (
-                <tr key={record.id} className="hover:bg-[#18181b] transition">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                    {getCategoryTitle(record)}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                    {record.rentMonth}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+      {/* History Cards */}
+      {!loading && !error && (
+        <div className="space-y-4">
+          {history.length === 0 ? (
+            <div className="bg-white/10 backdrop-blur-lg rounded-3xl p-8 border border-white/20 shadow-2xl text-center">
+              <div className="text-4xl mb-4">📚</div>
+              <h3 className="text-xl font-bold text-white mb-2">No History Found</h3>
+              <p className="text-gray-300">No rent records match your current filters</p>
+            </div>
+          ) : (
+            history.map((record) => (
+              <div key={record.id} className="bg-white/10 backdrop-blur-lg rounded-3xl p-6 border border-white/20 shadow-2xl">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h3 className="text-lg font-bold text-white">{getCategoryTitle(record)}</h3>
+                    <p className="text-gray-300 text-sm">{record.rentMonth}</p>
+                  </div>
+                  <div className={`px-4 py-2 rounded-full text-sm font-medium border ${getStatusColor(record.status)}`}>
+                    {record.status.toUpperCase()}
+                  </div>
+                </div>
+
+                {/* Summary Cards */}
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                  <div className="bg-red-500/20 rounded-2xl p-3 border border-red-500/30">
+                    <div className="text-red-300 text-xs mb-1">Due Amount</div>
+                    <div className="text-white font-bold">{formatCurrency(record.dueRent + record.dueAdvance + record.dueExternal)}</div>
+                  </div>
+                  <div className="bg-green-500/20 rounded-2xl p-3 border border-green-500/30">
+                    <div className="text-green-300 text-xs mb-1">Paid Amount</div>
+                    <div className="text-white font-bold">{formatCurrency(record.paidRent + record.paidAdvance + record.paidExternal)}</div>
+                  </div>
+                </div>
+
+                {/* Detailed Breakdown */}
+                <div className="space-y-2 mb-4">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-300">Rent Due: {formatCurrency(record.dueRent)}</span>
+                    <span className="text-green-400">Paid: {formatCurrency(record.paidRent)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-300">Advance Due: {formatCurrency(record.dueAdvance)}</span>
+                    <span className="text-green-400">Paid: {formatCurrency(record.paidAdvance)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-300">External Due: {formatCurrency(record.dueExternal)}</span>
+                    <span className="text-green-400">Paid: {formatCurrency(record.paidExternal)}</span>
+                  </div>
+                </div>
+
+                {/* Payment Details */}
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-300">Payment Type:</span>
+                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${
                       record.paymentType === 'on hand' 
-                        ? 'bg-green-100 text-green-800' 
-                        : 'bg-blue-100 text-blue-800'
+                        ? 'bg-green-500/20 text-green-400' 
+                        : 'bg-blue-500/20 text-blue-400'
                     }`}>
                       {record.paymentType}
                     </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                    {formatCurrency(record.dueRent + record.dueAdvance + record.dueExternal)}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-green-400 font-medium">
-                    {formatCurrency(record.paidRent + record.paidAdvance + record.paidExternal)}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                    {formatDate(record.paidDate)}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                      record.status === 'approved' 
-                        ? 'bg-green-100 text-green-800' 
-                        : record.status === 'rejected'
-                        ? 'bg-red-100 text-red-800'
-                        : 'bg-yellow-100 text-yellow-800'
-                    }`}>
-                      {record.status}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-300">Payment Date:</span>
+                    <span className="text-white">{formatDate(record.paidDate)}</span>
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
         </div>
-      </div>
+      )}
       
       {/* Pagination */}
       {total > 0 && (
-        <div className="flex justify-between items-center mt-6">
-          <div className="text-sm text-white">
-            Showing {((page - 1) * pageSize) + 1} to {Math.min(page * pageSize, total)} of {total} records
-          </div>
-          <div className="flex gap-2">
-            <button
-              onClick={() => handlePageChange(page - 1)}
-              disabled={page === 1}
-              className="px-3 py-1 rounded bg-gray-700 text-white hover:bg-gray-600 disabled:opacity-50"
-            >
-              Previous
-            </button>
-            <span className="px-3 py-1 text-white">
-              Page {page} of {Math.ceil(total / pageSize)}
-            </span>
-            <button
-              onClick={() => handlePageChange(page + 1)}
-              disabled={page >= Math.ceil(total / pageSize)}
-              className="px-3 py-1 rounded bg-gray-700 text-white hover:bg-gray-600 disabled:opacity-50"
-            >
-              Next
-            </button>
+        <div className="bg-white/10 backdrop-blur-lg rounded-3xl p-4 border border-white/20 shadow-2xl mt-6">
+          <div className="flex justify-between items-center">
+            <div className="text-sm text-gray-300">
+              Showing {((page - 1) * pageSize) + 1} to {Math.min(page * pageSize, total)} of {total} records
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => handlePageChange(page - 1)}
+                disabled={page === 1}
+                className="px-4 py-2 rounded-xl bg-white/10 text-white hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
+              >
+                ← Previous
+              </button>
+              <span className="px-4 py-2 text-white">
+                Page {page} of {Math.ceil(total / pageSize)}
+              </span>
+              <button
+                onClick={() => handlePageChange(page + 1)}
+                disabled={page >= Math.ceil(total / pageSize)}
+                className="px-4 py-2 rounded-xl bg-white/10 text-white hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
+              >
+                Next →
+              </button>
+            </div>
           </div>
         </div>
       )}
