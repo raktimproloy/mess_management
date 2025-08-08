@@ -151,6 +151,12 @@ export default function PaymentCronPage() {
                   </span>
                 </div>
                 <div className="flex justify-between">
+                  <span className="text-gray-300 text-sm">Rejected Requests:</span>
+                  <span className="text-red-400 font-semibold">
+                    {cronStatus?.rejectedCount || 0}
+                  </span>
+                </div>
+                <div className="flex justify-between">
                   <span className="text-gray-300 text-sm">Total Payments:</span>
                   <span className="text-blue-400 font-semibold">
                     {cronStatus?.totalPayments || 0}
@@ -170,7 +176,7 @@ export default function PaymentCronPage() {
           {lastRun && (
             <div className="bg-white/5 rounded-2xl p-4 border border-white/10">
               <h3 className="text-white font-medium mb-3">Last Run Results</h3>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                 <div className="text-center">
                   <div className="text-2xl font-bold text-white">{lastRun.summary.totalProcessed}</div>
                   <div className="text-gray-300 text-sm">Total Processed</div>
@@ -180,7 +186,11 @@ export default function PaymentCronPage() {
                   <div className="text-gray-300 text-sm">Successful</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-red-400">{lastRun.summary.errorCount}</div>
+                  <div className="text-2xl font-bold text-red-400">{lastRun.summary.rejectedCount || 0}</div>
+                  <div className="text-gray-300 text-sm">Rejected</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-orange-400">{lastRun.summary.errorCount}</div>
                   <div className="text-gray-300 text-sm">Errors</div>
                 </div>
                 <div className="text-center">
@@ -220,6 +230,65 @@ export default function PaymentCronPage() {
                       <p className="text-green-400 font-semibold">{formatCurrency(request.totalAmount)}</p>
                       <p className="text-gray-300 text-xs">
                         {request.rentHistory?.paidDate ? formatDate(request.rentHistory.paidDate) : 'N/A'}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Payment Statistics */}
+        {cronStatus?.paymentStats && (
+          <div className="bg-white/10 backdrop-blur-lg rounded-3xl p-6 border border-white/20 shadow-2xl">
+            <h2 className="text-lg font-semibold text-white mb-4 flex items-center">
+              <span className="text-2xl mr-3">📊</span>
+              Payment Statistics
+            </h2>
+            
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="bg-white/5 rounded-2xl p-4 border border-white/10 text-center">
+                <div className="text-2xl font-bold text-blue-400">{cronStatus.paymentStats.total}</div>
+                <div className="text-gray-300 text-sm">Total Payments</div>
+              </div>
+              <div className="bg-white/5 rounded-2xl p-4 border border-white/10 text-center">
+                <div className="text-2xl font-bold text-yellow-400">{cronStatus.paymentStats.pending}</div>
+                <div className="text-gray-300 text-sm">Pending</div>
+              </div>
+              <div className="bg-white/5 rounded-2xl p-4 border border-white/10 text-center">
+                <div className="text-2xl font-bold text-green-400">{cronStatus.paymentStats.approved}</div>
+                <div className="text-gray-300 text-sm">Approved</div>
+              </div>
+              <div className="bg-white/5 rounded-2xl p-4 border border-white/10 text-center">
+                <div className="text-2xl font-bold text-red-400">{cronStatus.paymentStats.rejected}</div>
+                <div className="text-gray-300 text-sm">Rejected</div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Recent Rejected Payments */}
+        {cronStatus?.recentRejectedPayments && cronStatus.recentRejectedPayments.length > 0 && (
+          <div className="bg-white/10 backdrop-blur-lg rounded-3xl p-6 border border-white/20 shadow-2xl">
+            <h2 className="text-lg font-semibold text-white mb-4 flex items-center">
+              <span className="text-2xl mr-3">❌</span>
+              Recent Rejected Payments
+            </h2>
+            
+            <div className="space-y-3">
+              {cronStatus.recentRejectedPayments.map((payment, index) => (
+                <div key={index} className="bg-white/5 rounded-2xl p-4 border border-white/10">
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-white font-medium truncate">TRX: {payment.trxid}</h3>
+                      <p className="text-gray-300 text-sm truncate">Amount: ৳{payment.amount}</p>
+                      <p className="text-red-400 text-sm truncate">From: {payment.fromDetails || 'N/A'}</p>
+                    </div>
+                    <div className="text-right flex-shrink-0 ml-4">
+                      <p className="text-red-400 font-semibold">Rejected</p>
+                      <p className="text-gray-300 text-xs">
+                        {formatDate(payment.receivedAt)}
                       </p>
                     </div>
                   </div>

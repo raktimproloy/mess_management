@@ -35,6 +35,7 @@ export async function POST(request) {
     let processedCount = 0;
     let successCount = 0;
     let errorCount = 0;
+    let rejectedCount = 0;
     const results = [];
     const smsRecipients = [];
 
@@ -61,22 +62,55 @@ export async function POST(request) {
           continue;
         }
 
+        // Check if payment is already used (status is approved or rejected)
+        if (payment.status === 'approved' || payment.status === 'rejected') {
+          console.log(`❌ Payment already ${payment.status} for TRX ID: ${request.trxId}`);
+          results.push({
+            requestId: request.id,
+            trxId: request.trxId,
+            status: `payment_already_${payment.status}`,
+            message: `Payment already ${payment.status}`
+          });
+          errorCount++;
+          continue;
+        }
+
+        // Check if payment is older than 2 days
+        const paymentAge = Date.now() - payment.receivedAt.getTime();
+        const twoDaysInMs = 2 * 24 * 60 * 60 * 1000; // 2 days in milliseconds
+        
+        if (paymentAge > twoDaysInMs) {
+          console.log(`❌ Payment is older than 2 days for TRX ID: ${request.trxId}`);
+          
+          // Update payment status to rejected
+          await prisma.payment.update({
+            where: { id: payment.id },
+            data: { status: 'rejected' }
+          });
+
+          // Update payment request status to rejected
+          await prisma.paymentRequest.update({
+            where: { id: request.id },
+            data: { status: 'rejected' }
+          });
+
+          results.push({
+            requestId: request.id,
+            trxId: request.trxId,
+            status: 'rejected',
+            message: 'Payment is older than 2 days'
+          });
+          rejectedCount++;
+          continue;
+        }
+
         // Check if bikash number matches
+        let numberMatch = false;
         if (request.bikashNumber && payment.fromDetails) {
           const requestNumber = request.bikashNumber.replace(/\s/g, '');
           const paymentNumber = payment.fromDetails.replace(/\s/g, '');
           
-          if (!paymentNumber.includes(requestNumber) && !requestNumber.includes(paymentNumber)) {
-            console.log(`❌ Bikash number mismatch. Request: ${request.bikashNumber}, Payment: ${payment.fromDetails}`);
-            results.push({
-              requestId: request.id,
-              trxId: request.trxId,
-              status: 'number_mismatch',
-              message: `Bikash number mismatch. Request: ${request.bikashNumber}, Payment: ${payment.fromDetails}`
-            });
-            errorCount++;
-            continue;
-          }
+          numberMatch = paymentNumber.includes(requestNumber) || requestNumber.includes(paymentNumber);
         }
 
         // Check if amount matches (with tolerance for small differences)
@@ -84,16 +118,42 @@ export async function POST(request) {
         const paymentAmount = parseFloat(payment.amount);
         const amountDifference = Math.abs(requestAmount - paymentAmount);
         const tolerance = 1.0; // 1 taka tolerance
+        const amountMatch = amountDifference <= tolerance;
 
-        if (amountDifference > tolerance) {
-          console.log(`❌ Amount mismatch. Request: ${requestAmount}, Payment: ${paymentAmount}`);
+        // If transaction ID matches but other data doesn't match, reject the payment
+        if (!numberMatch || !amountMatch) {
+          console.log(`❌ Data mismatch for TRX ID: ${request.trxId}`);
+          console.log(`   Number match: ${numberMatch}, Amount match: ${amountMatch}`);
+          console.log(`   Request number: ${request.bikashNumber}, Payment number: ${payment.fromDetails}`);
+          console.log(`   Request amount: ${requestAmount}, Payment amount: ${paymentAmount}`);
+          
+          // Update payment status to rejected
+          await prisma.payment.update({
+            where: { id: payment.id },
+            data: { status: 'rejected' }
+          });
+
+          // Update payment request status to rejected
+          await prisma.paymentRequest.update({
+            where: { id: request.id },
+            data: { status: 'rejected' }
+          });
+
           results.push({
             requestId: request.id,
             trxId: request.trxId,
-            status: 'amount_mismatch',
-            message: `Amount mismatch. Request: ${requestAmount}, Payment: ${paymentAmount}`
+            status: 'rejected',
+            message: `Data mismatch - Number: ${numberMatch}, Amount: ${amountMatch}`,
+            details: {
+              numberMatch,
+              amountMatch,
+              requestNumber: request.bikashNumber,
+              paymentNumber: payment.fromDetails,
+              requestAmount,
+              paymentAmount
+            }
           });
-          errorCount++;
+          rejectedCount++;
           continue;
         }
 
@@ -136,6 +196,12 @@ export async function POST(request) {
             status: 'approved',
             rentHistoryId: rentHistory.id
           }
+        });
+
+        // Update payment status to approved
+        await prisma.payment.update({
+          where: { id: payment.id },
+          data: { status: 'approved' }
         });
 
         // Update rent record
@@ -234,6 +300,7 @@ export async function POST(request) {
     const summary = {
       totalProcessed: processedCount,
       successCount,
+      rejectedCount,
       errorCount,
       results,
       smsStats: {
@@ -313,15 +380,51 @@ export async function GET(request) {
       }
     });
 
-    // Get total payments count
+    // Get rejected payment requests count
+    const rejectedCount = await prisma.paymentRequest.count({
+      where: {
+        status: 'rejected',
+        paymentMethod: 'online'
+      }
+    });
+
+    // Get total payments count with status breakdown
     const totalPayments = await prisma.payment.count();
+    const pendingPayments = await prisma.payment.count({
+      where: { status: 'pending' }
+    });
+    const approvedPayments = await prisma.payment.count({
+      where: { status: 'approved' }
+    });
+    const rejectedPayments = await prisma.payment.count({
+      where: { status: 'rejected' }
+    });
+
+    // Get recent rejected payments
+    const recentRejectedPayments = await prisma.payment.findMany({
+      where: {
+        status: 'rejected'
+      },
+      orderBy: {
+        receivedAt: 'desc'
+      },
+      take: 5
+    });
 
     return new Response(JSON.stringify({
       success: true,
       data: {
         recentAutoApproved,
         pendingCount,
+        rejectedCount,
         totalPayments,
+        paymentStats: {
+          total: totalPayments,
+          pending: pendingPayments,
+          approved: approvedPayments,
+          rejected: rejectedPayments
+        },
+        recentRejectedPayments,
         lastChecked: new Date().toISOString()
       }
     }), {
