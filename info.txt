@@ -5,3 +5,7 @@ admin
 
 cron-job
 post: http://localhost:3000/api/student/rent-cron
+
+
+Payment_cron
+post: http://localhost:3000/api/payment-request/cron

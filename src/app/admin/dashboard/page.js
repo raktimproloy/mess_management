@@ -148,17 +148,17 @@ export default function AdminDashboard() {
             </div>
           </div>
 
-          {/* Total Rents */}
+          {/* Current Month Collections */}
           <div className="bg-white/10 backdrop-blur-lg rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-white/20 shadow-2xl">
             <div className="flex items-center justify-between mb-3 sm:mb-4">
               <div className="text-2xl sm:text-3xl">💰</div>
               <div className="text-right min-w-0">
-                <p className="text-gray-300 text-xs truncate">Total Rents</p>
-                <p className="text-lg sm:text-2xl font-bold text-white">{dashboardData.rents.total}</p>
+                <p className="text-gray-300 text-xs truncate">This Month</p>
+                <p className="text-lg sm:text-2xl font-bold text-green-400">{formatCurrency(dashboardData.rents.currentMonthStats.totalPaid)}</p>
               </div>
             </div>
             <div className="text-xs sm:text-sm text-blue-400 truncate">
-              {dashboardData.rents.currentMonth} This Month
+              {dashboardData.rents.currentMonth} Students
             </div>
           </div>
 
@@ -191,13 +191,41 @@ export default function AdminDashboard() {
           </div>
         </div>
 
+        {/* Current Month Summary */}
+        <div className="bg-white/10 backdrop-blur-lg rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-white/20 shadow-2xl">
+          <h3 className="text-base sm:text-lg font-semibold text-white mb-4 flex items-center">
+            <span className="text-xl sm:text-2xl mr-2">📊</span>
+            <span className="truncate">Current Month Summary</span>
+          </h3>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="bg-white/5 rounded-xl sm:rounded-2xl p-4 border border-white/10 text-center">
+              <p className="text-gray-300 text-sm mb-2">Expected Collection</p>
+              <p className="text-blue-400 font-bold text-lg sm:text-xl">{formatCurrency(dashboardData.rents.currentMonthStats.totalRent)}</p>
+            </div>
+            <div className="bg-white/5 rounded-xl sm:rounded-2xl p-4 border border-white/10 text-center">
+              <p className="text-gray-300 text-sm mb-2">Actual Collection</p>
+              <p className="text-green-400 font-bold text-lg sm:text-xl">{formatCurrency(dashboardData.rents.currentMonthStats.totalPaid)}</p>
+            </div>
+          </div>
+          <div className="mt-4 p-3 bg-white/5 rounded-xl border border-white/10">
+            <div className="flex justify-between items-center">
+              <span className="text-gray-300 text-sm">Collection Rate</span>
+              <span className="text-yellow-400 font-semibold text-sm">
+                {dashboardData.rents.currentMonthStats.totalRent > 0 
+                  ? Math.round((dashboardData.rents.currentMonthStats.totalPaid / dashboardData.rents.currentMonthStats.totalRent) * 100)
+                  : 0}%
+              </span>
+            </div>
+          </div>
+        </div>
+
         {/* Detailed Statistics */}
         <div className="grid grid-cols-1 gap-4 sm:gap-6">
           {/* Rent Statistics */}
           <div className="bg-white/10 backdrop-blur-lg rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-white/20 shadow-2xl">
             <h3 className="text-base sm:text-lg font-semibold text-white mb-4 flex items-center">
               <span className="text-xl sm:text-2xl mr-2">📊</span>
-              <span className="truncate">Rent Statistics</span>
+              <span className="truncate">Current Month Rent Statistics</span>
             </h3>
             <div className="space-y-3 sm:space-y-4">
               <div className="flex justify-between items-center p-3 bg-white/5 rounded-xl sm:rounded-2xl border border-white/10">
@@ -216,6 +244,40 @@ export default function AdminDashboard() {
                 <span className="text-gray-300 text-sm truncate">Partial Payments</span>
                 <span className="text-yellow-400 font-semibold text-sm truncate ml-2">
                   {dashboardData.rents.summary.partial.count} ({formatCurrency(dashboardData.rents.summary.partial.amount)})
+                </span>
+              </div>
+              <div className="flex justify-between items-center p-3 bg-white/5 rounded-xl sm:rounded-2xl border border-white/10">
+                <span className="text-gray-300 text-sm truncate">Total Collected</span>
+                <span className="text-blue-400 font-semibold text-sm truncate ml-2">
+                  {formatCurrency(dashboardData.rents.currentMonthStats.totalPaid)}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* All-Time Rent Statistics */}
+          <div className="bg-white/10 backdrop-blur-lg rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-white/20 shadow-2xl">
+            <h3 className="text-base sm:text-lg font-semibold text-white mb-4 flex items-center">
+              <span className="text-xl sm:text-2xl mr-2">📈</span>
+              <span className="truncate">All-Time Rent Statistics</span>
+            </h3>
+            <div className="space-y-3 sm:space-y-4">
+              <div className="flex justify-between items-center p-3 bg-white/5 rounded-xl sm:rounded-2xl border border-white/10">
+                <span className="text-gray-300 text-sm truncate">Total Paid</span>
+                <span className="text-green-400 font-semibold text-sm truncate ml-2">
+                  {dashboardData.rents.allTimeSummary.paid.count} ({formatCurrency(dashboardData.rents.allTimeSummary.paid.amount)})
+                </span>
+              </div>
+              <div className="flex justify-between items-center p-3 bg-white/5 rounded-xl sm:rounded-2xl border border-white/10">
+                <span className="text-gray-300 text-sm truncate">Total Unpaid</span>
+                <span className="text-red-400 font-semibold text-sm truncate ml-2">
+                  {dashboardData.rents.allTimeSummary.unpaid.count} ({formatCurrency(dashboardData.rents.allTimeSummary.unpaid.amount)})
+                </span>
+              </div>
+              <div className="flex justify-between items-center p-3 bg-white/5 rounded-xl sm:rounded-2xl border border-white/10">
+                <span className="text-gray-300 text-sm truncate">Total Partial</span>
+                <span className="text-yellow-400 font-semibold text-sm truncate ml-2">
+                  {dashboardData.rents.allTimeSummary.partial.count} ({formatCurrency(dashboardData.rents.allTimeSummary.partial.amount)})
                 </span>
               </div>
             </div>

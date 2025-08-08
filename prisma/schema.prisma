@@ -153,6 +153,18 @@ model PaymentRequest {
   @@map("payment_requests")
 }
 
+model Payment {
+  id           Int      @id @default(autoincrement())
+  trxid        String   @unique @map("trxid")
+  amount       String
+  fromDetails  String?  @map("from_details")
+  paymentDate  String?  @map("payment_date")
+  paymentTime  String?  @map("payment_time")
+  receivedAt   DateTime @default(now()) @map("received_at")
+
+  @@map("payments")
+}
+
 model Testing {
   id    Int    @id @default(autoincrement())
   value Int

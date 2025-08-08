@@ -35,7 +35,8 @@ export async function GET(request) {
       categories,
       recentComplaints,
       recentPayments,
-      monthlyStats
+      monthlyStats,
+      currentMonthRentHistory
     ] = await Promise.all([
       // Total students
       prisma.student.count(),
@@ -48,12 +49,19 @@ export async function GET(request) {
       // Total rents
       prisma.rent.count(),
       
-      // Current month rents
+      // Current month rents - fixed to get actual current month rents
       prisma.rent.findMany({
         where: {
-          createdAt: {
-            gte: new Date(currentYear, currentMonth - 1, 1),
-            lt: new Date(currentYear, currentMonth, 1)
+          student: {
+            status: 'living'
+          }
+        },
+        include: {
+          student: {
+            select: { name: true, phone: true }
+          },
+          category: {
+            select: { title: true, rentAmount: true }
           }
         }
       }),
@@ -129,17 +137,59 @@ export async function GET(request) {
         },
         orderBy: { rentMonth: 'desc' },
         take: 6
+      }),
+      
+      // Current month rent history for accurate calculations
+      prisma.rentHistory.findMany({
+        where: {
+          rentMonth: currentMonthYear
+        },
+        include: {
+          student: {
+            select: { name: true, phone: true }
+          },
+          rent: {
+            include: {
+              category: {
+                select: { title: true }
+              }
+            }
+          }
+        }
       })
     ]);
 
-    // Calculate current month statistics
-    const currentMonthStats = currentMonthRents.reduce((acc, rent) => {
-      acc.totalRent += rent.rentAmount;
-      acc.totalPaid += rent.rentPaid;
-      acc.totalAdvance += rent.advanceAmount;
-      acc.totalExternal += rent.externalAmount;
+    // Calculate current month statistics more accurately
+    const currentMonthStats = currentMonthRentHistory.reduce((acc, history) => {
+      acc.totalPaid += history.paidRent + history.paidAdvance + history.paidExternal;
+      acc.totalRent += history.dueRent + history.dueAdvance + history.dueExternal;
+      acc.paymentCount += 1;
       return acc;
-    }, { totalRent: 0, totalPaid: 0, totalAdvance: 0, totalExternal: 0 });
+    }, { totalPaid: 0, totalRent: 0, paymentCount: 0 });
+
+    // Calculate rent statistics for current month
+    const currentMonthRentSummary = {
+      paid: { count: 0, amount: 0 },
+      unpaid: { count: 0, amount: 0 },
+      partial: { count: 0, amount: 0 }
+    };
+
+    // Group current month rents by status
+    currentMonthRents.forEach(rent => {
+      const totalAmount = rent.rentAmount + rent.advanceAmount + rent.externalAmount;
+      const totalPaid = rent.rentPaid + rent.advancePaid + rent.externalPaid;
+      
+      if (totalPaid >= totalAmount) {
+        currentMonthRentSummary.paid.count++;
+        currentMonthRentSummary.paid.amount += totalAmount;
+      } else if (totalPaid === 0) {
+        currentMonthRentSummary.unpaid.count++;
+        currentMonthRentSummary.unpaid.amount += totalAmount;
+      } else {
+        currentMonthRentSummary.partial.count++;
+        currentMonthRentSummary.partial.amount += totalAmount;
+      }
+    });
 
     // Calculate complaint statistics
     const complaintStats = await prisma.complaint.groupBy({
@@ -178,11 +228,15 @@ export async function GET(request) {
       };
     });
 
-    // Calculate rent statistics
+    // Calculate overall rent statistics (all time)
     const rentStats = await prisma.rent.groupBy({
       by: ['status'],
       _count: { id: true },
-      _sum: { rentAmount: true }
+      _sum: { 
+        rentAmount: true,
+        advanceAmount: true,
+        externalAmount: true
+      }
     });
 
     const rentSummary = {
@@ -192,9 +246,10 @@ export async function GET(request) {
     };
 
     rentStats.forEach(stat => {
+      const totalAmount = (stat._sum.rentAmount || 0) + (stat._sum.advanceAmount || 0) + (stat._sum.externalAmount || 0);
       rentSummary[stat.status] = {
         count: stat._count.id,
-        amount: stat._sum.rentAmount || 0
+        amount: totalAmount
       };
     });
 
@@ -213,7 +268,8 @@ export async function GET(request) {
           total: totalRents,
           currentMonth: currentMonthRents.length,
           currentMonthStats,
-          summary: rentSummary
+          summary: currentMonthRentSummary, // Use current month summary instead of all-time
+          allTimeSummary: rentSummary // Keep all-time summary for reference
         },
         
         // Complaint Statistics
