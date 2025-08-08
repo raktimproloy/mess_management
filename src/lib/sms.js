@@ -1,7 +1,9 @@
-const SMS_API_URL = 'http://bulksmsbd.net/api/smsapi';
-const SMS_API_URL_MANY = 'http://bulksmsbd.net/api/smsapimany';
-const SMS_API_KEY = 'k5LYyZJmNjjbBbwWfhSI';
-const SMS_SENDER_ID = '8809617611061';
+import { CONFIG } from './config.js';
+
+const SMS_API_URL = CONFIG.SMS.API_URL;
+const SMS_API_URL_MANY = CONFIG.SMS.API_URL_MANY;
+const SMS_API_KEY = CONFIG.SMS.API_KEY;
+const SMS_SENDER_ID = CONFIG.SMS.SENDER_ID;
 
 /**
  * Send SMS using BulkSMSBD API
@@ -11,26 +13,37 @@ const SMS_SENDER_ID = '8809617611061';
  */
 export async function sendSMS(number, message) {
   try {
+    console.log(`📱 === sendSMS DEBUG START ===`);
     console.log(`📱 Sending SMS to: ${number}`);
+    console.log(`📱 Message length: ${message.length} characters`);
+    console.log(`📱 SMS API URL: ${SMS_API_URL}`);
+    console.log(`📱 SMS API Key: ${SMS_API_KEY ? 'Present' : 'Missing'}`);
+    console.log(`📱 SMS Sender ID: ${SMS_SENDER_ID}`);
+    
+    const requestBody = {
+      api_key: SMS_API_KEY,
+      type: 'text',
+      number: number,
+      senderid: SMS_SENDER_ID,
+      message: message
+    };
+    console.log(`📱 Request body:`, requestBody);
     
     const response = await fetch(SMS_API_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        api_key: SMS_API_KEY,
-        type: 'text',
-        number: number,
-        senderid: SMS_SENDER_ID,
-        message: message
-      })
+      body: JSON.stringify(requestBody)
     });
 
+    console.log(`📱 Response status: ${response.status}`);
     const result = await response.json();
+    console.log(`📱 API Response:`, result);
     
     if (result.response_code === 1000) {
       console.log(`✅ SMS sent successfully to ${number}`);
+      console.log(`📱 === sendSMS DEBUG END ===`);
       return {
         success: true,
         message: 'SMS sent successfully',
@@ -38,6 +51,7 @@ export async function sendSMS(number, message) {
       };
     } else {
       console.error(`❌ SMS failed for ${number}:`, result.error_message);
+      console.log(`📱 === sendSMS DEBUG END ===`);
       return {
         success: false,
         message: result.error_message || 'SMS sending failed',
@@ -46,6 +60,7 @@ export async function sendSMS(number, message) {
     }
   } catch (error) {
     console.error(`❌ SMS error for ${number}:`, error);
+    console.log(`📱 === sendSMS DEBUG END ===`);
     return {
       success: false,
       message: 'Network error while sending SMS',
@@ -184,8 +199,8 @@ Dear ${studentName},
 💰 Monthly Rent: ৳${formattedAmount}
 
 📞 For any queries, contact us:
-📱 Phone: 01912345678
-📧 Email: info@avilashpalace.com
+📱 Phone: ${CONFIG.SUPPORT.PHONE}
+📧 Email: ${CONFIG.SUPPORT.EMAIL}
 
 🏠 We hope you have a wonderful stay with us!
 
@@ -266,9 +281,9 @@ ${breakdownText}
 
 📱 Online Payment:
 Bkash: ${bikashNumber}
-🔗 Payment Request: https://avilashpalace.com/payment-request
+🔗 Payment Request: ${CONFIG.PAYMENT.PAYMENT_REQUEST_URL}
 
-📞 For assistance: 01912345678
+📞 For assistance: ${CONFIG.SUPPORT.PHONE}
 
 Best regards,
 Avilash Palace Management
@@ -307,7 +322,7 @@ ${statusEmoji[status]} Your complaint has been updated:
 
 We are working to resolve your issue as soon as possible.
 
-📞 For urgent matters: 01912345678
+📞 For urgent matters: ${CONFIG.SUPPORT.PHONE}
 
 Best regards,
 Avilash Palace Management
@@ -330,7 +345,284 @@ Dear ${studentName},
 
 ${message}
 
-📞 For queries: 01912345678
+📞 For queries: ${CONFIG.SUPPORT.PHONE}
+
+Best regards,
+Avilash Palace Management
+🏢 Mess Management System`;
+}
+
+/**
+ * Generate rent payment confirmation message
+ * @param {string} studentName - Student's name
+ * @param {Object} paymentDetails - Payment details object
+ * @returns {string} - Formatted rent payment confirmation message
+ */
+export function generateRentPaymentConfirmationMessage(studentName, paymentDetails) {
+  const {
+    rentPaid = 0,
+    advancePaid = 0,
+    externalPaid = 0,
+    previousDuePaid = 0,
+    totalPaid = 0,
+    paymentType = 'on hand',
+    newStatus = 'partial'
+  } = paymentDetails;
+
+  const formattedTotal = new Intl.NumberFormat('en-IN').format(totalPaid);
+  const formattedRent = new Intl.NumberFormat('en-IN').format(rentPaid);
+  const formattedAdvance = new Intl.NumberFormat('en-IN').format(advancePaid);
+  const formattedExternal = new Intl.NumberFormat('en-IN').format(externalPaid);
+  const formattedPrevious = new Intl.NumberFormat('en-IN').format(previousDuePaid);
+
+  let breakdownText = '';
+  if (rentPaid > 0) breakdownText += `• Rent: ৳${formattedRent}\n`;
+  if (advancePaid > 0) breakdownText += `• Advance: ৳${formattedAdvance}\n`;
+  if (externalPaid > 0) breakdownText += `• External: ৳${formattedExternal}\n`;
+  if (previousDuePaid > 0) breakdownText += `• Previous Due: ৳${formattedPrevious}\n`;
+
+  const statusEmoji = newStatus === 'paid' ? '✅' : '💰';
+  const statusText = newStatus === 'paid' ? 'FULLY PAID' : 'PARTIALLY PAID';
+
+  return `💳 Rent Payment Confirmation
+
+Dear ${studentName},
+
+${statusEmoji} Your payment has been received successfully!
+💰 Total Amount: ৳${formattedTotal}
+💳 Payment Method: ${paymentType}
+📅 Date: ${new Date().toLocaleDateString('en-IN')} ${new Date().toLocaleTimeString('en-IN')}
+🔄 Status: ${statusText}
+
+📋 Payment Breakdown:
+${breakdownText}
+📊 Total Paid: ৳${formattedTotal}
+
+Thank you for your payment!
+
+📞 For any queries: ${CONFIG.SUPPORT.PHONE}
+
+Best regards,
+Avilash Palace Management
+🏢 Mess Management System`;
+}
+
+/**
+ * Generate payment request notification for owner
+ * @param {string} studentName - Student's name
+ * @param {string} studentPhone - Student's phone number
+ * @param {number} totalAmount - Total payment amount
+ * @param {string} paymentMethod - Payment method
+ * @param {string} bikashNumber - Bikash number (if online)
+ * @param {string} trxId - Transaction ID (if online)
+ * @param {string} categoryTitle - Category title
+ * @returns {string} - Formatted payment request notification for owner
+ */
+export function generatePaymentRequestOwnerNotification(studentName, studentPhone, totalAmount, paymentMethod, bikashNumber, trxId, categoryTitle) {
+  const formattedAmount = new Intl.NumberFormat('en-IN').format(totalAmount);
+  const paymentType = paymentMethod === 'online' ? 'Online Payment' : 'Cash Payment';
+  
+  let onlineDetails = '';
+  if (paymentMethod === 'online' && bikashNumber && trxId) {
+    onlineDetails = `
+📱 Bikash Number: ${bikashNumber}
+🆔 Transaction ID: ${trxId}`;
+  }
+
+  return `💰 New Payment Request
+
+Dear Owner,
+
+📋 A new payment request has been submitted:
+👤 Student: ${studentName}
+📱 Phone: ${studentPhone}
+🏠 Category: ${categoryTitle}
+💰 Amount: ৳${formattedAmount}
+💳 Method: ${paymentType}
+⏰ Submitted: ${new Date().toLocaleDateString('en-IN')} ${new Date().toLocaleTimeString('en-IN')}${onlineDetails}
+
+Please review and take necessary action.
+
+Best regards,
+Mess Management System
+🏢 Avilash Palace`;
+}
+
+/**
+ * Generate payment request status update message for student
+ * @param {string} studentName - Student's name
+ * @param {Object} requestDetails - Payment request details
+ * @returns {string} - Formatted payment request status message
+ */
+export function generatePaymentRequestStatusMessage(studentName, requestDetails) {
+  const {
+    totalAmount = 0,
+    rentAmount = 0,
+    advanceAmount = 0,
+    externalAmount = 0,
+    previousDueAmount = 0,
+    paymentMethod = 'on hand',
+    bikashNumber = '',
+    trxId = '',
+    newStatus = 'pending'
+  } = requestDetails;
+
+  const formattedTotal = new Intl.NumberFormat('en-IN').format(totalAmount);
+  const formattedRent = new Intl.NumberFormat('en-IN').format(rentAmount);
+  const formattedAdvance = new Intl.NumberFormat('en-IN').format(advanceAmount);
+  const formattedExternal = new Intl.NumberFormat('en-IN').format(externalAmount);
+  const formattedPrevious = new Intl.NumberFormat('en-IN').format(previousDueAmount);
+
+  const statusEmoji = {
+    'approved': '✅',
+    'rejected': '❌',
+    'pending': '⏳'
+  };
+
+  const statusText = {
+    'approved': 'APPROVED',
+    'rejected': 'REJECTED',
+    'pending': 'PENDING'
+  };
+
+  let breakdownText = '';
+  if (rentAmount > 0) breakdownText += `• Rent: ৳${formattedRent}\n`;
+  if (advanceAmount > 0) breakdownText += `• Advance: ৳${formattedAdvance}\n`;
+  if (externalAmount > 0) breakdownText += `• External: ৳${formattedExternal}\n`;
+  if (previousDueAmount > 0) breakdownText += `• Previous Due: ৳${formattedPrevious}\n`;
+
+  let onlineDetails = '';
+  if (paymentMethod === 'online' && bikashNumber && trxId) {
+    onlineDetails = `
+📱 Bikash Number: ${bikashNumber}
+🆔 Transaction ID: ${trxId}`;
+  }
+
+  return `📋 Payment Request Status Update
+
+Dear ${studentName},
+
+${statusEmoji[newStatus]} Your payment request has been ${statusText[newStatus].toLowerCase()}:
+💰 Total Amount: ৳${formattedTotal}
+💳 Payment Method: ${paymentMethod}
+📅 Updated: ${new Date().toLocaleDateString('en-IN')} ${new Date().toLocaleTimeString('en-IN')}${onlineDetails}
+
+📋 Request Breakdown:
+${breakdownText}
+📊 Total Requested: ৳${formattedTotal}
+
+${newStatus === 'approved' ? '✅ Your payment has been approved and processed successfully!' : 
+ newStatus === 'rejected' ? '❌ Your payment request has been rejected. Please contact us for more information.' :
+ '⏳ Your payment request is still pending review.'}
+
+📞 For queries: ${CONFIG.SUPPORT.PHONE}
+
+Best regards,
+Avilash Palace Management
+🏢 Mess Management System`;
+}
+
+/**
+ * Generate student leave notification message
+ * @param {string} studentName - Student's name
+ * @param {string} categoryTitle - Student's category title
+ * @returns {string} - Formatted leave notification message
+ */
+export function generateStudentLeaveMessage(studentName, categoryTitle) {
+  return `👋 Goodbye Notification
+
+Dear ${studentName},
+
+📋 Your account has been deactivated:
+🏠 Category: ${categoryTitle}
+📅 Date: ${new Date().toLocaleDateString('en-IN')} ${new Date().toLocaleTimeString('en-IN')}
+
+✅ Your account status has been set to 'Leave'
+
+📞 For any queries or to reactivate your account:
+📱 Contact: ${CONFIG.SUPPORT.PHONE}
+📧 Email: ${CONFIG.SUPPORT.EMAIL}
+
+Thank you for being part of Avilash Palace!
+
+Best regards,
+Avilash Palace Management
+🏢 Mess Management System`;
+}
+
+/**
+ * Generate complaint notification message for owner
+ * @param {string} studentName - Student's name
+ * @param {string} complaintTitle - Complaint title
+ * @param {string} complainFor - Complaint type (mess/room)
+ * @param {string} details - Complaint details
+ * @param {string} studentPhone - Student's phone number
+ * @returns {string} - Formatted complaint notification message for owner
+ */
+export function generateComplaintOwnerNotification(studentName, complaintTitle, complainFor, details, studentPhone) {
+  const complainType = complainFor === 'mess' ? 'Mess' : 'Room';
+  
+  return `📝 New Complaint Alert
+
+Dear Owner,
+
+🚨 A new complaint has been submitted:
+👤 Student: ${studentName}
+📱 Phone: ${studentPhone}
+📋 Title: ${complaintTitle}
+🏠 Type: ${complainType}
+📝 Details: ${details}
+
+⏰ Submitted: ${new Date().toLocaleDateString('en-IN')} ${new Date().toLocaleTimeString('en-IN')}
+
+Please review and take necessary action.
+
+Best regards,
+Mess Management System
+🏢 Avilash Palace`;
+}
+
+/**
+ * Generate complaint status update message for student
+ * @param {string} studentName - Student's name
+ * @param {string} complaintTitle - Complaint title
+ * @param {string} status - Complaint status
+ * @param {string} complainFor - Complaint type (mess/room)
+ * @returns {string} - Formatted complaint status message for student
+ */
+export function generateComplaintStatusUpdateMessage(studentName, complaintTitle, status, complainFor) {
+  const statusEmoji = {
+    'pending': '⏳',
+    'checking': '🔍',
+    'solved': '✅',
+    'canceled': '❌'
+  };
+  
+  const statusText = {
+    'pending': 'Pending',
+    'checking': 'Under Review',
+    'solved': 'Resolved',
+    'canceled': 'Canceled'
+  };
+
+  const complainType = complainFor === 'mess' ? 'Mess' : 'Room';
+  
+  return `📝 Complaint Status Update
+
+Dear ${studentName},
+
+${statusEmoji[status]} Your complaint has been updated:
+📋 Title: ${complaintTitle}
+🏠 Type: ${complainType}
+🔄 Status: ${statusText[status]}
+📅 Updated: ${new Date().toLocaleDateString('en-IN')} ${new Date().toLocaleTimeString('en-IN')}
+
+${status === 'solved' ? '✅ Your issue has been resolved. Thank you for your patience!' : 
+ status === 'checking' ? '🔍 We are currently investigating your complaint. We will update you soon.' :
+ status === 'canceled' ? '❌ Your complaint has been canceled. Please contact us if you need assistance.' :
+ '⏳ Your complaint is pending review. We will process it soon.'}
+
+📞 For urgent matters: ${CONFIG.SUPPORT.PHONE}
 
 Best regards,
 Avilash Palace Management

@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import { verifyToken } from '../../../../lib/auth';
+import { sendSMS, generateStudentLeaveMessage } from '../../../../lib/sms';
 import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
@@ -130,14 +131,76 @@ export async function DELETE(request, context) {
     if (!authHeader) return new Response(JSON.stringify({ message: 'Unauthorized' }), { status: 401 });
     const { success, user } = verifyToken(authHeader.split(' ')[1]);
     if (!success || user.role !== 'admin') return new Response(JSON.stringify({ message: 'Forbidden' }), { status: 403 });
+    
+    // Get student data before updating
+    const student = await prisma.student.findUnique({ 
+      where: { id: parseInt(id) },
+      include: {
+        categoryRef: {
+          select: {
+            title: true
+          }
+        }
+      }
+    });
+    
+    if (!student) {
+      return new Response(JSON.stringify({ message: 'Student not found' }), { status: 404 });
+    }
+    
     const updated = await prisma.student.update({
       where: { id: parseInt(id) },
       data: { status: 'leave', updatedAt: new Date() },
     });
     
+    // Send SMS notification to student
+    let smsResult = null;
+    try {
+      console.log(`📱 === STUDENT LEAVE SMS DEBUG START ===`);
+      console.log(`📱 Student name: ${student.name}`);
+      console.log(`📱 Student phone: ${student.phone}`);
+      console.log(`📱 Student smsPhone: ${student.smsPhone}`);
+      
+      const studentPhone = student.phone || student.smsPhone;
+      console.log(`📱 Using phone number: ${studentPhone}`);
+      
+      if (studentPhone) {
+        console.log(`📱 Generating leave notification message...`);
+        const leaveMessage = generateStudentLeaveMessage(
+          student.name,
+          student.categoryRef?.title || 'Unknown Category'
+        );
+        console.log(`📱 Generated message: ${leaveMessage}`);
+        
+        console.log(`📱 Calling sendSMS function...`);
+        smsResult = await sendSMS(studentPhone, leaveMessage);
+        console.log(`📱 SMS API response:`, smsResult);
+        console.log(`📱 Student leave notification result: ${smsResult.success ? '✅ Success' : '❌ Failed'}`);
+      } else {
+        console.log(`⚠️ No phone number found for student: ${student.name}`);
+        smsResult = {
+          success: false,
+          message: 'No phone number available for student'
+        };
+      }
+      console.log(`📱 === STUDENT LEAVE SMS DEBUG END ===`);
+      
+    } catch (smsError) {
+      console.error(`❌ Student leave SMS error:`, smsError);
+      smsResult = {
+        success: false,
+        message: 'Student leave SMS sending failed',
+        error: smsError.message
+      };
+    }
+    
     // Return student data without password
     const { password: _, ...studentWithoutPassword } = updated;
-    return new Response(JSON.stringify({ message: 'Student set to leave', student: studentWithoutPassword }), { status: 200 });
+    return new Response(JSON.stringify({ 
+      message: 'Student set to leave', 
+      student: studentWithoutPassword,
+      smsNotification: smsResult
+    }), { status: 200 });
   } catch (err) {
     return new Response(JSON.stringify({ message: 'Server error', error: err.message }), { status: 500 });
   }

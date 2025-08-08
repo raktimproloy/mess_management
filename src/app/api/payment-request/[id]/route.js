@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import { verifyAdminAuth } from '../../../../lib/auth';
+import { sendSMS, generatePaymentRequestStatusMessage } from '../../../../lib/sms';
 
 const prisma = new PrismaClient();
 
@@ -20,7 +21,7 @@ export async function GET(request, { params }) {
       });
     }
 
-    const { id } = params;
+    const { id } = await params;
 
     const paymentRequest = await prisma.paymentRequest.findUnique({
       where: { id: parseInt(id) },
@@ -74,12 +75,23 @@ export async function PUT(request, { params }) {
       });
     }
 
-    const { id } = params;
+    const { id } = await params;
 
     const data = await request.json();
     const paymentRequest = await prisma.paymentRequest.findUnique({
       where: { id: parseInt(id) },
-      include: { rent: true }
+      include: { 
+        rent: true,
+        student: {
+          select: {
+            id: true,
+            name: true,
+            phone: true,
+            smsPhone: true,
+            status: true
+          }
+        }
+      }
     });
 
     if (!paymentRequest) {
@@ -87,10 +99,13 @@ export async function PUT(request, { params }) {
     }
 
     let updateData = {};
+    let statusChanged = false;
+    let oldStatus = paymentRequest.status;
 
     // Admin can approve/reject payment requests
     if (data.status && ['approved', 'rejected'].includes(data.status)) {
       updateData.status = data.status;
+      statusChanged = oldStatus !== data.status;
 
       // If approved, create rent history and update rent
       if (data.status === 'approved') {
@@ -173,10 +188,65 @@ export async function PUT(request, { params }) {
       }
     });
 
+    // Send SMS notification to student if status changed
+    let smsResult = null;
+    if (statusChanged) {
+      try {
+        console.log(`📱 === PAYMENT REQUEST STATUS SMS DEBUG START ===`);
+        console.log(`📱 Student name: ${paymentRequest.student.name}`);
+        console.log(`📱 Student phone: ${paymentRequest.student.phone}`);
+        console.log(`📱 Student smsPhone: ${paymentRequest.student.smsPhone}`);
+        
+        const studentPhone = paymentRequest.student.phone || paymentRequest.student.smsPhone;
+        console.log(`📱 Using phone number: ${studentPhone}`);
+        
+        if (studentPhone) {
+          console.log(`📱 Generating payment request status message...`);
+          const statusMessage = generatePaymentRequestStatusMessage(
+            paymentRequest.student.name,
+            {
+              totalAmount: paymentRequest.totalAmount,
+              rentAmount: paymentRequest.rentAmount,
+              advanceAmount: paymentRequest.advanceAmount,
+              externalAmount: paymentRequest.externalAmount,
+              previousDueAmount: paymentRequest.previousDueAmount,
+              paymentMethod: paymentRequest.paymentMethod,
+              bikashNumber: paymentRequest.bikashNumber,
+              trxId: paymentRequest.trxId,
+              newStatus: updatedPaymentRequest.status
+            }
+          );
+          console.log(`📱 Generated message: ${statusMessage}`);
+          
+          console.log(`📱 Calling sendSMS function...`);
+          smsResult = await sendSMS(studentPhone, statusMessage);
+          console.log(`📱 SMS API response:`, smsResult);
+          console.log(`📱 Payment request status result: ${smsResult.success ? '✅ Success' : '❌ Failed'}`);
+        } else {
+          console.log(`⚠️ No phone number found for student: ${paymentRequest.student.name}`);
+          smsResult = {
+            success: false,
+            message: 'No phone number available for student'
+          };
+        }
+        console.log(`📱 === PAYMENT REQUEST STATUS SMS DEBUG END ===`);
+        
+      } catch (smsError) {
+        console.error(`❌ Payment request status SMS error:`, smsError);
+        smsResult = {
+          success: false,
+          message: 'Payment request status SMS sending failed',
+          error: smsError.message
+        };
+      }
+    }
+
     return new Response(JSON.stringify({
       success: true,
       message: 'Payment request updated successfully',
-      paymentRequest: updatedPaymentRequest
+      paymentRequest: updatedPaymentRequest,
+      statusChanged,
+      smsNotification: smsResult
     }), { status: 200 });
 
   } catch (err) {
@@ -202,7 +272,7 @@ export async function DELETE(request, { params }) {
       });
     }
 
-    const { id } = params;
+    const { id } = await params;
 
     const paymentRequest = await prisma.paymentRequest.findUnique({
       where: { id: parseInt(id) }

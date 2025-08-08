@@ -1,5 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import { verifyAdminAuth, verifyToken } from '../../../lib/auth';
+import { sendSMS, generatePaymentRequestOwnerNotification } from '../../../lib/sms';
+import { CONFIG } from '../../../lib/config.js';
 
 const prisma = new PrismaClient();
 
@@ -225,10 +227,42 @@ export async function POST(request) {
       }
     });
 
+    // Send SMS notification to owner
+    let smsResult = null;
+    try {
+      console.log(`📱 === PAYMENT REQUEST OWNER SMS DEBUG START ===`);
+      console.log(`📱 Owner phone: ${CONFIG.OWNER.PHONE}`);
+      
+      const ownerMessage = generatePaymentRequestOwnerNotification(
+        paymentRequest.student.name,
+        paymentRequest.student.phone || paymentRequest.student.smsPhone,
+        paymentRequest.totalAmount,
+        paymentRequest.paymentMethod,
+        paymentRequest.bikashNumber,
+        paymentRequest.trxId,
+        paymentRequest.category.title
+      );
+      console.log(`📱 Generated owner message: ${ownerMessage}`);
+      
+      console.log(`📱 Calling sendSMS function for owner...`);
+      smsResult = await sendSMS(CONFIG.OWNER.PHONE, ownerMessage);
+      console.log(`📱 Owner SMS result: ${smsResult.success ? '✅ Success' : '❌ Failed'}`);
+      console.log(`📱 === PAYMENT REQUEST OWNER SMS DEBUG END ===`);
+      
+    } catch (smsError) {
+      console.error(`❌ Owner SMS error:`, smsError);
+      smsResult = {
+        success: false,
+        message: 'Owner SMS sending failed',
+        error: smsError.message
+      };
+    }
+
     return new Response(JSON.stringify({
       success: true,
       message: 'Payment request created successfully',
-      paymentRequest
+      paymentRequest,
+      smsNotification: smsResult
     }), { status: 201 });
 
   } catch (err) {

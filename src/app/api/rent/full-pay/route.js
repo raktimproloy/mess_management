@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client';
+import { sendSMS, generateRentPaymentConfirmationMessage } from '../../../../lib/sms';
 
 const prisma = new PrismaClient();
 
@@ -19,7 +20,18 @@ export async function POST(request) {
     // Get the rent record
     const rent = await prisma.rent.findUnique({
       where: { id: parseInt(rentId) },
-      include: { student: true, category: true }
+      include: { 
+        student: {
+          select: {
+            id: true,
+            name: true,
+            phone: true,
+            smsPhone: true,
+            status: true
+          }
+        }, 
+        category: true 
+      }
     });
 
     if (!rent) {
@@ -76,11 +88,61 @@ export async function POST(request) {
       }
     });
 
+    // Send SMS notification to student
+    let smsResult = null;
+    try {
+      console.log(`📱 === FULL PAYMENT SMS DEBUG START ===`);
+      console.log(`📱 Student name: ${rent.student.name}`);
+      console.log(`📱 Student phone: ${rent.student.phone}`);
+      console.log(`📱 Student smsPhone: ${rent.student.smsPhone}`);
+      
+      const studentPhone = rent.student.phone || rent.student.smsPhone;
+      console.log(`📱 Using phone number: ${studentPhone}`);
+      
+      if (studentPhone) {
+        console.log(`📱 Generating full payment confirmation message...`);
+        const paymentMessage = generateRentPaymentConfirmationMessage(
+          rent.student.name,
+          {
+            rentPaid: rent.rentAmount,
+            advancePaid: rent.advanceAmount || 0,
+            externalPaid: rent.externalAmount,
+            previousDuePaid: rent.previousDue,
+            totalPaid: totalRentAmount + rent.previousDue,
+            paymentType: paidType || 'on hand',
+            newStatus: 'paid'
+          }
+        );
+        console.log(`📱 Generated message: ${paymentMessage}`);
+        
+        console.log(`📱 Calling sendSMS function...`);
+        smsResult = await sendSMS(studentPhone, paymentMessage);
+        console.log(`📱 SMS API response:`, smsResult);
+        console.log(`📱 Full payment confirmation result: ${smsResult.success ? '✅ Success' : '❌ Failed'}`);
+      } else {
+        console.log(`⚠️ No phone number found for student: ${rent.student.name}`);
+        smsResult = {
+          success: false,
+          message: 'No phone number available for student'
+        };
+      }
+      console.log(`📱 === FULL PAYMENT SMS DEBUG END ===`);
+      
+    } catch (smsError) {
+      console.error(`❌ Full payment SMS error:`, smsError);
+      smsResult = {
+        success: false,
+        message: 'Full payment SMS sending failed',
+        error: smsError.message
+      };
+    }
+
     return new Response(JSON.stringify({
       success: true,
       message: 'Rent fully paid successfully',
       rent: updatedRent,
-      history: rentHistory
+      history: rentHistory,
+      smsNotification: smsResult
     }), { 
       status: 200,
       headers: { 'Content-Type': 'application/json' }

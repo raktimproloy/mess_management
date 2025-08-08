@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import { verifyAdminAuth } from '../../../../../../lib/auth';
+import { sendSMS, generateComplaintStatusUpdateMessage } from '../../../../../../lib/sms';
 
 const prisma = new PrismaClient();
 
@@ -18,7 +19,7 @@ export async function PUT(request, { params }) {
       });
     }
 
-    const { id } = params;
+    const { id } = await params;
     const complaintId = parseInt(id);
 
     if (isNaN(complaintId)) {
@@ -73,10 +74,44 @@ export async function PUT(request, { params }) {
       }
     });
 
+    // Send SMS notification to student
+    let smsResult = null;
+    try {
+      console.log(`📱 Sending complaint status update to student: ${complaint.student.name}`);
+      
+      const studentPhone = complaint.student.phone || complaint.student.smsPhone;
+      if (studentPhone) {
+        const studentMessage = generateComplaintStatusUpdateMessage(
+          complaint.student.name,
+          updatedComplaint.title,
+          updatedComplaint.status,
+          updatedComplaint.complainFor
+        );
+        
+        smsResult = await sendSMS(studentPhone, studentMessage);
+        console.log(`📱 Student notification result: ${smsResult.success ? '✅ Success' : '❌ Failed'}`);
+      } else {
+        console.log(`⚠️ No phone number found for student: ${complaint.student.name}`);
+        smsResult = {
+          success: false,
+          message: 'No phone number available for student'
+        };
+      }
+      
+    } catch (smsError) {
+      console.error(`❌ Student SMS error:`, smsError);
+      smsResult = {
+        success: false,
+        message: 'Student SMS sending failed',
+        error: smsError.message
+      };
+    }
+
     return new Response(JSON.stringify({
       success: true,
       message: 'Complaint marked as canceled',
-      complaint: updatedComplaint
+      complaint: updatedComplaint,
+      smsNotification: smsResult
     }), {
       status: 200,
       headers: { 'Content-Type': 'application/json' }

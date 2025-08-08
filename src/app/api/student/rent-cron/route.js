@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import { sendSMS, sendBulkSMSWithGenerator, generateRentReminderMessage } from '../../../../lib/sms';
+import { CONFIG } from '../../../../lib/config.js';
 
 const prisma = new PrismaClient();
 
@@ -293,7 +294,7 @@ export async function POST(request) {
             month: 'long',
             day: 'numeric'
           }),
-          bikashNumber: '01912345678', // Default Bikash number - you can make this configurable
+          bikashNumber: CONFIG.PAYMENT.BIKASH_NUMBER, // Use configured Bikash number
           isFirstMonth
         });
 

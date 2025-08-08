@@ -1,5 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import { verifyStudentAuth } from '../../../lib/auth';
+import { sendSMS, generateComplaintOwnerNotification } from '../../../lib/sms';
+import { CONFIG } from '../../../lib/config.js';
 
 const prisma = new PrismaClient();
 
@@ -155,10 +157,37 @@ export async function POST(request) {
       }
     });
 
+    // Send SMS notification to owner
+    let smsResult = null;
+    try {
+      console.log(`📱 Sending complaint notification to owner for student: ${authResult.student.name}`);
+      
+      const ownerPhone = CONFIG.OWNER.PHONE; // Use configured owner phone number
+      const ownerMessage = generateComplaintOwnerNotification(
+        authResult.student.name,
+        title.trim(),
+        complainFor,
+        details.trim(),
+        authResult.student.phone || authResult.student.smsPhone
+      );
+      
+      smsResult = await sendSMS(ownerPhone, ownerMessage);
+      console.log(`📱 Owner notification result: ${smsResult.success ? '✅ Success' : '❌ Failed'}`);
+      
+    } catch (smsError) {
+      console.error(`❌ Owner SMS error:`, smsError);
+      smsResult = {
+        success: false,
+        message: 'Owner SMS sending failed',
+        error: smsError.message
+      };
+    }
+
     return new Response(JSON.stringify({
       success: true,
       message: 'Complaint created successfully',
-      complaint: newComplaint
+      complaint: newComplaint,
+      smsNotification: smsResult
     }), {
       status: 201,
       headers: { 'Content-Type': 'application/json' }

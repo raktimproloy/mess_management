@@ -1,12 +1,13 @@
 import { PrismaClient } from '@prisma/client';
 import { verifyStudentAuth, verifyAdminAuth } from '../../../../lib/auth';
+import { sendSMS, generateComplaintStatusUpdateMessage } from '../../../../lib/sms';
 
 const prisma = new PrismaClient();
 
 // GET: Get specific complaint (student can see their own, admin can see any)
 export async function GET(request, { params }) {
   try {
-    const { id } = params;
+    const { id } = await params;
     const complaintId = parseInt(id);
 
     if (isNaN(complaintId)) {
@@ -100,7 +101,7 @@ export async function GET(request, { params }) {
 // PUT: Update complaint (students can edit title/details, admin can change status)
 export async function PUT(request, { params }) {
   try {
-    const { id } = params;
+    const { id } = await params;
     const complaintId = parseInt(id);
 
     if (isNaN(complaintId)) {
@@ -136,7 +137,18 @@ export async function PUT(request, { params }) {
     }
 
     const complaint = await prisma.complaint.findUnique({
-      where: { id: complaintId }
+      where: { id: complaintId },
+      include: {
+        student: {
+          select: {
+            id: true,
+            name: true,
+            phone: true,
+            smsPhone: true,
+            status: true
+          }
+        }
+      }
     });
 
     if (!complaint) {
@@ -162,11 +174,14 @@ export async function PUT(request, { params }) {
 
     const data = await request.json();
     let updateData = {};
+    let statusChanged = false;
+    let oldStatus = complaint.status;
 
     if (isAdmin) {
       // Admin can only change status
       if (data.status && ['pending', 'checking', 'solved', 'canceled'].includes(data.status)) {
         updateData.status = data.status;
+        statusChanged = oldStatus !== data.status;
       }
     } else {
       // Students can only edit title and details
@@ -204,10 +219,47 @@ export async function PUT(request, { params }) {
       }
     });
 
+    // Send SMS notification to student if status was changed by admin
+    let smsResult = null;
+    if (isAdmin && statusChanged) {
+      try {
+        console.log(`📱 Sending complaint status update to student: ${complaint.student.name}`);
+        
+        const studentPhone = complaint.student.phone || complaint.student.smsPhone;
+        if (studentPhone) {
+          const studentMessage = generateComplaintStatusUpdateMessage(
+            complaint.student.name,
+            updatedComplaint.title,
+            updatedComplaint.status,
+            updatedComplaint.complainFor
+          );
+          
+          smsResult = await sendSMS(studentPhone, studentMessage);
+          console.log(`📱 Student notification result: ${smsResult.success ? '✅ Success' : '❌ Failed'}`);
+        } else {
+          console.log(`⚠️ No phone number found for student: ${complaint.student.name}`);
+          smsResult = {
+            success: false,
+            message: 'No phone number available for student'
+          };
+        }
+        
+      } catch (smsError) {
+        console.error(`❌ Student SMS error:`, smsError);
+        smsResult = {
+          success: false,
+          message: 'Student SMS sending failed',
+          error: smsError.message
+        };
+      }
+    }
+
     return new Response(JSON.stringify({
       success: true,
       message: 'Complaint updated successfully',
-      complaint: updatedComplaint
+      complaint: updatedComplaint,
+      statusChanged,
+      smsNotification: smsResult
     }), {
       status: 200,
       headers: { 'Content-Type': 'application/json' }
@@ -228,7 +280,7 @@ export async function PUT(request, { params }) {
 // DELETE: Delete complaint (students can delete their own, admin can delete any)
 export async function DELETE(request, { params }) {
   try {
-    const { id } = params;
+    const { id } = await params;
     const complaintId = parseInt(id);
 
     if (isNaN(complaintId)) {
