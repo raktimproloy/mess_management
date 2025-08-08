@@ -92,9 +92,9 @@ export default function AdminDashboard() {
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 flex items-center justify-center p-4">
-        <div className="bg-white/10 backdrop-blur-lg rounded-3xl p-8 border border-white/20 shadow-2xl text-center">
+        <div className="bg-white/10 backdrop-blur-lg rounded-3xl p-6 sm:p-8 border border-white/20 shadow-2xl text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
-          <p className="text-white text-lg">Loading Dashboard...</p>
+          <p className="text-white text-base sm:text-lg">Loading Dashboard...</p>
         </div>
       </div>
     );
@@ -103,9 +103,9 @@ export default function AdminDashboard() {
   if (!dashboardData) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 flex items-center justify-center p-4">
-        <div className="bg-white/10 backdrop-blur-lg rounded-3xl p-8 border border-white/20 shadow-2xl text-center">
-          <div className="text-red-400 text-6xl mb-4">⚠️</div>
-          <p className="text-white text-lg">Failed to load dashboard data</p>
+        <div className="bg-white/10 backdrop-blur-lg rounded-3xl p-6 sm:p-8 border border-white/20 shadow-2xl text-center">
+          <div className="text-red-400 text-4xl sm:text-6xl mb-4">⚠️</div>
+          <p className="text-white text-base sm:text-lg">Failed to load dashboard data</p>
         </div>
       </div>
     );
@@ -115,106 +115,106 @@ export default function AdminDashboard() {
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900">
       {/* Header */}
       <div className="sticky top-0 z-10 bg-white/10 backdrop-blur-lg border-b border-white/20">
-        <div className="px-4 py-6">
+        <div className="px-3 sm:px-4 py-4 sm:py-6">
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-white">🏢 Admin Dashboard</h1>
-              <p className="text-gray-300 text-sm">Welcome back! Here's what's happening in your mess management system.</p>
+            <div className="flex-1 min-w-0">
+              <h1 className="text-lg sm:text-2xl font-bold text-white truncate">🏢 Admin Dashboard</h1>
+              <p className="text-gray-300 text-xs sm:text-sm mt-1 line-clamp-2">Welcome back! Here's what's happening in your mess management system.</p>
             </div>
-            <div className="flex items-center space-x-3">
-              <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-lg">
-                <span className="text-white text-lg font-bold">👨‍💼</span>
+            <div className="flex items-center space-x-2 sm:space-x-3 ml-3">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-purple-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-lg flex-shrink-0">
+                <span className="text-white text-base sm:text-lg font-bold">👨‍💼</span>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="p-4 space-y-6">
+      <div className="p-3 sm:p-4 space-y-4 sm:space-y-6">
         {/* Main Statistics Cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 gap-3 sm:gap-4">
           {/* Total Students */}
-          <div className="bg-white/10 backdrop-blur-lg rounded-3xl p-6 border border-white/20 shadow-2xl">
-            <div className="flex items-center justify-between mb-4">
-              <div className="text-3xl">👥</div>
-              <div className="text-right">
-                <p className="text-gray-300 text-xs">Total Students</p>
-                <p className="text-2xl font-bold text-white">{dashboardData.students.total}</p>
+          <div className="bg-white/10 backdrop-blur-lg rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-white/20 shadow-2xl">
+            <div className="flex items-center justify-between mb-3 sm:mb-4">
+              <div className="text-2xl sm:text-3xl">👥</div>
+              <div className="text-right min-w-0">
+                <p className="text-gray-300 text-xs truncate">Total Students</p>
+                <p className="text-lg sm:text-2xl font-bold text-white">{dashboardData.students.total}</p>
               </div>
             </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-green-400">{dashboardData.students.living} Living</span>
-              <span className="text-gray-400">{dashboardData.students.left} Left</span>
+            <div className="flex justify-between text-xs sm:text-sm">
+              <span className="text-green-400 truncate">{dashboardData.students.living} Living</span>
+              <span className="text-gray-400 truncate">{dashboardData.students.left} Left</span>
             </div>
           </div>
 
           {/* Total Rents */}
-          <div className="bg-white/10 backdrop-blur-lg rounded-3xl p-6 border border-white/20 shadow-2xl">
-            <div className="flex items-center justify-between mb-4">
-              <div className="text-3xl">💰</div>
-              <div className="text-right">
-                <p className="text-gray-300 text-xs">Total Rents</p>
-                <p className="text-2xl font-bold text-white">{dashboardData.rents.total}</p>
+          <div className="bg-white/10 backdrop-blur-lg rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-white/20 shadow-2xl">
+            <div className="flex items-center justify-between mb-3 sm:mb-4">
+              <div className="text-2xl sm:text-3xl">💰</div>
+              <div className="text-right min-w-0">
+                <p className="text-gray-300 text-xs truncate">Total Rents</p>
+                <p className="text-lg sm:text-2xl font-bold text-white">{dashboardData.rents.total}</p>
               </div>
             </div>
-            <div className="text-sm text-blue-400">
+            <div className="text-xs sm:text-sm text-blue-400 truncate">
               {dashboardData.rents.currentMonth} This Month
             </div>
           </div>
 
           {/* Pending Complaints */}
-          <div className="bg-white/10 backdrop-blur-lg rounded-3xl p-6 border border-white/20 shadow-2xl">
-            <div className="flex items-center justify-between mb-4">
-              <div className="text-3xl">📝</div>
-              <div className="text-right">
-                <p className="text-gray-300 text-xs">Pending Complaints</p>
-                <p className="text-2xl font-bold text-yellow-400">{dashboardData.complaints.pending}</p>
+          <div className="bg-white/10 backdrop-blur-lg rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-white/20 shadow-2xl">
+            <div className="flex items-center justify-between mb-3 sm:mb-4">
+              <div className="text-2xl sm:text-3xl">📝</div>
+              <div className="text-right min-w-0">
+                <p className="text-gray-300 text-xs truncate">Pending Complaints</p>
+                <p className="text-lg sm:text-2xl font-bold text-yellow-400">{dashboardData.complaints.pending}</p>
               </div>
             </div>
-            <div className="text-sm text-gray-400">
+            <div className="text-xs sm:text-sm text-gray-400 truncate">
               {dashboardData.complaints.total} Total
             </div>
           </div>
 
           {/* Payment Requests */}
-          <div className="bg-white/10 backdrop-blur-lg rounded-3xl p-6 border border-white/20 shadow-2xl">
-            <div className="flex items-center justify-between mb-4">
-              <div className="text-3xl">💳</div>
-              <div className="text-right">
-                <p className="text-gray-300 text-xs">Payment Requests</p>
-                <p className="text-2xl font-bold text-purple-400">{dashboardData.payments.pendingRequests}</p>
+          <div className="bg-white/10 backdrop-blur-lg rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-white/20 shadow-2xl">
+            <div className="flex items-center justify-between mb-3 sm:mb-4">
+              <div className="text-2xl sm:text-3xl">💳</div>
+              <div className="text-right min-w-0">
+                <p className="text-gray-300 text-xs truncate">Payment Requests</p>
+                <p className="text-lg sm:text-2xl font-bold text-purple-400">{dashboardData.payments.pendingRequests}</p>
               </div>
             </div>
-            <div className="text-sm text-gray-400">
+            <div className="text-xs sm:text-sm text-gray-400 truncate">
               Pending
             </div>
           </div>
         </div>
 
         {/* Detailed Statistics */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 gap-4 sm:gap-6">
           {/* Rent Statistics */}
-          <div className="bg-white/10 backdrop-blur-lg rounded-3xl p-6 border border-white/20 shadow-2xl">
-            <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
-              <span className="text-2xl mr-2">📊</span>
-              Rent Statistics
+          <div className="bg-white/10 backdrop-blur-lg rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-white/20 shadow-2xl">
+            <h3 className="text-base sm:text-lg font-semibold text-white mb-4 flex items-center">
+              <span className="text-xl sm:text-2xl mr-2">📊</span>
+              <span className="truncate">Rent Statistics</span>
             </h3>
-            <div className="space-y-4">
-              <div className="flex justify-between items-center p-3 bg-white/5 rounded-2xl border border-white/10">
-                <span className="text-gray-300">Paid Rents</span>
-                <span className="text-green-400 font-semibold">
+            <div className="space-y-3 sm:space-y-4">
+              <div className="flex justify-between items-center p-3 bg-white/5 rounded-xl sm:rounded-2xl border border-white/10">
+                <span className="text-gray-300 text-sm truncate">Paid Rents</span>
+                <span className="text-green-400 font-semibold text-sm truncate ml-2">
                   {dashboardData.rents.summary.paid.count} ({formatCurrency(dashboardData.rents.summary.paid.amount)})
                 </span>
               </div>
-              <div className="flex justify-between items-center p-3 bg-white/5 rounded-2xl border border-white/10">
-                <span className="text-gray-300">Unpaid Rents</span>
-                <span className="text-red-400 font-semibold">
+              <div className="flex justify-between items-center p-3 bg-white/5 rounded-xl sm:rounded-2xl border border-white/10">
+                <span className="text-gray-300 text-sm truncate">Unpaid Rents</span>
+                <span className="text-red-400 font-semibold text-sm truncate ml-2">
                   {dashboardData.rents.summary.unpaid.count} ({formatCurrency(dashboardData.rents.summary.unpaid.amount)})
                 </span>
               </div>
-              <div className="flex justify-between items-center p-3 bg-white/5 rounded-2xl border border-white/10">
-                <span className="text-gray-300">Partial Payments</span>
-                <span className="text-yellow-400 font-semibold">
+              <div className="flex justify-between items-center p-3 bg-white/5 rounded-xl sm:rounded-2xl border border-white/10">
+                <span className="text-gray-300 text-sm truncate">Partial Payments</span>
+                <span className="text-yellow-400 font-semibold text-sm truncate ml-2">
                   {dashboardData.rents.summary.partial.count} ({formatCurrency(dashboardData.rents.summary.partial.amount)})
                 </span>
               </div>
@@ -222,55 +222,55 @@ export default function AdminDashboard() {
           </div>
 
           {/* Complaint Statistics */}
-          <div className="bg-white/10 backdrop-blur-lg rounded-3xl p-6 border border-white/20 shadow-2xl">
-            <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
-              <span className="text-2xl mr-2">📝</span>
-              Complaint Statistics
+          <div className="bg-white/10 backdrop-blur-lg rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-white/20 shadow-2xl">
+            <h3 className="text-base sm:text-lg font-semibold text-white mb-4 flex items-center">
+              <span className="text-xl sm:text-2xl mr-2">📝</span>
+              <span className="truncate">Complaint Statistics</span>
             </h3>
-            <div className="space-y-4">
-              <div className="flex justify-between items-center p-3 bg-white/5 rounded-2xl border border-white/10">
-                <span className="text-gray-300">Pending</span>
-                <span className="text-yellow-400 font-semibold">{dashboardData.complaints.summary.pending}</span>
+            <div className="space-y-3 sm:space-y-4">
+              <div className="flex justify-between items-center p-3 bg-white/5 rounded-xl sm:rounded-2xl border border-white/10">
+                <span className="text-gray-300 text-sm truncate">Pending</span>
+                <span className="text-yellow-400 font-semibold text-sm">{dashboardData.complaints.summary.pending}</span>
               </div>
-              <div className="flex justify-between items-center p-3 bg-white/5 rounded-2xl border border-white/10">
-                <span className="text-gray-300">Checking</span>
-                <span className="text-blue-400 font-semibold">{dashboardData.complaints.summary.checking}</span>
+              <div className="flex justify-between items-center p-3 bg-white/5 rounded-xl sm:rounded-2xl border border-white/10">
+                <span className="text-gray-300 text-sm truncate">Checking</span>
+                <span className="text-blue-400 font-semibold text-sm">{dashboardData.complaints.summary.checking}</span>
               </div>
-              <div className="flex justify-between items-center p-3 bg-white/5 rounded-2xl border border-white/10">
-                <span className="text-gray-300">Solved</span>
-                <span className="text-green-400 font-semibold">{dashboardData.complaints.summary.solved}</span>
+              <div className="flex justify-between items-center p-3 bg-white/5 rounded-xl sm:rounded-2xl border border-white/10">
+                <span className="text-gray-300 text-sm truncate">Solved</span>
+                <span className="text-green-400 font-semibold text-sm">{dashboardData.complaints.summary.solved}</span>
               </div>
-              <div className="flex justify-between items-center p-3 bg-white/5 rounded-2xl border border-white/10">
-                <span className="text-gray-300">Canceled</span>
-                <span className="text-red-400 font-semibold">{dashboardData.complaints.summary.canceled}</span>
+              <div className="flex justify-between items-center p-3 bg-white/5 rounded-xl sm:rounded-2xl border border-white/10">
+                <span className="text-gray-300 text-sm truncate">Canceled</span>
+                <span className="text-red-400 font-semibold text-sm">{dashboardData.complaints.summary.canceled}</span>
               </div>
             </div>
           </div>
         </div>
 
         {/* Recent Activities */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 gap-4 sm:gap-6">
           {/* Recent Complaints */}
-          <div className="bg-white/10 backdrop-blur-lg rounded-3xl p-6 border border-white/20 shadow-2xl">
-            <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
-              <span className="text-2xl mr-2">📝</span>
-              Recent Complaints
+          <div className="bg-white/10 backdrop-blur-lg rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-white/20 shadow-2xl">
+            <h3 className="text-base sm:text-lg font-semibold text-white mb-4 flex items-center">
+              <span className="text-xl sm:text-2xl mr-2">📝</span>
+              <span className="truncate">Recent Complaints</span>
             </h3>
             <div className="space-y-3">
               {dashboardData.recent.complaints.length === 0 ? (
-                <div className="text-center py-8">
-                  <div className="text-4xl mb-2">📭</div>
-                  <p className="text-gray-300">No recent complaints</p>
+                <div className="text-center py-6 sm:py-8">
+                  <div className="text-3xl sm:text-4xl mb-2">📭</div>
+                  <p className="text-gray-300 text-sm">No recent complaints</p>
                 </div>
               ) : (
                 dashboardData.recent.complaints.map((complaint) => (
-                  <div key={complaint.id} className="bg-white/5 rounded-2xl p-4 border border-white/10">
+                  <div key={complaint.id} className="bg-white/5 rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-white/10">
                     <div className="flex items-center justify-between">
-                      <div className="flex-1">
-                        <p className="text-white font-medium">{complaint.title}</p>
-                        <p className="text-gray-300 text-sm">{complaint.student.name}</p>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-white font-medium text-sm sm:text-base truncate">{complaint.title}</p>
+                        <p className="text-gray-300 text-xs sm:text-sm truncate">{complaint.student.name}</p>
                       </div>
-                      <span className={`px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(complaint.status)}`}>
+                      <span className={`px-2 sm:px-3 py-1 rounded-full text-xs font-medium border flex-shrink-0 ml-2 ${getStatusColor(complaint.status)}`}>
                         {complaint.status}
                       </span>
                     </div>
@@ -281,27 +281,27 @@ export default function AdminDashboard() {
           </div>
 
           {/* Recent Payments */}
-          <div className="bg-white/10 backdrop-blur-lg rounded-3xl p-6 border border-white/20 shadow-2xl">
-            <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
-              <span className="text-2xl mr-2">💳</span>
-              Recent Payments
+          <div className="bg-white/10 backdrop-blur-lg rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-white/20 shadow-2xl">
+            <h3 className="text-base sm:text-lg font-semibold text-white mb-4 flex items-center">
+              <span className="text-xl sm:text-2xl mr-2">💳</span>
+              <span className="truncate">Recent Payments</span>
             </h3>
             <div className="space-y-3">
               {dashboardData.recent.payments.length === 0 ? (
-                <div className="text-center py-8">
-                  <div className="text-4xl mb-2">💳</div>
-                  <p className="text-gray-300">No recent payments</p>
+                <div className="text-center py-6 sm:py-8">
+                  <div className="text-3xl sm:text-4xl mb-2">💳</div>
+                  <p className="text-gray-300 text-sm">No recent payments</p>
                 </div>
               ) : (
                 dashboardData.recent.payments.map((payment) => (
-                  <div key={payment.id} className="bg-white/5 rounded-2xl p-4 border border-white/10">
+                  <div key={payment.id} className="bg-white/5 rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-white/10">
                     <div className="flex items-center justify-between">
-                      <div className="flex-1">
-                        <p className="text-white font-medium">{payment.student.name}</p>
-                        <p className="text-gray-300 text-sm">{formatCurrency(payment.paidRent)}</p>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-white font-medium text-sm sm:text-base truncate">{payment.student.name}</p>
+                        <p className="text-gray-300 text-xs sm:text-sm truncate">{formatCurrency(payment.paidRent)}</p>
                       </div>
-                      <div className="text-right">
-                        <p className="text-green-400 font-medium">{formatCurrency(payment.paidRent)}</p>
+                      <div className="text-right flex-shrink-0 ml-2">
+                        <p className="text-green-400 font-medium text-sm sm:text-base">{formatCurrency(payment.paidRent)}</p>
                         <p className="text-gray-300 text-xs">{formatDate(payment.paidDate)}</p>
                       </div>
                     </div>
@@ -313,33 +313,33 @@ export default function AdminDashboard() {
         </div>
 
         {/* Monthly Statistics Chart */}
-        <div className="bg-white/10 backdrop-blur-lg rounded-3xl p-6 border border-white/20 shadow-2xl">
-          <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
-            <span className="text-2xl mr-2">📈</span>
-            Monthly Payment Statistics
+        <div className="bg-white/10 backdrop-blur-lg rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-white/20 shadow-2xl">
+          <h3 className="text-base sm:text-lg font-semibold text-white mb-4 flex items-center">
+            <span className="text-xl sm:text-2xl mr-2">📈</span>
+            <span className="truncate">Monthly Payment Statistics</span>
           </h3>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
             {dashboardData.monthlyStats.map((stat, index) => (
-              <div key={index} className="bg-white/5 rounded-2xl p-4 text-center border border-white/10">
-                <p className="text-gray-300 text-sm">{stat.month}</p>
-                <p className="text-white font-semibold mt-1">{formatCurrency(stat.totalPaid)}</p>
-                <p className="text-gray-300 text-xs mt-1">{stat.paymentCount} payments</p>
+              <div key={index} className="bg-white/5 rounded-xl sm:rounded-2xl p-3 sm:p-4 text-center border border-white/10">
+                <p className="text-gray-300 text-xs sm:text-sm truncate">{stat.month}</p>
+                <p className="text-white font-semibold mt-1 text-sm sm:text-base truncate">{formatCurrency(stat.totalPaid)}</p>
+                <p className="text-gray-300 text-xs mt-1 truncate">{stat.paymentCount} payments</p>
               </div>
             ))}
           </div>
         </div>
 
         {/* Categories Overview */}
-        <div className="bg-white/10 backdrop-blur-lg rounded-3xl p-6 border border-white/20 shadow-2xl">
-          <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
-            <span className="text-2xl mr-2">🏷️</span>
-            Categories Overview
+        <div className="bg-white/10 backdrop-blur-lg rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-white/20 shadow-2xl">
+          <h3 className="text-base sm:text-lg font-semibold text-white mb-4 flex items-center">
+            <span className="text-xl sm:text-2xl mr-2">🏷️</span>
+            <span className="truncate">Categories Overview</span>
           </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
             {dashboardData.categories.map((category) => (
-              <div key={category.id} className="bg-white/5 rounded-2xl p-4 border border-white/10">
-                <h4 className="text-white font-medium">{category.title}</h4>
-                <p className="text-green-400 font-semibold">{formatCurrency(category.rentAmount)}</p>
+              <div key={category.id} className="bg-white/5 rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-white/10">
+                <h4 className="text-white font-medium text-sm sm:text-base truncate">{category.title}</h4>
+                <p className="text-green-400 font-semibold text-sm sm:text-base truncate">{formatCurrency(category.rentAmount)}</p>
               </div>
             ))}
           </div>

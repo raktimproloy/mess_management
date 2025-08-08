@@ -2,7 +2,7 @@
 import React, { useState, useMemo, useEffect } from "react";
 import toast, { Toaster } from 'react-hot-toast';
 
-const PAGE_SIZE = 5;
+const PAGE_SIZE = 10;
 
 function getMonthYear() {
   const now = new Date();
@@ -18,13 +18,13 @@ export default function CurrentRent() {
   const [summary, setSummary] = useState({ totalStudents: 0, totalRent: 0, totalPaid: 0, totalDue: 0 });
   const [loading, setLoading] = useState(false);
   const [modal, setModal] = useState({ open: false, type: null, rent: null });
-  const [payAmount, setPayAmount] = useState("");
   const [rentPaid, setRentPaid] = useState("");
   const [advancePaid, setAdvancePaid] = useState("");
   const [externalPaid, setExternalPaid] = useState("");
   const [previousDuePaid, setPreviousDuePaid] = useState("");
   const [paymentType, setPaymentType] = useState("on hand");
   const [confirmModal, setConfirmModal] = useState({ open: false, rent: null });
+  const [expandedCards, setExpandedCards] = useState(new Set());
 
   // Fetch categories from API
   useEffect(() => {
@@ -89,7 +89,6 @@ export default function CurrentRent() {
       setPaymentType("on hand");
     } else {
       setModal({ open: true, type, rent });
-      setPayAmount("");
       setRentPaid("");
       setAdvancePaid("");
       setExternalPaid("");
@@ -99,7 +98,6 @@ export default function CurrentRent() {
   };
   const closeModal = () => {
     setModal({ open: false, type: null, rent: null });
-    setPayAmount("");
     setRentPaid("");
     setAdvancePaid("");
     setExternalPaid("");
@@ -194,8 +192,31 @@ export default function CurrentRent() {
     }
   };
 
+  const toggleCardExpansion = (rentId) => {
+    const newExpanded = new Set(expandedCards);
+    if (newExpanded.has(rentId)) {
+      newExpanded.delete(rentId);
+    } else {
+      newExpanded.add(rentId);
+    }
+    setExpandedCards(newExpanded);
+  };
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'paid': return 'bg-green-500/20 text-green-400 border-green-500/30';
+      case 'partial': return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30';
+      case 'unpaid': return 'bg-red-500/20 text-red-400 border-red-500/30';
+      default: return 'bg-gray-500/20 text-gray-400 border-gray-500/30';
+    }
+  };
+
+  const getStatusText = (status) => {
+    return status.charAt(0).toUpperCase() + status.slice(1);
+  };
+
   return (
-    <div className="p-6 min-h-screen bg-[#18181b] dark:bg-[#18181b]">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900">
       <Toaster 
         position="top-right"
         toastOptions={{
@@ -219,375 +240,579 @@ export default function CurrentRent() {
           },
         }}
       />
-      {/* Top summary */}
-      <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div className="text-2xl font-bold text-white">{getMonthYear()}</div>
-        <div className="flex gap-6 flex-wrap">
-          <div className="text-white">Total Student: <span className="font-bold">{summary.totalStudents}</span></div>
-          <div className="text-white">Total Rent: <span className="font-bold">৳{summary.totalRent}</span></div>
-          <div className="text-white">Total Paid: <span className="font-bold">৳{summary.totalPaid}</span></div>
-          <div className="text-white">Total Due: <span className="font-bold">৳{summary.totalDue}</span></div>
+
+      {/* Header */}
+      <div className="sticky top-0 z-10 bg-white/10 backdrop-blur-lg border-b border-white/20">
+        <div className="px-4 py-6">
+          <div className="flex items-center justify-between">
+            <div className="flex-1 min-w-0">
+              <h1 className="text-xl sm:text-2xl font-bold text-white truncate">💰 Current Rent</h1>
+              <p className="text-gray-300 text-sm mt-1">{getMonthYear()}</p>
+            </div>
+            <div className="flex items-center space-x-2">
+              <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-lg">
+                <span className="text-white text-lg font-bold">📊</span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
-      {/* Filters */}
-      <form onSubmit={handleSearch} className="flex flex-wrap gap-4 items-end mb-4 bg-[#232329] dark:bg-[#232329] p-4 rounded-lg shadow">
-        <div>
-          <label className="block text-sm font-medium text-white mb-1">Category</label>
-          <select
-            name="category"
-            value={filters.category}
-            onChange={handleFilterChange}
-            className="px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-[#18181b] text-white border-gray-600"
-          >
-            <option value="">All</option>
-            {categories.map((cat) => (
-              <option key={cat.id} value={cat.id}>{cat.title}</option>
-            ))}
-          </select>
+
+      <div className="p-4 space-y-6">
+        {/* Summary Cards */}
+        <div className="grid grid-cols-2 gap-4">
+          <div className="bg-white/10 backdrop-blur-lg rounded-3xl p-4 border border-white/20 shadow-2xl">
+            <div className="flex items-center justify-between mb-3">
+              <div className="text-2xl">👥</div>
+              <div className="text-right">
+                <p className="text-gray-300 text-xs">Total Students</p>
+                <p className="text-xl font-bold text-white">{summary.totalStudents}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white/10 backdrop-blur-lg rounded-3xl p-4 border border-white/20 shadow-2xl">
+            <div className="flex items-center justify-between mb-3">
+              <div className="text-2xl">💰</div>
+              <div className="text-right">
+                <p className="text-gray-300 text-xs">Total Rent</p>
+                <p className="text-xl font-bold text-white">৳{summary.totalRent}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white/10 backdrop-blur-lg rounded-3xl p-4 border border-white/20 shadow-2xl">
+            <div className="flex items-center justify-between mb-3">
+              <div className="text-2xl">✅</div>
+              <div className="text-right">
+                <p className="text-gray-300 text-xs">Total Paid</p>
+                <p className="text-xl font-bold text-green-400">৳{summary.totalPaid}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white/10 backdrop-blur-lg rounded-3xl p-4 border border-white/20 shadow-2xl">
+            <div className="flex items-center justify-between mb-3">
+              <div className="text-2xl">⚠️</div>
+              <div className="text-right">
+                <p className="text-gray-300 text-xs">Total Due</p>
+                <p className="text-xl font-bold text-red-400">৳{summary.totalDue}</p>
+              </div>
+            </div>
+          </div>
         </div>
-        <div>
-          <label className="block text-sm font-medium text-white mb-1">Search</label>
-          <input
-            type="text"
-            name="search"
-            value={filters.search}
-            onChange={handleFilterChange}
-            className="px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-[#18181b] text-white border-gray-600"
-            placeholder="Name or phone"
-          />
+
+        {/* Filters */}
+        <div className="bg-white/10 backdrop-blur-lg rounded-3xl p-4 border border-white/20 shadow-2xl">
+          <form onSubmit={handleSearch} className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-white mb-2">Category</label>
+                <select
+                  name="category"
+                  value={filters.category}
+                  onChange={handleFilterChange}
+                  className="w-full px-4 py-3 border rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white/10 text-white border-white/20 backdrop-blur-lg"
+                >
+                  <option value="">All Categories</option>
+                  {categories.map((cat) => (
+                    <option key={cat.id} value={cat.id}>{cat.title}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-white mb-2">Search</label>
+                <input
+                  type="text"
+                  name="search"
+                  value={filters.search}
+                  onChange={handleFilterChange}
+                  className="w-full px-4 py-3 border rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white/10 text-white border-white/20 backdrop-blur-lg"
+                  placeholder="Search by name or phone..."
+                />
+              </div>
+            </div>
+            <button
+              type="submit"
+              className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold py-3 px-6 rounded-2xl shadow-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200"
+            >
+              🔍 Search
+            </button>
+          </form>
         </div>
-        <button
-          type="submit"
-          className="px-6 py-2 rounded-md bg-blue-600 text-white font-medium shadow hover:bg-blue-700 transition"
-        >
-          Search
-        </button>
-      </form>
-      {/* Table */}
-      <div className="overflow-x-auto rounded-lg shadow bg-[#232329] dark:bg-[#232329]">
-        <table className="min-w-full divide-y divide-gray-700">
-          <thead className="bg-[#18181b] dark:bg-[#18181b]">
-            <tr>
-              <th className="px-4 py-2 text-left text-xs font-semibold text-white uppercase">ID</th>
-              <th className="px-4 py-2 text-left text-xs font-semibold text-white uppercase">Student</th>
-              <th className="px-4 py-2 text-left text-xs font-semibold text-white uppercase">Category</th>
-              <th className="px-4 py-2 text-left text-xs font-semibold text-white uppercase">Rent Amount</th>
-              <th className="px-4 py-2 text-left text-xs font-semibold text-white uppercase">Rent Paid</th>
-              <th className="px-4 py-2 text-left text-xs font-semibold text-white uppercase">Advance Amount</th>
-              <th className="px-4 py-2 text-left text-xs font-semibold text-white uppercase">Advance Paid</th>
-              <th className="px-4 py-2 text-left text-xs font-semibold text-white uppercase">External Amount</th>
-              <th className="px-4 py-2 text-left text-xs font-semibold text-white uppercase">External Paid</th>
-              <th className="px-4 py-2 text-left text-xs font-semibold text-white uppercase">Previous Due</th>
-              <th className="px-4 py-2 text-left text-xs font-semibold text-white uppercase">Previous Due Paid</th>
-              <th className="px-4 py-2 text-left text-xs font-semibold text-white uppercase">Status</th>
-              <th className="px-4 py-2 text-left text-xs font-semibold text-white uppercase">Paid Date</th>
-              <th className="px-4 py-2 text-left text-xs font-semibold text-white uppercase">Paid Type</th>
-              <th className="px-4 py-2 text-left text-xs font-semibold text-white uppercase">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-800">
-            {loading ? (
-              <tr><td colSpan={18} className="px-4 py-6 text-center text-white">Loading...</td></tr>
-            ) : rents.length === 0 ? (
-              <tr><td colSpan={18} className="px-4 py-6 text-center text-white">No data found.</td></tr>
-            ) : (
-              rents.map((rent) => {
-                return (
-                  <tr key={rent.id} className="hover:bg-[#18181b]">
-                    <td className="px-4 py-2 text-sm text-white">{rent.id}</td>
-                    <td className="px-4 py-2 text-sm text-white">{rent.student?.name} <br/><span className="text-xs text-gray-400">ID: {rent.studentId}</span></td>
-                    <td className="px-4 py-2 text-sm text-white">{rent.category?.title} <br/><span className="text-xs text-gray-400">ID: {rent.categoryId}</span></td>
-                    <td className="px-4 py-2 text-sm text-red-500">৳{rent.rentAmount}</td>
-                    <td className="px-4 py-2 text-sm text-green-500">৳{rent.rentPaid}</td>
-                    <td className="px-4 py-2 text-sm text-red-500">৳{rent.advanceAmount}</td>
-                    <td className="px-4 py-2 text-sm text-green-500">৳{rent.advancePaid}</td>
-                    <td className="px-4 py-2 text-sm text-red-500">৳{rent.externalAmount}</td>
-                    <td className="px-4 py-2 text-sm text-green-500">৳{rent.externalPaid}</td>
-                    <td className="px-4 py-2 text-sm text-red-500">৳{rent.previousDue}</td>
-                    <td className="px-4 py-2 text-sm text-green-500">৳{rent.previousDuePaid}</td>
-                    <td className="px-4 py-2 text-sm">
-                      <span className={`inline-block px-2 py-1 rounded text-xs font-medium ${rent.status === 'paid' ? 'bg-green-700 text-white' : rent.status === 'partial' ? 'bg-yellow-700 text-white' : 'bg-red-700 text-white'}`}>
-                        {rent.status.charAt(0).toUpperCase() + rent.status.slice(1)}
-                      </span>
-                    </td>
-                    
-                    <td className="px-4 py-2 text-sm text-white">{rent.paidDate ? new Date(rent.paidDate).toLocaleString() : "-"}</td>
-                    <td className="px-4 py-2 text-sm text-white">{rent.paidType || "-"}</td>
-                    <td className="px-4 py-2 text-sm text-white">
-                      <div className="flex gap-2">
+
+        {/* Rent Cards */}
+        <div className="space-y-4">
+          {loading ? (
+            <div className="bg-white/10 backdrop-blur-lg rounded-3xl p-8 border border-white/20 shadow-2xl text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+              <p className="text-white text-lg">Loading rents...</p>
+            </div>
+          ) : rents.length === 0 ? (
+            <div className="bg-white/10 backdrop-blur-lg rounded-3xl p-8 border border-white/20 shadow-2xl text-center">
+              <div className="text-4xl mb-4">📭</div>
+              <p className="text-white text-lg">No rents found</p>
+              <p className="text-gray-300 text-sm mt-2">Try adjusting your search criteria</p>
+            </div>
+          ) : (
+            rents.map((rent) => {
+              const isExpanded = expandedCards.has(rent.id);
+              const totalDue = (rent.rentAmount || 0) - (rent.rentPaid || 0) + 
+                              (rent.advanceAmount || 0) - (rent.advancePaid || 0) + 
+                              (rent.externalAmount || 0) - (rent.externalPaid || 0) + 
+                              (rent.previousDue || 0) - (rent.previousDuePaid || 0);
+
+              return (
+                <div key={rent.id} className="bg-white/10 backdrop-blur-lg rounded-3xl border border-white/20 shadow-2xl overflow-hidden">
+                  {/* Card Header - Collapsed State */}
+                  <div 
+                    className="p-4 cursor-pointer hover:bg-white/5 transition-colors duration-200"
+                    onClick={() => toggleCardExpansion(rent.id)}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-3 flex-1 min-w-0">
+                        {/* <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg flex-shrink-0">
+                          <span className="text-white text-sm font-bold">
+                            {rent.student?.name?.charAt(0)?.toUpperCase() || '?'}
+                          </span>
+                        </div> */}
+                        <div className="flex-1 min-w-0">
+                          <h3 className="text-white font-semibold text-base truncate">{rent.student?.name}</h3>
+                          <p className="text-gray-300 text-xs truncate">৳{totalDue} due</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-3">
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getStatusColor(rent.status)}`}>
+                          {getStatusText(rent.status)}
+                        </span>
+                        <div className="transform transition-transform duration-200">
+                          <span className="text-white text-lg">{isExpanded ? '−' : '+'}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Expanded Content */}
+                  {isExpanded && (
+                    <div className="px-4 pb-4 space-y-4 border-t border-white/10">
+                      {/* Student & Category Info */}
+                      <div className="bg-white/5 rounded-2xl p-4">
+                        <h4 className="text-white font-medium mb-3">👤 Student & Category Details</h4>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+                          <div>
+                            <span className="text-gray-300">Student Name: </span>
+                            <span className="text-white font-medium">{rent.student?.name}</span>
+                          </div>
+                          <div>
+                            <span className="text-gray-300">Student ID: </span>
+                            <span className="text-white">{rent.studentId}</span>
+                          </div>
+                          <div>
+                            <span className="text-gray-300">Category: </span>
+                            <span className="text-white font-medium">{rent.category?.title}</span>
+                          </div>
+                          <div>
+                            <span className="text-gray-300">Category ID: </span>
+                            <span className="text-white">{rent.categoryId}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Payment Details */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {/* Rent Details */}
+                        <div className="bg-white/5 rounded-2xl p-4">
+                          <h4 className="text-blue-300 font-medium mb-3">🏠 Monthly Rent</h4>
+                          <div className="space-y-2 text-sm">
+                            <div className="flex justify-between">
+                              <span className="text-gray-300">Total Amount:</span>
+                              <span className="text-white font-medium">৳{rent.rentAmount || 0}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-gray-300">Paid Amount:</span>
+                              <span className="text-green-400 font-medium">৳{rent.rentPaid || 0}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-gray-300">Remaining:</span>
+                              <span className="text-red-400 font-medium">৳{(rent.rentAmount || 0) - (rent.rentPaid || 0)}</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Advance Details */}
+                        <div className="bg-white/5 rounded-2xl p-4">
+                          <h4 className="text-yellow-300 font-medium mb-3">💰 Advance</h4>
+                          <div className="space-y-2 text-sm">
+                            <div className="flex justify-between">
+                              <span className="text-gray-300">Total Amount:</span>
+                              <span className="text-white font-medium">৳{rent.advanceAmount || 0}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-gray-300">Paid Amount:</span>
+                              <span className="text-green-400 font-medium">৳{rent.advancePaid || 0}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-gray-300">Remaining:</span>
+                              <span className="text-red-400 font-medium">৳{(rent.advanceAmount || 0) - (rent.advancePaid || 0)}</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* External Details */}
+                        <div className="bg-white/5 rounded-2xl p-4">
+                          <h4 className="text-purple-300 font-medium mb-3">🌐 External</h4>
+                          <div className="space-y-2 text-sm">
+                            <div className="flex justify-between">
+                              <span className="text-gray-300">Total Amount:</span>
+                              <span className="text-white font-medium">৳{rent.externalAmount || 0}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-gray-300">Paid Amount:</span>
+                              <span className="text-green-400 font-medium">৳{rent.externalPaid || 0}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-gray-300">Remaining:</span>
+                              <span className="text-red-400 font-medium">৳{(rent.externalAmount || 0) - (rent.externalPaid || 0)}</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Previous Due Details */}
+                        {rent.previousDue > 0 && (
+                          <div className="bg-white/5 rounded-2xl p-4">
+                            <h4 className="text-orange-300 font-medium mb-3">📅 Previous Due</h4>
+                            <div className="space-y-2 text-sm">
+                              <div className="flex justify-between">
+                                <span className="text-gray-300">Total Amount:</span>
+                                <span className="text-white font-medium">৳{rent.previousDue || 0}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-gray-300">Paid Amount:</span>
+                                <span className="text-green-400 font-medium">৳{rent.previousDuePaid || 0}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-gray-300">Remaining:</span>
+                                <span className="text-red-400 font-medium">৳{(rent.previousDue || 0) - (rent.previousDuePaid || 0)}</span>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Payment History */}
+                      <div className="bg-white/5 rounded-2xl p-4">
+                        <h4 className="text-white font-medium mb-3">📊 Payment History</h4>
+                        <div className="grid grid-cols-2 gap-4 text-sm">
+                          <div>
+                            <span className="text-gray-300">Paid Date: </span>
+                            <span className="text-white">{rent.paidDate ? new Date(rent.paidDate).toLocaleDateString() : 'Not paid'}</span>
+                          </div>
+                          <div>
+                            <span className="text-gray-300">Payment Type: </span>
+                            <span className="text-white">{rent.paidType || 'Not specified'}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Action Buttons */}
+                      <div className="flex flex-col sm:flex-row gap-3">
                         <button
                           onClick={() => openModal("full", rent)}
-                          className="px-2 py-1 border border-white rounded hover:bg-green-700 text-white transition"
-                          title="Full Pay"
+                          className="flex-1 bg-gradient-to-r from-green-600 to-green-700 text-white font-semibold py-3 px-6 rounded-2xl shadow-lg hover:from-green-700 hover:to-green-800 transition-all duration-200"
                         >
-                          Full Pay
+                          💰 Full Pay
                         </button>
                         <button
                           onClick={() => openModal("pay", rent)}
-                          className="px-2 py-1 border border-blue-400 rounded hover:bg-blue-700 text-blue-300 transition"
-                          title="Pay"
+                          className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-semibold py-3 px-6 rounded-2xl shadow-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-200"
                         >
-                          Pay
+                          💳 Partial Pay
                         </button>
-                        {/* <button
-                          onClick={() => toast.info(`Profile: ${rent.student?.name}`)}
-                          className="px-2 py-1 border border-gray-400 rounded hover:bg-gray-700 text-gray-300 transition"
-                          title="Profile"
-                        >
-                          Profile
-                        </button> */}
                       </div>
-                    </td>
-                  </tr>
-                );
-              })
-            )}
-          </tbody>
-        </table>
-      </div>
-      {/* Pagination */}
-      <div className="flex justify-between items-center mt-6">
-        <div className="text-sm text-white">Page {page} of {totalPages}</div>
-        <div className="flex gap-2">
-          <button
-            onClick={() => handlePageChange(page - 1)}
-            disabled={page === 1}
-            className="px-3 py-1 rounded bg-gray-700 text-white hover:bg-gray-600 disabled:opacity-50"
-          >
-            Previous
-          </button>
-          {Array.from({ length: totalPages }, (_, i) => (
-            <button
-              key={i + 1}
-              onClick={() => handlePageChange(i + 1)}
-              className={`px-3 py-1 rounded ${page === i + 1 ? "bg-blue-600 text-white" : "bg-gray-700 text-white hover:bg-gray-600"}`}
-            >
-              {i + 1}
-            </button>
-          ))}
-          <button
-            onClick={() => handlePageChange(page + 1)}
-            disabled={page === totalPages}
-            className="px-3 py-1 rounded bg-gray-700 text-white hover:bg-gray-600 disabled:opacity-50"
-          >
-            Next
-          </button>
+                    </div>
+                  )}
+                </div>
+              );
+            })
+          )}
         </div>
-      </div>
-      {/* Modal */}
-      {modal.open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60">
-          <div className="bg-[#232329] rounded-lg shadow-lg w-full max-w-2xl p-6 relative animate-fadeIn border border-gray-700 max-h-[90vh] overflow-y-auto">
-            <button
-              onClick={closeModal}
-              className="absolute top-2 right-2 text-white text-xl font-bold hover:text-red-500"
-              title="Close"
-            >
-              ×
-            </button>
-            <h2 className="text-xl font-semibold mb-4 text-white text-center">
-              {modal.type === "full" && "Full Payment"}
-              {modal.type === "pay" && "Monthly Rent Payment"}
-              {modal.type === "adv" && "Advance Payment"}
-            </h2>
-            
-            <div className="mb-4 text-white space-y-4">
-              {/* Payment Type Selector */}
-              <div className="mb-2">
-                <label className="block text-sm font-medium mb-1">Payment Type</label>
-                <select
-                  className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-[#232329] text-white border-gray-600"
-                  value={paymentType}
-                  onChange={e => setPaymentType(e.target.value)}
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="bg-white/10 backdrop-blur-lg rounded-3xl p-4 border border-white/20 shadow-2xl">
+            <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+              <div className="text-sm text-white">Page {page} of {totalPages}</div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => handlePageChange(page - 1)}
+                  disabled={page === 1}
+                  className="px-4 py-2 rounded-2xl bg-white/10 text-white hover:bg-white/20 disabled:opacity-50 transition-all duration-200"
                 >
-                  <option value="on hand">On Hand</option>
-                  <option value="online">Online</option>
-                </select>
-              </div>
-              {/* Rent Due Section */}
-              <div className="bg-[#18181b] p-4 rounded-lg border border-gray-600">
-                <h3 className="text-lg font-semibold mb-2 text-blue-300">Monthly Rent Due</h3>
-                <div className="grid grid-cols-2 gap-4 mb-3">
-                  <div>
-                    <span className="text-gray-300">Total Rent: </span>
-                    <span className="font-bold text-white">৳{modal.rent.rentAmount || 0}</span>
-                  </div>
-                  <div>
-                    <span className="text-gray-300">Already Paid: </span>
-                    <span className="font-bold text-green-400">৳{modal.rent.rentPaid || 0}</span>
-                  </div>
-                </div>
-                <div className="mb-2">
-                  <span className="text-gray-300">Remaining Due: </span>
-                  <span className="font-bold text-red-400">৳{(modal.rent.rentAmount || 0) - (modal.rent.rentPaid || 0)}</span>
-                </div>
-                <input
-                  type="number"
-                  className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-[#232329] text-white border-gray-600"
-                  placeholder="Enter rent payment amount"
-                  value={rentPaid}
-                  onChange={e => setRentPaid(e.target.value)}
-                />
-              </div>
-
-              {/* Advance Due Section */}
-              <div className="bg-[#18181b] p-4 rounded-lg border border-gray-600">
-                <h3 className="text-lg font-semibold mb-2 text-yellow-300">Advance Due</h3>
-                <div className="grid grid-cols-2 gap-4 mb-3">
-                  <div>
-                    <span className="text-gray-300">Total Advance: </span>
-                    <span className="font-bold text-white">৳{modal.rent.advanceAmount || 0}</span>
-                  </div>
-                  <div>
-                    <span className="text-gray-300">Already Paid: </span>
-                    <span className="font-bold text-green-400">৳{modal.rent.advancePaid || 0}</span>
-                  </div>
-                </div>
-                <div className="mb-2">
-                  <span className="text-gray-300">Remaining Due: </span>
-                  <span className="font-bold text-red-400">৳{(modal.rent.advanceAmount || 0) - (modal.rent.advancePaid || 0)}</span>
-                </div>
-                <input
-                  type="number"
-                  className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-[#232329] text-white border-gray-600"
-                  placeholder="Enter advance payment amount"
-                  value={advancePaid}
-                  onChange={e => setAdvancePaid(Number(e.target.value))}
-                />
-                {advancePaid > 0 && (
-                  <div className="text-green-500 text-xs mt-1">Advance will be carried forward to next month's rent.</div>
-                )}
-              </div>
-
-              {/* External Due Section */}
-              <div className="bg-[#18181b] p-4 rounded-lg border border-gray-600">
-                <h3 className="text-lg font-semibold mb-2 text-purple-300">External Due</h3>
-                <div className="grid grid-cols-2 gap-4 mb-3">
-                  <div>
-                    <span className="text-gray-300">Total External: </span>
-                    <span className="font-bold text-white">৳{modal.rent.externalAmount || 0}</span>
-                  </div>
-                  <div>
-                    <span className="text-gray-300">Already Paid: </span>
-                    <span className="font-bold text-green-400">৳{modal.rent.externalPaid || 0}</span>
-                  </div>
-                </div>
-                <div className="mb-2">
-                  <span className="text-gray-300">Remaining Due: </span>
-                  <span className="font-bold text-red-400">৳{(modal.rent.externalAmount || 0) - (modal.rent.externalPaid || 0)}</span>
-                </div>
-                <input
-                  type="number"
-                  className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-[#232329] text-white border-gray-600"
-                  placeholder="Enter external payment amount"
-                  value={externalPaid}
-                  onChange={e => setExternalPaid(e.target.value)}
-                />
-              </div>
-
-              {/* Previous Due Section */}
-              {modal.rent.previousDue > 0 && (
-                <div className="bg-[#18181b] p-4 rounded-lg border border-gray-600">
-                  <h3 className="text-lg font-semibold mb-2 text-orange-300">Previous Due</h3>
-                  <div className="grid grid-cols-2 gap-4 mb-3">
-                    <div>
-                      <span className="text-gray-300">Total Previous Due: </span>
-                      <span className="font-bold text-white">৳{modal.rent.previousDue || 0}</span>
-                    </div>
-                    <div>
-                      <span className="text-gray-300">Already Paid: </span>
-                      <span className="font-bold text-green-400">৳{modal.rent.previousDuePaid || 0}</span>
-                    </div>
-                  </div>
-                  <div className="mb-2">
-                    <span className="text-gray-300">Remaining Due: </span>
-                    <span className="font-bold text-red-400">৳{(modal.rent.previousDue || 0) - (modal.rent.previousDuePaid || 0)}</span>
-                  </div>
-                  <input
-                    type="number"
-                    className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 bg-[#232329] text-white border-gray-600"
-                    placeholder="Enter previous due payment amount"
-                    value={previousDuePaid}
-                    onChange={e => setPreviousDuePaid(e.target.value)}
-                  />
-                  <p className="text-sm text-gray-400 mt-1">This amount will be paid towards previous due.</p>
-                </div>
-              )}
-
-              {/* Total Summary */}
-              <div className="bg-[#18181b] p-4 rounded-lg border border-gray-600">
-                <h3 className="text-lg font-semibold mb-2 text-white">Payment Summary</h3>
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <span className="text-gray-300">Rent Payment: </span>
-                    <span className="font-bold text-blue-300">৳{parseFloat(rentPaid) || 0}</span>
-                  </div>
-                  <div>
-                    <span className="text-gray-300">Advance Payment: </span>
-                    <span className="font-bold text-yellow-300">৳{parseFloat(advancePaid) || 0}</span>
-                  </div>
-                  <div>
-                    <span className="text-gray-300">External Payment: </span>
-                    <span className="font-bold text-purple-300">৳{parseFloat(externalPaid) || 0}</span>
-                  </div>
-                  <div>
-                    <span className="text-gray-300">Total Payment: </span>
-                    <span className="font-bold text-green-400">৳{(parseFloat(rentPaid) || 0) + (parseFloat(advancePaid) || 0) + (parseFloat(externalPaid) || 0)}</span>
-                  </div>
-                </div>
+                  ← Previous
+                </button>
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  const pageNum = i + 1;
+                  return (
+                    <button
+                      key={pageNum}
+                      onClick={() => handlePageChange(pageNum)}
+                      className={`px-4 py-2 rounded-2xl transition-all duration-200 ${
+                        page === pageNum 
+                          ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white" 
+                          : "bg-white/10 text-white hover:bg-white/20"
+                      }`}
+                    >
+                      {pageNum}
+                    </button>
+                  );
+                })}
+                <button
+                  onClick={() => handlePageChange(page + 1)}
+                  disabled={page === totalPages}
+                  className="px-4 py-2 rounded-2xl bg-white/10 text-white hover:bg-white/20 disabled:opacity-50 transition-all duration-200"
+                >
+                  Next →
+                </button>
               </div>
             </div>
-            
-            <button
-              onClick={handlePay}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-md transition-colors"
-            >
-              Process Payment
-            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Payment Modal */}
+      {modal.open && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+          <div className="bg-white/10 backdrop-blur-lg rounded-3xl shadow-2xl w-full max-w-md border border-white/20 max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-semibold text-white">
+                  {modal.type === "full" && "💰 Full Payment"}
+                  {modal.type === "pay" && "💳 Partial Payment"}
+                  {modal.type === "adv" && "💰 Advance Payment"}
+                </h2>
+                <button
+                  onClick={closeModal}
+                  className="text-white text-2xl font-bold hover:text-red-400 transition-colors"
+                >
+                  ×
+                </button>
+              </div>
+              
+              <div className="space-y-6">
+                {/* Student Info */}
+                <div className="bg-white/5 rounded-2xl p-4">
+                  <h3 className="text-white font-medium mb-2">👤 Student Information</h3>
+                  <p className="text-white text-lg font-semibold">{modal.rent?.student?.name}</p>
+                  <p className="text-gray-300 text-sm">ID: {modal.rent?.studentId}</p>
+                </div>
+
+                {/* Payment Type */}
+                <div>
+                  <label className="block text-sm font-medium text-white mb-2">Payment Method</label>
+                  <select
+                    className="w-full px-4 py-3 border rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white/10 text-white border-white/20 backdrop-blur-lg"
+                    value={paymentType}
+                    onChange={e => setPaymentType(e.target.value)}
+                  >
+                    <option value="on hand">💵 Cash Payment</option>
+                    <option value="online">💳 Online Payment</option>
+                  </select>
+                </div>
+
+                {/* Payment Sections */}
+                <div className="space-y-4">
+                  {/* Rent Payment */}
+                  <div className="bg-white/5 rounded-2xl p-4">
+                    <h4 className="text-blue-300 font-medium mb-3">🏠 Monthly Rent Payment</h4>
+                    <div className="space-y-3">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-300">Total Rent:</span>
+                        <span className="text-white">৳{modal.rent?.rentAmount || 0}</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-300">Already Paid:</span>
+                        <span className="text-green-400">৳{modal.rent?.rentPaid || 0}</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-300">Remaining Due:</span>
+                        <span className="text-red-400">৳{(modal.rent?.rentAmount || 0) - (modal.rent?.rentPaid || 0)}</span>
+                      </div>
+                      <input
+                        type="number"
+                        className="w-full px-4 py-3 border rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white/10 text-white border-white/20 backdrop-blur-lg"
+                        placeholder="Enter rent payment amount"
+                        value={rentPaid}
+                        onChange={e => setRentPaid(e.target.value)}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Advance Payment */}
+                  <div className="bg-white/5 rounded-2xl p-4">
+                    <h4 className="text-yellow-300 font-medium mb-3">💰 Advance Payment</h4>
+                    <div className="space-y-3">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-300">Total Advance:</span>
+                        <span className="text-white">৳{modal.rent?.advanceAmount || 0}</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-300">Already Paid:</span>
+                        <span className="text-green-400">৳{modal.rent?.advancePaid || 0}</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-300">Remaining Due:</span>
+                        <span className="text-red-400">৳{(modal.rent?.advanceAmount || 0) - (modal.rent?.advancePaid || 0)}</span>
+                      </div>
+                      <input
+                        type="number"
+                        className="w-full px-4 py-3 border rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white/10 text-white border-white/20 backdrop-blur-lg"
+                        placeholder="Enter advance payment amount"
+                        value={advancePaid}
+                        onChange={e => setAdvancePaid(e.target.value)}
+                      />
+                    </div>
+                  </div>
+
+                  {/* External Payment */}
+                  <div className="bg-white/5 rounded-2xl p-4">
+                    <h4 className="text-purple-300 font-medium mb-3">🌐 External Payment</h4>
+                    <div className="space-y-3">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-300">Total External:</span>
+                        <span className="text-white">৳{modal.rent?.externalAmount || 0}</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-300">Already Paid:</span>
+                        <span className="text-green-400">৳{modal.rent?.externalPaid || 0}</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-300">Remaining Due:</span>
+                        <span className="text-red-400">৳{(modal.rent?.externalAmount || 0) - (modal.rent?.externalPaid || 0)}</span>
+                      </div>
+                      <input
+                        type="number"
+                        className="w-full px-4 py-3 border rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white/10 text-white border-white/20 backdrop-blur-lg"
+                        placeholder="Enter external payment amount"
+                        value={externalPaid}
+                        onChange={e => setExternalPaid(e.target.value)}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Previous Due Payment */}
+                  {modal.rent?.previousDue > 0 && (
+                    <div className="bg-white/5 rounded-2xl p-4">
+                      <h4 className="text-orange-300 font-medium mb-3">📅 Previous Due Payment</h4>
+                      <div className="space-y-3">
+                        <div className="flex justify-between text-sm">
+                          <span className="text-gray-300">Total Previous Due:</span>
+                          <span className="text-white">৳{modal.rent?.previousDue || 0}</span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                          <span className="text-gray-300">Already Paid:</span>
+                          <span className="text-green-400">৳{modal.rent?.previousDuePaid || 0}</span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                          <span className="text-gray-300">Remaining Due:</span>
+                          <span className="text-red-400">৳{(modal.rent?.previousDue || 0) - (modal.rent?.previousDuePaid || 0)}</span>
+                        </div>
+                        <input
+                          type="number"
+                          className="w-full px-4 py-3 border rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white/10 text-white border-white/20 backdrop-blur-lg"
+                          placeholder="Enter previous due payment amount"
+                          value={previousDuePaid}
+                          onChange={e => setPreviousDuePaid(e.target.value)}
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Payment Summary */}
+                  <div className="bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-2xl p-4 border border-blue-500/30">
+                    <h4 className="text-white font-medium mb-3">📊 Payment Summary</h4>
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <span className="text-gray-300">Rent Payment:</span>
+                        <span className="text-blue-300 font-medium block">৳{parseFloat(rentPaid) || 0}</span>
+                      </div>
+                      <div>
+                        <span className="text-gray-300">Advance Payment:</span>
+                        <span className="text-yellow-300 font-medium block">৳{parseFloat(advancePaid) || 0}</span>
+                      </div>
+                      <div>
+                        <span className="text-gray-300">External Payment:</span>
+                        <span className="text-purple-300 font-medium block">৳{parseFloat(externalPaid) || 0}</span>
+                      </div>
+                      <div>
+                        <span className="text-gray-300">Total Payment:</span>
+                        <span className="text-green-400 font-bold text-lg block">৳{(parseFloat(rentPaid) || 0) + (parseFloat(advancePaid) || 0) + (parseFloat(externalPaid) || 0)}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Action Button */}
+                <button
+                  onClick={handlePay}
+                  className="w-full bg-gradient-to-r from-green-600 to-green-700 text-white font-semibold py-4 px-6 rounded-2xl shadow-lg hover:from-green-700 hover:to-green-800 transition-all duration-200"
+                >
+                  💳 Process Payment
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
+
       {/* Full Pay Confirmation Modal */}
       {confirmModal.open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60">
-          <div className="bg-[#232329] rounded-lg shadow-lg w-full max-w-md p-6 relative animate-fadeIn border border-gray-700">
-            <button
-              onClick={closeConfirmModal}
-              className="absolute top-2 right-2 text-white text-xl font-bold hover:text-red-500"
-              title="Close"
-            >
-              ×
-            </button>
-            <h2 className="text-xl font-semibold mb-4 text-white text-center">Confirm Full Pay</h2>
-            <div className="mb-4 text-white text-center">
-              Are you sure you want to fully pay for <span className="font-bold">{confirmModal.rent?.student?.name}</span>?
-              <div className="mt-2">Total Rent: <span className="font-bold">৳{(confirmModal.rent?.rentAmount || 0) + (confirmModal.rent?.externalAmount || 0) + (confirmModal.rent?.previousDue || 0)}</span></div>
-              {/* Payment Type Selector */}
-              <div className="mt-4">
-                <label className="block text-sm font-medium mb-1">Payment Type</label>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+          <div className="bg-white/10 backdrop-blur-lg rounded-3xl shadow-2xl w-full max-w-md border border-white/20">
+            <div className="p-6">
+              <div className="text-center mb-6">
+                <div className="text-4xl mb-4">💰</div>
+                <h2 className="text-xl font-semibold text-white mb-2">Confirm Full Payment</h2>
+                <p className="text-gray-300 text-sm">Are you sure you want to fully pay for this student?</p>
+              </div>
+
+              <div className="bg-white/5 rounded-2xl p-4 mb-6">
+                <h3 className="text-white font-medium mb-3">👤 Student Details</h3>
+                <p className="text-white text-lg font-semibold">{confirmModal.rent?.student?.name}</p>
+                <p className="text-gray-300 text-sm">ID: {confirmModal.rent?.studentId}</p>
+                <div className="mt-3 pt-3 border-t border-white/10">
+                  <p className="text-gray-300 text-sm">Total Amount Due:</p>
+                  <p className="text-green-400 font-bold text-xl">
+                    ৳{(confirmModal.rent?.rentAmount || 0) + (confirmModal.rent?.externalAmount || 0) + (confirmModal.rent?.previousDue || 0)}
+                  </p>
+                </div>
+              </div>
+
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-white mb-2">Payment Method</label>
                 <select
-                  className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-[#232329] text-white border-gray-600"
+                  className="w-full px-4 py-3 border rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white/10 text-white border-white/20 backdrop-blur-lg"
                   value={paymentType}
                   onChange={e => setPaymentType(e.target.value)}
                 >
-                  <option value="on hand">On Hand</option>
-                  <option value="online">Online</option>
+                  <option value="on hand">💵 Cash Payment</option>
+                  <option value="online">💳 Online Payment</option>
                 </select>
               </div>
-            </div>
-            <div className="flex gap-4 justify-center">
-              <button
-                onClick={handleConfirmFullPay}
-                className="px-6 py-2 rounded-md bg-blue-600 text-white font-semibold hover:bg-blue-700 transition"
-              >
-                Confirm
-              </button>
-              <button
-                onClick={closeConfirmModal}
-                className="px-6 py-2 rounded-md bg-gray-700 text-white font-semibold hover:bg-gray-600 transition"
-              >
-                Cancel
-              </button>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={handleConfirmFullPay}
+                  className="flex-1 bg-gradient-to-r from-green-600 to-green-700 text-white font-semibold py-3 px-6 rounded-2xl shadow-lg hover:from-green-700 hover:to-green-800 transition-all duration-200"
+                >
+                  ✅ Confirm
+                </button>
+                <button
+                  onClick={closeConfirmModal}
+                  className="flex-1 bg-white/10 text-white font-semibold py-3 px-6 rounded-2xl shadow-lg hover:bg-white/20 transition-all duration-200"
+                >
+                  ❌ Cancel
+                </button>
+              </div>
             </div>
           </div>
         </div>

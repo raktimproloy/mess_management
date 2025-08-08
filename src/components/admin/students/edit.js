@@ -160,7 +160,7 @@ export default function EditStudent({ student }) {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-[#18181b] py-8">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 flex items-center justify-center py-8">
       <Toaster 
         position="top-right"
         toastOptions={{
@@ -187,20 +187,20 @@ export default function EditStudent({ student }) {
       
       <form
         onSubmit={handleSubmit}
-        className="bg-white dark:bg-[#232329] p-8 rounded-lg shadow-md w-full max-w-lg space-y-6"
+        className="bg-white/10 backdrop-blur-lg p-8 rounded-3xl shadow-2xl w-full max-w-lg space-y-6 border border-white/20 mx-4"
       >
-        <h2 className="text-2xl font-bold mb-2 text-center text-gray-900 dark:text-white">
+        <h2 className="text-2xl font-bold mb-2 text-center text-white">
           Edit Student
         </h2>
         
         {/* New/Old selection */}
         <div className="mb-4">
-          <label className="block mb-1 text-gray-700 dark:text-gray-300 font-medium">Student Type</label>
+          <label className="block mb-1 text-white font-medium">Student Type</label>
           <select
             name="type"
             value={form.type}
             onChange={handleTypeChange}
-            className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-[#18181b] dark:text-white dark:border-gray-600"
+            className="w-full px-4 py-3 border rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white/10 text-white border-white/20 backdrop-blur-lg"
             disabled={role === 'student'}
           >
             <option value="new">New</option>
@@ -210,13 +210,13 @@ export default function EditStudent({ student }) {
         
         {/* Name */}
         <div className="mb-4">
-          <label className="block mb-1 text-gray-700 dark:text-gray-300">Name *</label>
+          <label className="block mb-1 text-white">Name *</label>
           <input
             type="text"
             name="name"
             value={form.name}
             onChange={handleChange}
-            className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-[#18181b] dark:text-white dark:border-gray-600"
+            className="w-full px-4 py-3 border rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white/10 text-white border-white/20 backdrop-blur-lg"
             placeholder="Enter student name"
             required
             disabled={loading}
@@ -225,13 +225,13 @@ export default function EditStudent({ student }) {
         
         {/* Phone */}
         <div className="mb-4">
-          <label className="block mb-1 text-gray-700 dark:text-gray-300">Phone *</label>
+          <label className="block mb-1 text-white">Phone *</label>
           <input
             type="tel"
             name="phone"
             value={form.phone}
             onChange={handlePhoneChange}
-            className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-[#18181b] dark:text-white dark:border-gray-600"
+            className="w-full px-4 py-3 border rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white/10 text-white border-white/20 backdrop-blur-lg"
             placeholder="Enter phone number"
             required
             disabled={loading || role === 'student'}
@@ -240,13 +240,13 @@ export default function EditStudent({ student }) {
         
         {/* SMS Phone */}
         <div className="mb-4">
-          <label className="block mb-1 text-gray-700 dark:text-gray-300">SMS Phone</label>
+          <label className="block mb-1 text-white">SMS Phone</label>
           <input
             type="tel"
             name="smsPhone"
             value={form.smsPhone}
             onChange={handleChange}
-            className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-[#18181b] dark:text-white dark:border-gray-600"
+            className="w-full px-4 py-3 border rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white/10 text-white border-white/20 backdrop-blur-lg"
             placeholder="Enter SMS phone number"
             disabled={loading}
           />
@@ -254,13 +254,13 @@ export default function EditStudent({ student }) {
         
         {/* Password */}
         <div className="mb-4">
-          <label className="block mb-1 text-gray-700 dark:text-gray-300">Password</label>
+          <label className="block mb-1 text-white">Password</label>
           <input
             type="text"
             name="password"
             value={form.password}
             onChange={handleChange}
-            className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-[#18181b] dark:text-white dark:border-gray-600"
+            className="w-full px-4 py-3 border rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white/10 text-white border-white/20 backdrop-blur-lg"
             placeholder="Enter password"
             disabled={loading}
           />
@@ -268,12 +268,12 @@ export default function EditStudent({ student }) {
         
         {/* Category */}
         <div className="mb-4">
-          <label className="block mb-1 text-gray-700 dark:text-gray-300">Category *</label>
+          <label className="block mb-1 text-white">Category *</label>
           <select
             name="categoryId"
             value={form.categoryId}
             onChange={handleChange}
-            className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-[#18181b] dark:text-white dark:border-gray-600"
+            className="w-full px-4 py-3 border rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white/10 text-white border-white/20 backdrop-blur-lg"
             required
             disabled={loading || role === 'student'}
           >
@@ -288,13 +288,13 @@ export default function EditStudent({ student }) {
         
         {/* Joining Date */}
         <div className="mb-4">
-          <label className="block mb-1 text-gray-700 dark:text-gray-300">Joining Date *</label>
+          <label className="block mb-1 text-white">Joining Date *</label>
           <input
             type="date"
             name="joiningDate"
             value={form.joiningDate}
             onChange={handleChange}
-            className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-[#18181b] dark:text-white dark:border-gray-600"
+            className="w-full px-4 py-3 border rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white/10 text-white border-white/20 backdrop-blur-lg"
             required
             disabled={loading || role === 'student'}
           />
@@ -302,13 +302,13 @@ export default function EditStudent({ student }) {
 
         {/* Booking Amount */}
         <div className="mb-4">
-          <label className="block mb-1 text-gray-700 dark:text-gray-300">Booking Amount</label>
+          <label className="block mb-1 text-white">Booking Amount</label>
           <input
             type="number"
             name="bookingAmount"
             value={form.bookingAmount}
             onChange={handleChange}
-            className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-[#18181b] dark:text-white dark:border-gray-600"
+            className="w-full px-4 py-3 border rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white/10 text-white border-white/20 backdrop-blur-lg"
             placeholder="Enter booking amount"
             min="0"
             step="0.01"
@@ -320,13 +320,13 @@ export default function EditStudent({ student }) {
         {/* Current Due Rent (only if old) */}
         {form.type === "old" && (
           <div className="mb-4">
-            <label className="block mb-1 text-gray-700 dark:text-gray-300">Current Due Rent</label>
+            <label className="block mb-1 text-white">Current Due Rent</label>
             <input
               type="number"
               name="dueRent"
               value={form.dueRent}
               onChange={handleChange}
-              className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-[#18181b] dark:text-white dark:border-gray-600"
+              className="w-full px-4 py-3 border rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white/10 text-white border-white/20 backdrop-blur-lg"
               placeholder="Enter current due rent"
               disabled={loading || role === 'student'}
               ref={dueRentRef}
@@ -337,7 +337,7 @@ export default function EditStudent({ student }) {
         <button
           type="submit"
           disabled={loading}
-          className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-semibold py-2 rounded-md transition-colors"
+          className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 disabled:from-blue-400 disabled:to-blue-500 text-white font-semibold py-3 rounded-2xl transition-all duration-200 shadow-lg"
         >
           {loading ? "Updating..." : "Update Student"}
         </button>

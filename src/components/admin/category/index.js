@@ -45,7 +45,7 @@ function CategoryModal({ open, onClose, onSave, category, mode, loading }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm">
-      <div className="bg-gray-800 rounded-xl shadow-2xl w-full max-w-md p-6 relative animate-fadeIn border border-gray-700">
+      <div className="bg-white/10 backdrop-blur-lg rounded-3xl shadow-2xl w-full max-w-md p-6 relative animate-fadeIn border border-white/20 mx-4">
         <h2 className="text-xl font-semibold mb-6 text-white">
           {mode === 'add' ? 'Add New Category' : mode === 'edit' ? 'Edit Category' : 'View Category'}
         </h2>
@@ -58,7 +58,7 @@ function CategoryModal({ open, onClose, onSave, category, mode, loading }) {
               onChange={handleChange}
               disabled={mode === 'view' || loading}
               required
-              className="w-full px-4 py-3 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-700 text-white placeholder-gray-400 disabled:bg-gray-600 disabled:cursor-not-allowed"
+              className="w-full px-4 py-3 border border-white/20 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white/10 text-white placeholder-gray-400 backdrop-blur-lg disabled:bg-white/5 disabled:cursor-not-allowed"
               placeholder="Enter category title"
             />
           </div>
@@ -71,7 +71,7 @@ function CategoryModal({ open, onClose, onSave, category, mode, loading }) {
               onChange={handleChange}
               disabled={mode === 'view' || loading}
               required
-              className="w-full px-4 py-3 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-700 text-white placeholder-gray-400 disabled:bg-gray-600 disabled:cursor-not-allowed"
+              className="w-full px-4 py-3 border border-white/20 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white/10 text-white placeholder-gray-400 backdrop-blur-lg disabled:bg-white/5 disabled:cursor-not-allowed"
               placeholder="Enter rent amount"
             />
           </div>
@@ -83,7 +83,7 @@ function CategoryModal({ open, onClose, onSave, category, mode, loading }) {
               value={form.externalAmount}
               onChange={handleChange}
               disabled={mode === 'view' || loading}
-              className="w-full px-4 py-3 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-700 text-white placeholder-gray-400 disabled:bg-gray-600 disabled:cursor-not-allowed"
+              className="w-full px-4 py-3 border border-white/20 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white/10 text-white placeholder-gray-400 backdrop-blur-lg disabled:bg-white/5 disabled:cursor-not-allowed"
               placeholder="Enter external amount"
             />
           </div>
@@ -95,7 +95,7 @@ function CategoryModal({ open, onClose, onSave, category, mode, loading }) {
               onChange={handleChange}
               disabled={mode === 'view' || loading}
               rows="3"
-              className="w-full px-4 py-3 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-700 text-white placeholder-gray-400 disabled:bg-gray-600 disabled:cursor-not-allowed resize-none"
+              className="w-full px-4 py-3 border border-white/20 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white/10 text-white placeholder-gray-400 backdrop-blur-lg disabled:bg-white/5 disabled:cursor-not-allowed resize-none"
               placeholder="Enter description"
             />
           </div>
@@ -106,7 +106,7 @@ function CategoryModal({ open, onClose, onSave, category, mode, loading }) {
               value={form.status}
               onChange={handleChange}
               disabled={mode === 'view' || loading}
-              className="w-full px-4 py-3 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-700 text-white disabled:bg-gray-600 disabled:cursor-not-allowed"
+              className="w-full px-4 py-3 border border-white/20 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white/10 text-white backdrop-blur-lg disabled:bg-white/5 disabled:cursor-not-allowed"
             >
               <option value={1}>Active</option>
               <option value={0}>Inactive</option>
@@ -117,7 +117,7 @@ function CategoryModal({ open, onClose, onSave, category, mode, loading }) {
               type="button"
               onClick={onClose}
               disabled={loading}
-              className="px-6 py-2 rounded-lg border border-gray-600 bg-gray-700 text-gray-300 hover:bg-gray-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-6 py-2 rounded-2xl border border-white/20 bg-white/10 text-white hover:bg-white/20 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Cancel
             </button>
@@ -125,7 +125,7 @@ function CategoryModal({ open, onClose, onSave, category, mode, loading }) {
               <button
                 type="submit"
                 disabled={loading}
-                className="px-6 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                className="px-6 py-2 rounded-2xl bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
               >
                 {loading && (
                   <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
@@ -147,6 +147,7 @@ export default function CategoryTable() {
   const [fetching, setFetching] = useState(true);
   const [showDebug, setShowDebug] = useState(false);
   const [authStatus, setAuthStatus] = useState('checking');
+  const [expandedCards, setExpandedCards] = useState(new Set());
 
   // Get auth token from localStorage with better error handling
   const getAuthToken = () => {
@@ -287,6 +288,16 @@ export default function CategoryTable() {
   const handleView = (cat) => setModal({ open: true, mode: 'view', category: cat });
   const handleClose = () => setModal({ open: false, mode: 'add', category: null });
 
+  const toggleCardExpansion = (categoryId) => {
+    const newExpanded = new Set(expandedCards);
+    if (newExpanded.has(categoryId)) {
+      newExpanded.delete(categoryId);
+    } else {
+      newExpanded.add(categoryId);
+    }
+    setExpandedCards(newExpanded);
+  };
+
   const handleSave = async (formData) => {
     const token = getAuthToken();
     if (!token) {
@@ -375,223 +386,278 @@ export default function CategoryTable() {
     });
   };
 
+  const formatCurrency = (amount) => {
+    return `৳${amount?.toLocaleString() || 0}`;
+  };
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 1: return 'bg-green-500/20 text-green-400 border-green-500/30';
+      case 0: return 'bg-red-500/20 text-red-400 border-red-500/30';
+      default: return 'bg-gray-500/20 text-gray-400 border-gray-500/30';
+    }
+  };
+
   return (
-    <div className="p-6 bg-gray-900 min-h-screen">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900">
       <Toaster 
         position="top-right"
         toastOptions={{
           duration: 4000,
           style: {
-            background: '#1f2937',
+            background: '#232329',
             color: '#fff',
-            border: '1px solid #374151'
+            border: '1px solid #374151',
           },
           success: {
             iconTheme: {
-              primary: '#10b981',
+              primary: '#10B981',
               secondary: '#fff',
             },
           },
           error: {
             iconTheme: {
-              primary: '#ef4444',
+              primary: '#EF4444',
               secondary: '#fff',
             },
           },
         }}
       />
-      
-      {/* Debug Section */}
-      <div className="mb-4 p-4 bg-gray-800 rounded-lg border border-gray-700">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <span className="text-white font-medium">Auth Status:</span>
-            <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-              authStatus === 'authenticated'
-                ? 'bg-green-900 text-green-300 border border-green-700' 
-                : authStatus === 'checking'
-                ? 'bg-yellow-900 text-yellow-300 border border-yellow-700'
-                : 'bg-red-900 text-red-300 border border-red-700'
-            }`}>
-              {authStatus === 'authenticated' ? 'Authenticated' : 
-               authStatus === 'checking' ? 'Checking...' : 'Not Authenticated'}
-            </span>
-          </div>
-          <div className="flex gap-2">
-            <button
-              onClick={debugAuth}
-              className="px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700"
-            >
-              Debug Auth
-            </button>
-            <button
-              onClick={testAuth}
-              className="px-3 py-1 text-xs bg-green-600 text-white rounded hover:bg-green-700"
-            >
-              Test Auth
-            </button>
-            <button
-              onClick={() => setShowDebug(!showDebug)}
-              className="px-3 py-1 text-xs bg-gray-600 text-white rounded hover:bg-gray-700"
-            >
-              {showDebug ? 'Hide' : 'Show'} Debug
-            </button>
-          </div>
-        </div>
-        
-        {showDebug && (
-          <div className="mt-3 p-3 bg-gray-700 rounded text-xs text-gray-300">
-            <div><strong>Token:</strong> {getAuthToken() ? 'Present' : 'Missing'}</div>
-            <div><strong>Admin Data:</strong> {localStorage.getItem('adminData') ? 'Present' : 'Missing'}</div>
-            <div><strong>Window:</strong> {typeof window !== 'undefined' ? 'Available' : 'Not Available'}</div>
-            <div><strong>Auth Status:</strong> {authStatus}</div>
-            <div className="mt-2 flex gap-2">
-              <button
-                onClick={() => {
-                  localStorage.removeItem('adminToken');
-                  localStorage.removeItem('adminData');
-                  setAuthStatus('not_authenticated');
-                  toast.success('Cleared auth data');
-                }}
-                className="px-2 py-1 bg-red-600 text-white rounded text-xs hover:bg-red-700"
-              >
-                Clear Auth Data
-              </button>
-              <button
-                onClick={() => {
-                  isAuthenticated();
-                  toast.success('Refreshed auth status');
-                }}
-                className="px-2 py-1 bg-blue-600 text-white rounded text-xs hover:bg-blue-700"
-              >
-                Refresh Status
-              </button>
+
+      {/* Header */}
+      <div className="sticky top-0 z-10 bg-white/10 backdrop-blur-lg border-b border-white/20">
+        <div className="px-4 py-6">
+          <div className="flex items-center justify-between">
+            <div className="flex-1 min-w-0">
+              <h1 className="text-xl sm:text-2xl font-bold text-white truncate">Category Management</h1>
+              <p className="text-gray-300 text-sm mt-1">Manage room categories and pricing</p>
+              {authStatus === 'not_authenticated' && (
+                <p className="text-yellow-400 text-xs mt-1">⚠️ Admin login required for modifications</p>
+              )}
             </div>
+            <button
+              onClick={handleAdd}
+              className={`px-6 py-3 rounded-2xl font-semibold shadow-lg transition-all duration-200 transform hover:scale-105 flex items-center gap-2 ${
+                authStatus === 'authenticated'
+                  ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800' 
+                  : 'bg-gray-600 text-gray-300 cursor-not-allowed'
+              }`}
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              </svg>
+              Add Category
+            </button>
           </div>
-        )}
-      </div>
-      
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-white mb-2">Category Management</h1>
-          <p className="text-gray-400">Manage room categories and pricing</p>
-          {authStatus === 'not_authenticated' && (
-            <p className="text-yellow-400 text-sm mt-1">⚠️ Admin login required for modifications</p>
-          )}
         </div>
-        <button
-          onClick={handleAdd}
-          className={`px-6 py-3 rounded-lg font-medium shadow-lg transition-all duration-200 transform hover:scale-105 flex items-center gap-2 ${
-            authStatus === 'authenticated'
-              ? 'bg-blue-600 text-white hover:bg-blue-700' 
-              : 'bg-gray-600 text-gray-300 cursor-not-allowed'
-          }`}
-        >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-          </svg>
-          Add Category
-        </button>
       </div>
 
-      <div className="overflow-x-auto rounded-xl shadow-2xl bg-gray-800 border border-gray-700">
-        {fetching ? (
-          <div className="flex items-center justify-center py-12">
-            <div className="flex items-center gap-3 text-gray-400">
-              <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-              <span>Loading categories...</span>
+      <div className="p-4 space-y-6">
+        {/* Debug Section */}
+        <div className="bg-white/10 backdrop-blur-lg rounded-3xl p-4 border border-white/20 shadow-2xl">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <span className="text-white font-medium">Auth Status:</span>
+              <span className={`px-3 py-1 rounded-full text-xs font-medium border ${
+                authStatus === 'authenticated'
+                  ? 'bg-green-500/20 text-green-400 border-green-500/30' 
+                  : authStatus === 'checking'
+                  ? 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30'
+                  : 'bg-red-500/20 text-red-400 border-red-500/30'
+              }`}>
+                {authStatus === 'authenticated' ? 'Authenticated' : 
+                 authStatus === 'checking' ? 'Checking...' : 'Not Authenticated'}
+              </span>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={debugAuth}
+                className="px-3 py-1 text-xs bg-blue-600 text-white rounded-2xl hover:bg-blue-700 transition-all duration-200"
+              >
+                Debug Auth
+              </button>
+              <button
+                onClick={testAuth}
+                className="px-3 py-1 text-xs bg-green-600 text-white rounded-2xl hover:bg-green-700 transition-all duration-200"
+              >
+                Test Auth
+              </button>
+              <button
+                onClick={() => setShowDebug(!showDebug)}
+                className="px-3 py-1 text-xs bg-gray-600 text-white rounded-2xl hover:bg-gray-700 transition-all duration-200"
+              >
+                {showDebug ? 'Hide' : 'Show'} Debug
+              </button>
             </div>
           </div>
-        ) : (
-          <table className="min-w-full divide-y divide-gray-700">
-            <thead className="bg-gray-700">
-              <tr>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">ID</th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Title</th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Rent Amount</th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">External Amount</th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Description</th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Created</th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Status</th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-700">
-              {categories.length === 0 ? (
-                <tr>
-                  <td colSpan="8" className="px-6 py-12 text-center text-gray-400">
-                    <div className="flex flex-col items-center gap-3">
-                      <svg className="w-12 h-12 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                      </svg>
-                      <span className="text-lg">No categories found</span>
-                      <p className="text-sm">Create your first category to get started</p>
-                    </div>
-                  </td>
-                </tr>
-              ) : (
-                categories.map((cat) => (
-                  <tr key={cat.id} className="hover:bg-gray-700 transition-colors duration-200">
-                    <td className="px-6 py-4 text-sm text-gray-300">{cat.id}</td>
-                    <td className="px-6 py-4 text-sm font-medium text-white">{cat.title}</td>
-                    <td className="px-6 py-4 text-sm text-green-400">৳{cat.rentAmount}</td>
-                    <td className="px-6 py-4 text-sm text-blue-400">৳{cat.externalAmount}</td>
-                    <td className="px-6 py-4 text-sm text-gray-400 max-w-xs truncate">{cat.description}</td>
-                    <td className="px-6 py-4 text-sm text-gray-400">{formatDate(cat.createdAt)}</td>
-                    <td className="px-6 py-4 text-sm">
-                      <span className={`inline-flex px-3 py-1 rounded-full text-xs font-medium ${
-                        cat.status === 1 
-                          ? 'bg-green-900 text-green-300 border border-green-700' 
-                          : 'bg-red-900 text-red-300 border border-red-700'
-                      }`}>
-                        {cat.status === 1 ? 'Active' : 'Inactive'}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-sm">
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => handleView(cat)}
-                          className="p-2 rounded-lg bg-gray-600 text-gray-300 hover:bg-gray-500 transition-colors duration-200"
-                          title="View"
-                        >
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                          </svg>
-                        </button>
-                        <button
-                          onClick={() => handleEdit(cat)}
-                          className={`p-2 rounded-lg transition-colors duration-200 ${
-                            authStatus === 'authenticated'
-                              ? 'bg-yellow-600 text-white hover:bg-yellow-500' 
-                              : 'bg-gray-600 text-gray-400 cursor-not-allowed'
-                          }`}
-                          title={authStatus === 'authenticated' ? "Edit" : "Login required"}
-                        >
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                          </svg>
-                        </button>
-                        <button
-                          onClick={() => handleDelete(cat.id)}
-                          className={`p-2 rounded-lg transition-colors duration-200 ${
-                            authStatus === 'authenticated'
-                              ? 'bg-red-600 text-white hover:bg-red-500' 
-                              : 'bg-gray-600 text-gray-400 cursor-not-allowed'
-                          }`}
-                          title={authStatus === 'authenticated' ? "Delete" : "Login required"}
-                        >
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                          </svg>
-                        </button>
+          
+          {showDebug && (
+            <div className="mt-3 p-3 bg-white/5 rounded-2xl border border-white/10 text-xs text-gray-300">
+              <div><strong>Token:</strong> {getAuthToken() ? 'Present' : 'Missing'}</div>
+              <div><strong>Admin Data:</strong> {localStorage.getItem('adminData') ? 'Present' : 'Missing'}</div>
+              <div><strong>Window:</strong> {typeof window !== 'undefined' ? 'Available' : 'Not Available'}</div>
+              <div><strong>Auth Status:</strong> {authStatus}</div>
+              <div className="mt-2 flex gap-2">
+                <button
+                  onClick={() => {
+                    localStorage.removeItem('adminToken');
+                    localStorage.removeItem('adminData');
+                    setAuthStatus('not_authenticated');
+                    toast.success('Cleared auth data');
+                  }}
+                  className="px-2 py-1 bg-red-600 text-white rounded-2xl text-xs hover:bg-red-700 transition-all duration-200"
+                >
+                  Clear Auth Data
+                </button>
+                <button
+                  onClick={() => {
+                    isAuthenticated();
+                    toast.success('Refreshed auth status');
+                  }}
+                  className="px-2 py-1 bg-blue-600 text-white rounded-2xl text-xs hover:bg-blue-700 transition-all duration-200"
+                >
+                  Refresh Status
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Loading State */}
+        {fetching && (
+          <div className="bg-white/10 backdrop-blur-lg rounded-3xl p-8 border border-white/20 shadow-2xl text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+            <p className="text-white text-lg">Loading categories...</p>
+          </div>
+        )}
+
+        {/* Categories Cards */}
+        {!fetching && (
+          <div className="space-y-4">
+            {categories.length === 0 ? (
+              <div className="bg-white/10 backdrop-blur-lg rounded-3xl p-8 border border-white/20 shadow-2xl text-center">
+                <div className="flex flex-col items-center gap-3">
+                  <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                  </svg>
+                  <span className="text-lg text-white">No categories found</span>
+                  <p className="text-sm text-gray-300">Create your first category to get started</p>
+                </div>
+              </div>
+            ) : (
+              categories.map((cat) => {
+                const isExpanded = expandedCards.has(cat.id);
+                
+                return (
+                  <div key={cat.id} className="bg-white/10 backdrop-blur-lg rounded-3xl border border-white/20 shadow-2xl overflow-hidden">
+                    {/* Card Header - Collapsed State */}
+                    <div 
+                      className="p-4 cursor-pointer hover:bg-white/5 transition-colors duration-200"
+                      onClick={() => toggleCardExpansion(cat.id)}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3 flex-1 min-w-0">
+                          <div className="flex-1 min-w-0">
+                            <h3 className="text-white font-semibold text-sm truncate">{cat.title}</h3>
+                            <p className="text-gray-300 text-xs truncate">Rent: {formatCurrency(cat.rentAmount)}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium border truncate max-w-20 ${getStatusColor(cat.status)}`}>
+                            {cat.status === 1 ? 'Active' : 'Inactive'}
+                          </span>
+                          <div className="transform transition-transform duration-200 flex-shrink-0">
+                            <span className="text-white text-lg">{isExpanded ? '−' : '+'}</span>
+                          </div>
+                        </div>
                       </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                    </div>
+
+                    {/* Expanded Content */}
+                    {isExpanded && (
+                      <div className="px-4 pb-4 space-y-4 border-t border-white/10">
+                        {/* Category Details */}
+                        <div className="bg-white/5 rounded-2xl p-4">
+                          <h4 className="text-white font-medium mb-3">Category Details</h4>
+                          <div className="grid grid-cols-1 gap-3 text-xs">
+                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                              <span className="text-gray-300">Title:</span>
+                              <span className="text-white font-medium truncate">{cat.title}</span>
+                            </div>
+                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                              <span className="text-gray-300">Rent Amount:</span>
+                              <span className="text-green-400 font-medium truncate">{formatCurrency(cat.rentAmount)}</span>
+                            </div>
+                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                              <span className="text-gray-300">External Amount:</span>
+                              <span className="text-blue-400 font-medium truncate">{formatCurrency(cat.externalAmount)}</span>
+                            </div>
+                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                              <span className="text-gray-300">Status:</span>
+                              <span className={`px-2 py-1 rounded-full text-xs font-medium border truncate max-w-20 ${getStatusColor(cat.status)}`}>
+                                {cat.status === 1 ? 'Active' : 'Inactive'}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Additional Information */}
+                        <div className="bg-white/5 rounded-2xl p-4">
+                          <h4 className="text-white font-medium mb-3">Additional Information</h4>
+                          <div className="grid grid-cols-1 gap-3 text-xs">
+                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                              <span className="text-gray-300">Description:</span>
+                              <span className="text-white truncate max-w-48">{cat.description || 'No description'}</span>
+                            </div>
+                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                              <span className="text-gray-300">Created:</span>
+                              <span className="text-white truncate">{formatDate(cat.createdAt)}</span>
+                            </div>
+                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                              <span className="text-gray-300">Category ID:</span>
+                              <span className="text-white truncate">{cat.id}</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Action Buttons */}
+                        <div className="flex gap-2 pt-2 border-t border-white/10">
+                          <button
+                            onClick={() => handleView(cat)}
+                            className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-semibold py-2 px-4 rounded-2xl shadow-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-200"
+                          >
+                            View Details
+                          </button>
+                          <button
+                            onClick={() => handleEdit(cat)}
+                            className={`flex-1 font-semibold py-2 px-4 rounded-2xl shadow-lg transition-all duration-200 ${
+                              authStatus === 'authenticated'
+                                ? 'bg-gradient-to-r from-yellow-600 to-yellow-700 text-white hover:from-yellow-700 hover:to-yellow-800' 
+                                : 'bg-gray-600 text-gray-300 cursor-not-allowed'
+                            }`}
+                            title={authStatus === 'authenticated' ? "Edit" : "Login required"}
+                          >
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => handleDelete(cat.id)}
+                            className={`flex-1 font-semibold py-2 px-4 rounded-2xl shadow-lg transition-all duration-200 ${
+                              authStatus === 'authenticated'
+                                ? 'bg-gradient-to-r from-red-600 to-red-700 text-white hover:from-red-700 hover:to-red-800' 
+                                : 'bg-gray-600 text-gray-300 cursor-not-allowed'
+                            }`}
+                            title={authStatus === 'authenticated' ? "Delete" : "Login required"}
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })
+            )}
+          </div>
         )}
       </div>
 
