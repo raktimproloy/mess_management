@@ -1,5 +1,5 @@
 import { PrismaClient } from '@prisma/client';
-import { sendSMS, generatePaymentConfirmationMessage } from '../../../../lib/sms';
+import { sendSMS, sendBulkSMSWithGenerator, generatePaymentConfirmationMessage } from '../../../../lib/sms';
 
 const prisma = new PrismaClient();
 
@@ -36,6 +36,7 @@ export async function POST(request) {
     let successCount = 0;
     let errorCount = 0;
     const results = [];
+    const smsRecipients = [];
 
     for (const request of pendingRequests) {
       try {
@@ -166,20 +167,17 @@ export async function POST(request) {
           }
         });
 
-        // Send payment confirmation SMS
-        try {
-          const paymentMessage = generatePaymentConfirmationMessage(
-            request.student.name,
-            request.totalAmount,
-            'Online Payment (Auto-approved)'
-          );
-          
-          const smsResult = await sendSMS(request.student.smsPhone, paymentMessage);
-          console.log(`📱 Payment confirmation SMS result for ${request.student.name}:`, smsResult);
-          
-        } catch (smsError) {
-          console.error(`❌ SMS error for ${request.student.name}:`, smsError);
-        }
+        // Prepare SMS recipient data
+        smsRecipients.push({
+          studentId: request.studentId,
+          studentName: request.student.name,
+          phone: request.student.phone,
+          smsPhone: request.student.smsPhone,
+          totalAmount: request.totalAmount,
+          paymentMethod: 'Online Payment (Auto-approved)',
+          rentHistoryId: rentHistory.id,
+          newRentStatus: newStatus
+        });
 
         console.log(`✅ Successfully processed request ID: ${request.id}`);
         results.push({
@@ -206,11 +204,43 @@ export async function POST(request) {
       processedCount++;
     }
 
+    // Send bulk SMS to all approved recipients
+    let bulkSmsResult = null;
+    if (smsRecipients.length > 0) {
+      try {
+        console.log(`📱 Sending bulk payment confirmation SMS to ${smsRecipients.length} students`);
+        
+        bulkSmsResult = await sendBulkSMSWithGenerator(
+          smsRecipients,
+          (recipient) => generatePaymentConfirmationMessage(
+            recipient.studentName,
+            recipient.totalAmount,
+            recipient.paymentMethod
+          )
+        );
+        
+        console.log(`📱 Bulk SMS result: ${bulkSmsResult.success ? '✅ Success' : '❌ Failed'}`);
+        
+      } catch (smsError) {
+        console.error(`❌ Bulk SMS error:`, smsError);
+        bulkSmsResult = {
+          success: false,
+          message: 'Bulk SMS sending failed',
+          error: smsError.message
+        };
+      }
+    }
+
     const summary = {
       totalProcessed: processedCount,
       successCount,
       errorCount,
-      results
+      results,
+      smsStats: {
+        totalRecipients: smsRecipients.length,
+        bulkSmsSuccess: bulkSmsResult?.success || false,
+        bulkSmsMessage: bulkSmsResult?.message || 'No SMS sent'
+      }
     };
 
     console.log(`📊 Cron job completed. Summary:`, summary);
@@ -218,7 +248,9 @@ export async function POST(request) {
     return new Response(JSON.stringify({
       success: true,
       message: 'Payment request cron job completed',
-      summary
+      summary,
+      smsRecipients,
+      bulkSmsResult
     }), {
       status: 200,
       headers: { 'Content-Type': 'application/json' }

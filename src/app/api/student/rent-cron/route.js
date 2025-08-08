@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client';
+import { sendSMS, sendBulkSMSWithGenerator, generateRentReminderMessage } from '../../../../lib/sms';
 
 const prisma = new PrismaClient();
 
@@ -77,6 +78,7 @@ export async function POST(request) {
     let createdRents = [];
     let skippedStudents = [];
     let errorStudents = [];
+    let smsRecipients = [];
 
     for (const student of students) {
       try {
@@ -144,6 +146,7 @@ export async function POST(request) {
         let previousDue = 0;
         let previousDuePaid = 0;
         let carryForwardAdvance = 0;
+        let isFirstMonth = false;
         
         if (prevRent) {
           
@@ -156,6 +159,8 @@ export async function POST(request) {
           carryForwardAdvance = Math.max(0, (prevRent.advanceAmount || 0) - (prevRent.advancePaid || 0));
           
         } else {
+          // This is the student's first month (joining month)
+          isFirstMonth = true;
         }
 
         // 5. Calculate reference discount
@@ -216,11 +221,17 @@ export async function POST(request) {
         // 6. Calculate booking amount deduction
         const bookingAmount = student.bookingAmount || 0;
         
+        // For first month, add rent amount to advance amount
+        let adjustedAdvanceForBooking = carryForwardAdvance;
+        if (isFirstMonth) {
+          adjustedAdvanceForBooking += category.rentAmount;
+        }
+        
         const deductionResult = calculateBookingDeduction(
           bookingAmount,
           category.rentAmount,
           category.externalAmount || 0,
-          carryForwardAdvance
+          adjustedAdvanceForBooking
         );
 
         // 7. Update student's booking amount if needed
@@ -232,15 +243,24 @@ export async function POST(request) {
         }
 
         // 8. Create new rent record
+        let finalAdvanceAmount = deductionResult.adjustedAdvanceAmount;
+        let finalRentAmount = deductionResult.adjustedRentAmount;
+        
+        // For first month (new joining), set rent to 1200 and advance to 1200
+        if (isFirstMonth) {
+          finalRentAmount = 1200;
+          finalAdvanceAmount = 1200;
+        }
+        
         const newRent = await prisma.rent.create({
           data: {
             studentId: student.id,
             categoryId: category.id,
-            rentAmount: deductionResult.adjustedRentAmount,
+            rentAmount: finalRentAmount,
             externalAmount: deductionResult.adjustedExternalAmount,
             previousDue,
             previousDuePaid,
-            advanceAmount: deductionResult.adjustedAdvanceAmount,
+            advanceAmount: finalAdvanceAmount,
             status: 'unpaid',
             rentPaid: 0,
             advancePaid: 0,
@@ -249,6 +269,32 @@ export async function POST(request) {
             paidType: null,
             discountAmount: discountAmount,
           },
+        });
+
+        // 9. Prepare SMS recipient data
+        const rentDue = finalRentAmount;
+        const externalDue = deductionResult.adjustedExternalAmount;
+        const advanceDue = finalAdvanceAmount;
+        const totalDueAmount = rentDue + externalDue + advanceDue + previousDue; // Fixed: include previousDue
+        const dueDate = new Date(now.getFullYear(), now.getMonth(), 5); // 5th of current month
+        
+        smsRecipients.push({
+          studentId: student.id,
+          studentName: student.name,
+          phone: student.phone,
+          smsPhone: student.smsPhone,
+          rentDue,
+          externalDue,
+          advanceDue,
+          previousDue, // Added previousDue to SMS data
+          totalDueAmount,
+          dueDate: dueDate.toLocaleDateString('en-IN', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+          }),
+          bikashNumber: '01912345678', // Default Bikash number - you can make this configurable
+          isFirstMonth
         });
 
         createdRents.push({
@@ -271,6 +317,37 @@ export async function POST(request) {
       }
     }
 
+    // 10. Send bulk SMS to all recipients
+    let bulkSmsResult = null;
+    if (smsRecipients.length > 0) {
+      try {
+        console.log(`📱 Sending bulk rent reminder SMS to ${smsRecipients.length} students`);
+        
+        bulkSmsResult = await sendBulkSMSWithGenerator(
+          smsRecipients,
+          (recipient) => generateRentReminderMessage(
+            recipient.studentName,
+            recipient.rentDue,
+            recipient.externalDue,
+            recipient.advanceDue,
+            recipient.dueDate,
+            recipient.bikashNumber,
+            recipient.previousDue
+          )
+        );
+        
+        console.log(`📱 Bulk SMS result: ${bulkSmsResult.success ? '✅ Success' : '❌ Failed'}`);
+        
+      } catch (smsError) {
+        console.error(`❌ Bulk SMS error:`, smsError);
+        bulkSmsResult = {
+          success: false,
+          message: 'Bulk SMS sending failed',
+          error: smsError.message
+        };
+      }
+    }
+
     if (skippedStudents.length > 0) {
       skippedStudents.forEach(skip => {
         console.log(`  - ${skip.studentName} (ID: ${skip.studentId}): ${skip.reason}`);
@@ -283,6 +360,12 @@ export async function POST(request) {
       });
     }
 
+    // Calculate SMS statistics
+    const smsStats = {
+      totalRecipients: smsRecipients.length,
+      bulkSmsSuccess: bulkSmsResult?.success || false,
+      bulkSmsMessage: bulkSmsResult?.message || 'No SMS sent'
+    };
 
     return new Response(JSON.stringify({ 
       message: 'Rent generation completed successfully', 
@@ -290,11 +373,14 @@ export async function POST(request) {
         totalStudents: students.length,
         createdRents: createdRents.length,
         skippedStudents: skippedStudents.length,
-        errorStudents: errorStudents.length
+        errorStudents: errorStudents.length,
+        smsStats
       },
       createdRents,
       skippedStudents,
-      errorStudents
+      errorStudents,
+      smsRecipients,
+      bulkSmsResult
     }), { 
       status: 200,
       headers: { 'Content-Type': 'application/json' }
@@ -314,4 +400,4 @@ export async function POST(request) {
       headers: { 'Content-Type': 'application/json' }
     });
   }
-} 
+}
