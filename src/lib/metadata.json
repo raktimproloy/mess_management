@@ -1,0 +1,154 @@
+{
+  "default": {
+    "title": "HostelHub - Smart Mess Management System",
+    "description": "Modern hostel and mess management system for students and administrators. Manage rent, payments, complaints, and more efficiently.",
+    "keywords": "hostel management, mess management, student portal, rent payment, hostel booking",
+    "author": "HostelHub Team",
+    "robots": "index, follow",
+    "ogType": "website",
+    "ogImage": "/logo.svg",
+    "ogImageAlt": "HostelHub Logo",
+    "twitterCard": "summary_large_image",
+    "canonical": "https://hostelhub.com"
+  },
+  "home": {
+    "title": "HostelHub - Smart Mess Management System",
+    "description": "Welcome to HostelHub - Your complete hostel and mess management solution. Manage rent, payments, complaints, and more with ease.",
+    "keywords": "hostel management, mess management, student portal, rent payment, hostel booking, smart hostel",
+    "ogType": "website",
+    "canonical": "https://hostelhub.com"
+  },
+  "about": {
+    "title": "About Us - HostelHub",
+    "description": "Learn about HostelHub's mission to revolutionize hostel and mess management. Discover our features, team, and commitment to excellence.",
+    "keywords": "about hostelhub, hostel management system, mess management features, our team",
+    "ogType": "website",
+    "canonical": "https://hostelhub.com/about"
+  },
+  "features": {
+    "title": "Features - HostelHub",
+    "description": "Explore HostelHub's comprehensive features including rent management, payment processing, complaint handling, and student portal.",
+    "keywords": "hostel features, rent management, payment system, complaint management, student portal",
+    "ogType": "website",
+    "canonical": "https://hostelhub.com/features"
+  },
+  "contact": {
+    "title": "Contact Us - HostelHub",
+    "description": "Get in touch with HostelHub team. We're here to help with your hostel and mess management needs. Contact us for support and inquiries.",
+    "keywords": "contact hostelhub, support, help, inquiry, hostel management support",
+    "ogType": "website",
+    "canonical": "https://hostelhub.com/contact"
+  },
+  "photos": {
+    "title": "Photo Gallery - HostelHub",
+    "description": "View our hostel facilities, rooms, and amenities through our photo gallery. See what makes our hostel the perfect choice for students.",
+    "keywords": "hostel photos, room gallery, hostel facilities, amenities photos",
+    "ogType": "website",
+    "canonical": "https://hostelhub.com/photos"
+  },
+  "login_admin": {
+    "title": "Admin Login - HostelHub",
+    "description": "Secure admin login portal for HostelHub. Access your admin dashboard to manage students, rent, payments, and system settings.",
+    "keywords": "admin login, hostel management admin, secure login",
+    "ogType": "website",
+    "canonical": "https://hostelhub.com/login/admin"
+  },
+  "login_student": {
+    "title": "Student Login - HostelHub",
+    "description": "Student login portal for HostelHub. Access your student dashboard to view rent, make payments, submit complaints, and manage your profile.",
+    "keywords": "student login, hostel student portal, secure login",
+    "ogType": "website",
+    "canonical": "https://hostelhub.com/login/student"
+  },
+  "admin_dashboard": {
+    "title": "Admin Dashboard - HostelHub",
+    "description": "Admin dashboard for comprehensive hostel management. Monitor students, rent collections, payments, complaints, and system analytics.",
+    "keywords": "admin dashboard, hostel management, student management, rent management",
+    "ogType": "website",
+    "canonical": "https://hostelhub.com/admin/dashboard"
+  },
+  "admin_students": {
+    "title": "Manage Students - Admin Dashboard",
+    "description": "Manage student information, add new students, edit profiles, and handle student-related operations from the admin dashboard.",
+    "keywords": "student management, add student, edit student, student profiles",
+    "ogType": "website",
+    "canonical": "https://hostelhub.com/admin/students"
+  },
+  "admin_category": {
+    "title": "Manage Categories - Admin Dashboard",
+    "description": "Manage hostel categories, room types, and pricing. Configure different accommodation options and their associated costs.",
+    "keywords": "category management, room types, pricing, accommodation options",
+    "ogType": "website",
+    "canonical": "https://hostelhub.com/admin/category"
+  },
+  "admin_rent": {
+    "title": "Rent Management - Admin Dashboard",
+    "description": "Comprehensive rent management system. Track current rent, payment history, and manage rent-related operations efficiently.",
+    "keywords": "rent management, rent collection, payment tracking, rent history",
+    "ogType": "website",
+    "canonical": "https://hostelhub.com/admin/current_rent"
+  },
+  "admin_complaints": {
+    "title": "Complaint Management - Admin Dashboard",
+    "description": "Handle and manage student complaints efficiently. Track complaint status, respond to issues, and maintain service quality.",
+    "keywords": "complaint management, issue tracking, service quality, complaint resolution",
+    "ogType": "website",
+    "canonical": "https://hostelhub.com/admin/complaint"
+  },
+  "admin_payment_requests": {
+    "title": "Payment Requests - Admin Dashboard",
+    "description": "Manage payment requests from students. Review, approve, or reject payment requests and maintain financial records.",
+    "keywords": "payment requests, financial management, payment approval, transaction records",
+    "ogType": "website",
+    "canonical": "https://hostelhub.com/admin/payment_request"
+  },
+  "admin_discounts": {
+    "title": "Discount Management - Admin Dashboard",
+    "description": "Configure and manage student discounts, special offers, and promotional pricing for hostel accommodations.",
+    "keywords": "discount management, special offers, promotional pricing, student discounts",
+    "ogType": "website",
+    "canonical": "https://hostelhub.com/admin/discount"
+  },
+  "student_dashboard": {
+    "title": "Student Dashboard - HostelHub",
+    "description": "Your personal student dashboard. View rent details, make payments, submit complaints, and manage your hostel profile.",
+    "keywords": "student dashboard, rent details, payments, complaints, profile management",
+    "ogType": "website",
+    "canonical": "https://hostelhub.com/student/dashboard"
+  },
+  "student_rent": {
+    "title": "My Rent - Student Dashboard",
+    "description": "View your current rent status, payment history, and manage rent-related activities from your student dashboard.",
+    "keywords": "my rent, rent status, payment history, rent management",
+    "ogType": "website",
+    "canonical": "https://hostelhub.com/student/rent"
+  },
+  "student_profile": {
+    "title": "My Profile - Student Dashboard",
+    "description": "Manage your student profile, update personal information, change password, and maintain your account settings.",
+    "keywords": "student profile, personal information, account settings, profile management",
+    "ogType": "website",
+    "canonical": "https://hostelhub.com/student/profile"
+  },
+  "student_complaints": {
+    "title": "My Complaints - Student Dashboard",
+    "description": "Submit and track your complaints. View complaint status, history, and communicate with admin regarding issues.",
+    "keywords": "my complaints, submit complaint, complaint tracking, issue reporting",
+    "ogType": "website",
+    "canonical": "https://hostelhub.com/student/complaint"
+  },
+  "student_payment_requests": {
+    "title": "Payment Requests - Student Dashboard",
+    "description": "Submit payment requests, track their status, and manage your financial transactions with the hostel management.",
+    "keywords": "payment requests, financial transactions, payment tracking, request status",
+    "ogType": "website",
+    "canonical": "https://hostelhub.com/student/payment-requests"
+  },
+  "student_rent_history": {
+    "title": "Rent History - Student Dashboard",
+    "description": "View your complete rent history, past payments, and financial records from your student dashboard.",
+    "keywords": "rent history, payment history, financial records, past transactions",
+    "ogType": "website",
+    "canonical": "https://hostelhub.com/student/rent-history"
+  }
+}
