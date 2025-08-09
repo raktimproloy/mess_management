@@ -30,7 +30,7 @@ export function generateMetadata(pageKey) {
       description: mergedMetadata.description,
       type: mergedMetadata.ogType,
       url: mergedMetadata.canonical,
-      siteName: 'HostelHub',
+             siteName: 'Avilash Palace',
       images: [
         {
           url: mergedMetadata.ogImage,
@@ -51,8 +51,8 @@ export function generateMetadata(pageKey) {
       canonical: mergedMetadata.canonical,
     },
     // Additional metadata
-    metadataBase: new URL('https://hostelhub.com'),
-    applicationName: 'HostelHub',
+    metadataBase: new URL('https://avilashpalace.com'),
+    applicationName: 'Avilash Palace',
     category: 'hostel management',
     classification: 'business',
     referrer: 'origin-when-cross-origin',

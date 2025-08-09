@@ -69,7 +69,7 @@ const Navbar = () => {
           <div className="flex items-center justify-between h-16">
             <div className="flex-shrink-0">
               <Link href="/" className="text-white font-bold text-xl">
-                MessManager
+                Avilash Palace
               </Link>
             </div>
             <div className="text-gray-400">Loading...</div>
@@ -86,7 +86,7 @@ const Navbar = () => {
           {/* Left side - Logo */}
           <div className="flex-shrink-0">
             <Link href="/" className="text-white font-bold text-xl">
-              MessManager
+              Avilash Palace
             </Link>
           </div>
 

@@ -124,7 +124,7 @@ const FeaturesPage = () => {
     {
       name: "Rajesh Kumar",
       role: "Hostel Manager, IIT Delhi",
-      text: "MessManager has transformed how we operate. The attendance tracking alone saved us 15 hours per week in administrative work.",
+      text: "Avilash Palace has transformed how we operate. The attendance tracking alone saved us 15 hours per week in administrative work.",
       rating: 5
     },
     {
