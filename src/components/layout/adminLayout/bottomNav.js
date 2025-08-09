@@ -34,7 +34,7 @@ export default function AdminBottomNav() {
               )}
               
               <span className={`text-2xl transition-all duration-300 ${
-                isActive ? "scale-110" : "group-hover:scale-105"
+                isActive ? "scale-110" : "group-"
               }`}>
                 {item.icon}
               </span>

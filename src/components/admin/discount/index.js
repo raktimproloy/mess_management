@@ -338,7 +338,7 @@ export default function DiscountTable() {
             </div>
             <button
               onClick={handleAdd}
-              className="px-6 py-3 rounded-2xl font-semibold shadow-lg transition-all duration-200 transform hover:scale-105 flex items-center gap-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800"
+              className="px-6 py-3 rounded-2xl font-semibold shadow-lg transition-all duration-200 transform  flex items-center gap-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />

@@ -437,7 +437,7 @@ export default function CategoryTable() {
             </div>
             <button
               onClick={handleAdd}
-              className={`px-6 py-3 rounded-2xl font-semibold shadow-lg transition-all duration-200 transform hover:scale-105 flex items-center gap-2 ${
+              className={`px-6 py-3 rounded-2xl font-semibold shadow-lg transition-all duration-200 transform  flex items-center gap-2 ${
                 authStatus === 'authenticated'
                   ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800' 
                   : 'bg-gray-600 text-gray-300 cursor-not-allowed'

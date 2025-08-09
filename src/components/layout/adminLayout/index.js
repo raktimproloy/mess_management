@@ -37,10 +37,10 @@ export default function AdminLayout({ children }) {
         )}
         
         {/* Mobile Sidebar */}
-        <div className={`fixed top-0 left-0 h-full w-64 bg-white/10 backdrop-blur-lg border-r border-white/20 z-50 transform transition-transform duration-300 ease-in-out ${
+        <div className={`fixed top-0 left-0 h-full w-64 bg-white/10 backdrop-blur-lg border-r border-white/20 z-50 transform transition-transform duration-300 ease-in-out flex flex-col ${
           isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
         }`}>
-          <div className="flex items-center justify-between p-4 border-b border-white/20">
+          <div className="flex items-center justify-between p-4 border-b border-white/20 flex-shrink-0">
             <h1 className="text-lg font-bold text-white">Menu</h1>
             <button
               onClick={toggleMobileMenu}
@@ -51,8 +51,10 @@ export default function AdminLayout({ children }) {
               </svg>
             </button>
           </div>
-          <div className="p-4">
-            <AdminSidebar onLinkClick={toggleMobileMenu} />
+          <div className="flex-1 overflow-y-auto">
+            <div className="p-4">
+              <AdminSidebar onLinkClick={toggleMobileMenu} />
+            </div>
           </div>
         </div>
         

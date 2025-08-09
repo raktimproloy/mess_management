@@ -70,7 +70,7 @@ export default function index() {
     const formatCurrency = (amount) => {
       return new Intl.NumberFormat('en-IN', {
         style: 'currency',
-        currency: 'INR',
+        currency: 'BDT',
         minimumFractionDigits: 0,
         maximumFractionDigits: 0,
       }).format(amount || 0);
