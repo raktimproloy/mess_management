@@ -224,7 +224,7 @@ export default function StudentRentHistory() {
               <option value="">All Months</option>
               {Array.from({ length: 12 }, (_, i) => i + 1).map(month => (
                 <option key={month} value={month}>
-                  {new Date(2024, month - 1).toLocaleDateString('en-US', { month: 'long' })}
+                  {new Date(2025, month - 1).toLocaleDateString('en-US', { month: 'long' })}
                 </option>
               ))}
             </select>

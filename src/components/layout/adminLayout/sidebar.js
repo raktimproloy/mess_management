@@ -57,7 +57,7 @@ export default function AdminSidebar({ onLinkClick }) {
       </nav>
       
       <div className="mt-auto text-xs text-white/50 px-4 pt-8 lg:block hidden">
-        &copy; 2024 Mess Management
+        &copy; 2025 Mess Management
       </div>
     </aside>
   );
