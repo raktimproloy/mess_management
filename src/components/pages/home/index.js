@@ -1,7 +1,7 @@
 'use client'
 import Link from 'next/link';
 import { useState } from 'react';
-import { FaUtensils, FaWifi, FaTshirt, FaParking, FaShieldAlt, FaStar } from 'react-icons/fa';
+import {  FaWifi, FaTshirt, FaParking, FaShieldAlt, FaStar, FaHandHoldingWater, FaHandsWash } from 'react-icons/fa';
 import { IoIosArrowForward, IoIosArrowBack } from 'react-icons/io';
 
 export default function Home() {
@@ -9,9 +9,9 @@ export default function Home() {
   
   const features = [
     {
-      icon: <FaUtensils className="text-3xl text-amber-500" />,
-      title: "সুস্বাদু খাবার",
-      description: "দৈনিক তাজা খাবার, অভিজ্ঞ রাঁধুনির হাতে প্রস্তুত বিভিন্ন স্বাদের মেনু দিয়ে প্রতিদিন কিছু নতুন।"
+      icon: <FaHandHoldingWater className="text-3xl text-amber-500" />,
+      title: "বিশুদ্ধ পানি",
+      description: "দৈনিক বিশুদ্ধ পানির সরবরাহ, আধুনিক পরিশোধন প্রযুক্তিতে প্রস্তুত নিরাপদ ও স্বাস্থ্যকর পানীয় জল।"
     },
     {
       icon: <FaWifi className="text-3xl text-amber-500" />,
@@ -19,7 +19,7 @@ export default function Home() {
       description: "পড়াশোনা আর বিনোদনের জন্য নিরবিচারে দ্রুতগতির ইন্টারনেট সারাদিনই।"
     },
     {
-      icon: <FaTshirt className="text-3xl text-amber-500" />,
+      icon: <FaHandsWash className="text-3xl text-amber-500" />,
       title: "Cleaning Service",
       description: "নিয়মিত পরিষ্কার-পরিচ্ছন্ন পরিবেশ — স্বাস্থ্যকর ও আরামদায়ক থাকার নিশ্চয়তা।"
     },
@@ -39,19 +39,19 @@ export default function Home() {
     {
       name: "Raj Sharma",
       role: "Engineering Student",
-      text: "The mess has been my home away from home. The food is delicious and the staff is very supportive.",
+      text: "মেসের পরিবেশ শান্ত ও নিরাপদ। পড়াশোনার জন্য খুবই উপযোগী।",
       rating: 5
     },
     {
       name: "Priya Patel",
       role: "Medical Student",
-      text: "As a busy med student, I appreciate the flexible meal timings and nutritious food options.",
+      text: "উচ্চগতির ইন্টারনেট আর নিরিবিলি পরিবেশ পড়াশোনার জন্য দারুণ সহায়ক।",
       rating: 4
     },
     {
       name: "Amit Singh",
       role: "MBA Student",
-      text: "The high-speed WiFi and study room have been a game-changer for my late-night study sessions.",
+      text: "বন্ধুসুলভ ব্যবস্থাপনা এবং দ্রুত সমস্যার সমাধান মেসটিকে আরও আরামদায়ক করেছে।",
       rating: 5
     }
   ];
@@ -180,10 +180,10 @@ export default function Home() {
                   ))}
                 </div>
                 <p className="text-gray-300 mb-6 italic">"{testimonial.text}"</p>
-                <div>
+                {/* <div>
                   <h4 className="font-bold text-lg">{testimonial.name}</h4>
                   <p className="text-amber-500">{testimonial.role}</p>
-                </div>
+                </div> */}
               </div>
             ))}
           </div>

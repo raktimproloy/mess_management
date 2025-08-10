@@ -628,3 +628,32 @@ Best regards,
 Avilash Palace Management
 🏢 Mess Management System`;
 }
+
+/**
+ * Generate contact notification message for owner
+ * @param {string} contactName - Name of the person contacting
+ * @param {string} contactPhone - Phone number of the person contacting
+ * @param {string} contactMessage - Message content
+ * @returns {string} - Formatted SMS message
+ */
+export function generateContactNotificationMessage(contactName, contactPhone, contactMessage) {
+  const timestamp = new Date().toLocaleString('en-US', {
+    timeZone: 'Asia/Dhaka',
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+  
+  return `📞 NEW CONTACT MESSAGE
+
+From: ${contactName}
+Phone: ${contactPhone}
+Time: ${timestamp}
+
+Message:
+${contactMessage}
+
+Please respond within 24 hours.`;
+}
