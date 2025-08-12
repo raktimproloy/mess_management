@@ -109,7 +109,7 @@ export async function POST(request) {
       console.log(`📱 Student phone: ${rent.student.phone}`);
       console.log(`📱 Student smsPhone: ${rent.student.smsPhone}`);
       
-      const studentPhone = rent.student.phone || rent.student.smsPhone;
+      const studentPhone = rent.student.smsPhone;
       console.log(`📱 Using phone number: ${studentPhone}`);
       
       if (studentPhone) {

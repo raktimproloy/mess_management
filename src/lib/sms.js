@@ -190,7 +190,7 @@ export async function sendBulkSMSWithGenerator(recipients, messageGenerator) {
 export function generateWelcomeMessage(studentName, categoryTitle, rentAmount) {
   const formattedAmount = new Intl.NumberFormat('en-IN').format(rentAmount);
   
-  return `🎓 Welcome to Avilash Palace Mess!
+  return `🎓 Welcome to Avilash Palace!
 
 Dear ${studentName},
 
@@ -205,8 +205,7 @@ Dear ${studentName},
 🏠 We hope you have a wonderful stay with us!
 
 Best regards,
-Avilash Palace Management
-🏢 Mess Management System`;
+Avilash Palace`;
 }
 
 /**
@@ -233,8 +232,7 @@ Dear ${studentName},
 Thank you for your payment!
 
 Best regards,
-Avilash Palace Management
-🏢 Mess Management System`;
+Avilash Palace`;
 }
 
 /**
@@ -277,7 +275,7 @@ ${breakdownText}
 
 💳 Payment Methods:
 • Cash
-• Mobile Banking (Bkash/Nagad/Rocket)
+• Mobile Banking (Bkash/Nagad)
 
 📱 Online Payment:
 Bkash: ${bikashNumber}
@@ -286,8 +284,7 @@ Bkash: ${bikashNumber}
 📞 For assistance: ${CONFIG.SUPPORT.PHONE}
 
 Best regards,
-Avilash Palace Management
-🏢 Mess Management System`;
+Avilash Palace`;
 }
 
 /**
@@ -325,8 +322,7 @@ We are working to resolve your issue as soon as possible.
 📞 For urgent matters: ${CONFIG.SUPPORT.PHONE}
 
 Best regards,
-Avilash Palace Management
-🏢 Mess Management System`;
+Avilash Palace`;
 }
 
 /**
@@ -348,8 +344,7 @@ ${message}
 📞 For queries: ${CONFIG.SUPPORT.PHONE}
 
 Best regards,
-Avilash Palace Management
-🏢 Mess Management System`;
+Avilash Palace`;
 }
 
 /**
@@ -403,8 +398,7 @@ Thank you for your payment!
 📞 For any queries: ${CONFIG.SUPPORT.PHONE}
 
 Best regards,
-Avilash Palace Management
-🏢 Mess Management System`;
+Avilash Palace`;
 }
 
 /**
@@ -444,8 +438,7 @@ Dear Owner,
 Please review and take necessary action.
 
 Best regards,
-Mess Management System
-🏢 Avilash Palace`;
+Avilash Palace`;
 }
 
 /**
@@ -518,8 +511,7 @@ ${newStatus === 'approved' ? '✅ Your payment has been approved and processed s
 📞 For queries: ${CONFIG.SUPPORT.PHONE}
 
 Best regards,
-Avilash Palace Management
-🏢 Mess Management System`;
+Avilash Palace`;
 }
 
 /**
@@ -546,8 +538,7 @@ Dear ${studentName},
 Thank you for being part of Avilash Palace!
 
 Best regards,
-Avilash Palace Management
-🏢 Mess Management System`;
+Avilash Palace`;
 }
 
 /**
@@ -578,8 +569,7 @@ Dear Owner,
 Please review and take necessary action.
 
 Best regards,
-Mess Management System
-🏢 Avilash Palace`;
+Avilash Palace`;
 }
 
 /**
@@ -625,8 +615,7 @@ ${status === 'solved' ? '✅ Your issue has been resolved. Thank you for your pa
 📞 For urgent matters: ${CONFIG.SUPPORT.PHONE}
 
 Best regards,
-Avilash Palace Management
-🏢 Mess Management System`;
+Avilash Palace`;
 }
 
 /**

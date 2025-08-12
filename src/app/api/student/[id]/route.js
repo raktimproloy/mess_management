@@ -161,7 +161,7 @@ export async function DELETE(request, context) {
       console.log(`📱 Student phone: ${student.phone}`);
       console.log(`📱 Student smsPhone: ${student.smsPhone}`);
       
-      const studentPhone = student.phone || student.smsPhone;
+      const studentPhone = student.smsPhone;
       console.log(`📱 Using phone number: ${studentPhone}`);
       
       if (studentPhone) {
