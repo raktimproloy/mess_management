@@ -199,7 +199,15 @@ const Footer = () => {
                 ></iframe>
                 
                 <div className="bg-gray-800 p-3 flex justify-center">
-                  <button className="text-amber-500 hover:text-amber-400 font-medium flex items-center">
+                  <button 
+                    onClick={() => {
+                      const address = "9J6Q+VMH, Rajshahi";
+                      const encodedAddress = encodeURIComponent(address);
+                      const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodedAddress}`;
+                      window.open(googleMapsUrl, '_blank');
+                    }}
+                    className="text-amber-500 hover:text-amber-400 font-medium flex items-center transition-colors duration-200"
+                  >
                     <FiMapPin className="mr-2" />
                     Get Directions
                   </button>

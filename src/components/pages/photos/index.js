@@ -32,7 +32,7 @@ const PhotosPage = () => {
 
   const albums = [
     { id: 'all', name: 'All Photos', icon: <FaStar /> },
-    { id: 'dining', name: 'Dining Area', icon: <FaUtensils /> },
+    // { id: 'dining', name: 'Dining Area', icon: <FaUtensils /> },
     { id: 'rooms', name: 'Rooms', icon: <FaBed /> },
     { id: 'common', name: 'Common Areas', icon: <FaUsers /> },
     { id: 'events', name: 'Events', icon: <FaBook /> },
@@ -89,9 +89,9 @@ const PhotosPage = () => {
         </div>
         <div className="relative z-20 h-full flex flex-col justify-end p-6 md:p-12">
           <div className="mb-8">
-            <h1 className="text-4xl md:text-6xl font-bold mb-4">Our Mess Gallery</h1>
+            <h1 className="text-4xl md:text-6xl font-bold mb-4">আমাদের মেস গ্যালারি</h1>
             <p className="text-xl text-gray-300 max-w-3xl">
-              Explore our modern facilities, delicious meals, and vibrant community through photos
+            ছবির মাধ্যমে দেখুন আমাদের আধুনিক সুবিধা, সুস্বাদু খাবার এবং প্রাণবন্ত কমিউনিটি
             </p>
           </div>
           <div className="flex gap-4">

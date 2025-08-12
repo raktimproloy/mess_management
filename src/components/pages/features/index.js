@@ -168,7 +168,7 @@ const FeaturesPage = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div className="text-center lg:text-left">
               <h1 className="text-4xl md:text-5xl font-bold mb-6 leading-tight">
-                Powerful Features for <span className="text-amber-500">Modern Mess Management</span>
+              আধুনিক মেস ব্যবস্থাপনার জন্য <span className="text-amber-500">শক্তিশালী ফিচারসমূহ</span>
               </h1>
               <p className="text-xl text-gray-300 mb-8 max-w-2xl">
                 Everything you need to streamline operations, enhance student experience, and optimize your mess services - all in one platform.

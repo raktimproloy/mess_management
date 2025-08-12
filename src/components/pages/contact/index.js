@@ -1,6 +1,6 @@
 'use client'
 import { useState } from 'react';
-import { FaPhone, FaEnvelope, FaMapMarkerAlt, FaClock, FaComments, FaHeadset, FaLightbulb, FaSend, FaLoader } from 'react-icons/fa';
+import { FaClock, FaComments, FaHeadset, FaLightbulb, FaPaperPlane, FaSpinner } from 'react-icons/fa';
 import { motion } from 'framer-motion';
 import Toast from '../../common/Toast';
 
@@ -17,18 +17,18 @@ const ContactPage = () => {
   const benefits = [
     {
       icon: <FaClock className="text-3xl text-amber-500" />,
-      title: "Quick Response",
-      description: "Our support team typically responds within 1 business hour"
+      title: "দ্রুত সাড়া",
+      description: "আমাদের সহায়তা দল সাধারণত ১ কর্মঘণ্টার মধ্যেই সাড়া দেয়"
     },
     {
       icon: <FaComments className="text-3xl text-amber-500" />,
-      title: "Friendly Support",
-      description: "Student-focused advisors who understand your needs"
+      title: "বন্ধুসুলভ সহায়তা",
+      description: "শিক্ষার্থী-কেন্দ্রিক উপদেষ্টা যারা আপনার প্রয়োজন বোঝে"
     },
     {
       icon: <FaLightbulb className="text-3xl text-amber-500" />,
-      title: "Expert Guidance",
-      description: "Get personalized recommendations for your situation"
+      title: "বিশেষজ্ঞ পরামর্শ",
+      description: "আপনার পরিস্থিতির জন্য ব্যক্তিগত সুপারিশ পান"
     }
   ];
 
@@ -127,26 +127,11 @@ const ContactPage = () => {
                 transition={{ duration: 0.5 }}
               >
                 <h1 className="text-4xl md:text-5xl font-bold mb-6 leading-tight">
-                  We're Here to <span className="text-amber-500">Help You</span>
+                আমরা আপনার <span className="text-amber-500"> সাহায্যে </span>প্রস্তুত
                 </h1>
                 <p className="text-xl text-gray-300 mb-8 max-w-2xl">
-                  Have questions about our mess services? Our friendly team is ready to assist you with any inquiries about accommodation, meals, or facilities.
+                আমাদের মেস সেবা সম্পর্কে কোনো প্রশ্ন আছে? আবাসন, খাবার বা অন্যান্য সুবিধা নিয়ে যেকোনো জিজ্ঞাসায় আমাদের বন্ধুসুলভ টিম সবসময় আপনার সহায়তায় প্রস্তুত।
                 </p>
-                
-                <div className="flex flex-wrap gap-4">
-                  <a 
-                    href="#contact-form" 
-                    className="bg-amber-500 hover:bg-amber-600 text-gray-900 font-bold py-3 px-8 rounded-lg transition duration-300"
-                  >
-                    Send Message
-                  </a>
-                  <a 
-                    href="#why-contact" 
-                    className="bg-transparent border-2 border-amber-500 text-amber-500 hover:bg-amber-500/10 font-bold py-3 px-8 rounded-lg transition duration-300"
-                  >
-                    Why Contact Us?
-                  </a>
-                </div>
               </motion.div>
               
               <motion.div
@@ -164,8 +149,8 @@ const ContactPage = () => {
                           <FaHeadset className="text-2xl" />
                         </div>
                         <div>
-                          <h2 className="text-xl font-bold">Student Support Team</h2>
-                          <p className="text-amber-500">Ready to assist you</p>
+                          <h2 className="text-xl font-bold">ছাত্র সহায়তা</h2>
+                          <p className="text-amber-500">আপনার সহায়তায় সবসময় প্রস্তুত</p>
                         </div>
                       </div>
                       
@@ -175,9 +160,8 @@ const ContactPage = () => {
                             <FaClock className="text-amber-500" />
                           </div>
                           <div>
-                            <h3 className="font-bold mb-1">Operating Hours</h3>
-                            <p className="text-gray-400">Monday-Saturday: 8AM - 10PM</p>
-                            <p className="text-gray-400">Sunday: 9AM - 8PM</p>
+                            <h3 className="font-bold mb-1">সেবা সময়</h3>
+                            <p className="text-gray-400">যেকোনো সময়</p>
                           </div>
                         </div>
                         
@@ -186,9 +170,9 @@ const ContactPage = () => {
                             <FaComments className="text-amber-500" />
                           </div>
                           <div>
-                            <h3 className="font-bold mb-1">Best Ways to Reach Us</h3>
-                            <p className="text-gray-400">Phone for immediate assistance</p>
-                            <p className="text-gray-400">Email for detailed inquiries</p>
+                            <h3 className="font-bold mb-1">আমাদের সাথে যোগাযোগের সেরা উপায়</h3>
+                            <p className="text-gray-400">📞 তাত্ক্ষণিক সহায়তার জন্য ফোন</p>
+                            <p className="text-gray-400">📧 বিস্তারিত জানার জন্য ইমেইল</p>
                           </div>
                         </div>
                       </div>
@@ -200,109 +184,15 @@ const ContactPage = () => {
           </div>
         </section>
 
-        {/* Contact Form Section */}
-        <section id="contact-form" className="py-16 px-4 bg-gray-800">
-          <div className="max-w-4xl mx-auto">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl md:text-4xl font-bold mb-4">Send Us a Message</h2>
-              <div className="w-20 h-1 bg-amber-500 mx-auto mb-6"></div>
-              <p className="text-gray-400 max-w-2xl mx-auto">
-                Have a question or need assistance? Fill out the form below and we'll get back to you as soon as possible.
-              </p>
-            </div>
-            
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-              className="bg-gray-900 border border-gray-700 rounded-xl p-8"
-            >
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label htmlFor="name" className="block text-sm font-medium mb-2 text-gray-300">
-                      Your Name *
-                    </label>
-                    <input
-                      type="text"
-                      id="name"
-                      name="name"
-                      value={formData.name}
-                      onChange={handleChange}
-                      className="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-3 text-gray-100 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                      placeholder="Enter your full name"
-                      required
-                      disabled={isLoading}
-                    />
-                  </div>
-                  
-                  <div>
-                    <label htmlFor="phone" className="block text-sm font-medium mb-2 text-gray-300">
-                      Phone Number *
-                    </label>
-                    <input
-                      type="tel"
-                      id="phone"
-                      name="phone"
-                      value={formData.phone}
-                      onChange={handleChange}
-                      className="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-3 text-gray-100 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                      placeholder="Enter your phone number"
-                      required
-                      disabled={isLoading}
-                    />
-                  </div>
-                </div>
-                
-                <div>
-                  <label htmlFor="message" className="block text-sm font-medium mb-2 text-gray-300">
-                    Your Message *
-                  </label>
-                  <textarea
-                    id="message"
-                    name="message"
-                    value={formData.message}
-                    onChange={handleChange}
-                    rows="5"
-                    className="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-3 text-gray-100 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent resize-none"
-                    placeholder="Tell us how we can help you..."
-                    required
-                    disabled={isLoading}
-                  ></textarea>
-                </div>
-                
-                <div className="text-center">
-                  <button
-                    type="submit"
-                    disabled={isLoading}
-                    className="bg-amber-500 hover:bg-amber-600 disabled:bg-amber-400 disabled:cursor-not-allowed text-gray-900 font-bold py-4 px-8 rounded-lg transition duration-300 flex items-center justify-center mx-auto"
-                  >
-                    {isLoading ? (
-                      <>
-                        <FaLoader className="mr-2 animate-spin" />
-                        Sending Message...
-                      </>
-                    ) : (
-                      <>
-                        <FaSend className="mr-2" />
-                        Send Message
-                      </>
-                    )}
-                  </button>
-                </div>
-              </form>
-            </motion.div>
-          </div>
-        </section>
 
         {/* Benefits Section */}
-        <section className="py-16 px-4">
+        <section className="py-16 px-4 bg-gray-800">
           <div className="max-w-7xl mx-auto">
             <div className="text-center mb-16">
-              <h2 className="text-3xl md:text-4xl font-bold mb-4">Why Students Love Our Support</h2>
+              <h2 className="text-3xl md:text-4xl font-bold mb-4">কেন শিক্ষার্থীরা আমাদের সহায়তাকে ভালোবাসে</h2>
               <div className="w-20 h-1 bg-amber-500 mx-auto mb-6"></div>
               <p className="text-gray-400 max-w-3xl mx-auto">
-                We're committed to making your mess experience as smooth as possible
+              আমরা প্রতিশ্রুতিবদ্ধ আপনার মেস অভিজ্ঞতাকে যতটা সম্ভব সহজ ও সুন্দর করে তুলতে
               </p>
             </div>
             
@@ -326,66 +216,6 @@ const ContactPage = () => {
           </div>
         </section>
 
-        {/* Reasons to Contact */}
-        <section id="why-contact" className="py-16 px-4 bg-gray-800">
-          <div className="max-w-7xl mx-auto">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.5 }}
-              >
-                <h2 className="text-3xl md:text-4xl font-bold mb-6">
-                  When to <span className="text-amber-500">Reach Out</span>
-                </h2>
-                <p className="text-xl text-gray-300 mb-8">
-                  Don't hesitate to contact us for any of these reasons - we're here to make your mess experience better!
-                </p>
-                
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="bg-amber-500/10 border border-amber-500/30 px-4 py-2 rounded-lg">
-                    <p className="text-amber-500 font-medium">Serving since 2015</p>
-                  </div>
-                  <div className="bg-amber-500/10 border border-amber-500/30 px-4 py-2 rounded-lg">
-                    <p className="text-amber-500 font-medium">5000+ Happy Students</p>
-                  </div>
-                </div>
-              </motion.div>
-              
-              <motion.div
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.5, delay: 0.2 }}
-              >
-                <div className="bg-gray-900 border border-gray-700 rounded-xl p-8">
-                  <ul className="space-y-4">
-                    {reasons.map((reason, index) => (
-                      <motion.li 
-                        key={index}
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ duration: 0.3, delay: index * 0.1 }}
-                        className="flex items-start"
-                      >
-                        <svg className="w-6 h-6 text-amber-500 mr-3 mt-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                        </svg>
-                        <span className="text-gray-300">{reason}</span>
-                      </motion.li>
-                    ))}
-                  </ul>
-                  
-                  <div className="mt-8 p-4 bg-gradient-to-r from-gray-800 to-gray-900 border border-amber-500/30 rounded-lg">
-                    <p className="text-amber-500">
-                      "The support team helped me transition to a special diet plan within 24 hours. They were incredibly helpful!"
-                    </p>
-                    <p className="text-gray-400 mt-2">- Priya S., Medical Student</p>
-                  </div>
-                </div>
-              </motion.div>
-            </div>
-          </div>
-        </section>
 
       </div>
       

@@ -27,14 +27,14 @@ const AboutPage = () => {
         color: "from-amber-500/10 to-amber-500/5",
         hoverColor: "from-amber-500/20 to-amber-500/10"
       },
-      {
-        id: 2,
-        icon: <FaUtensils className="text-3xl" />,
-        title: "মেনু ব্যবস্থাপনা",
-        description: "সাপ্তাহিক মেনু ডিজাইন, পুষ্টি মান নিরীক্ষণ, এবং বিশেষ খাদ্যসংক্রান্ত প্রয়োজনীয়তা সহজেই পরিচালনা করুন।",
-        color: "from-green-500/10 to-green-500/5",
-        hoverColor: "from-green-500/20 to-green-500/10"
-      },
+      // {
+      //   id: 2,
+      //   icon: <FaUtensils className="text-3xl" />,
+      //   title: "মেনু ব্যবস্থাপনা",
+      //   description: "সাপ্তাহিক মেনু ডিজাইন, পুষ্টি মান নিরীক্ষণ, এবং বিশেষ খাদ্যসংক্রান্ত প্রয়োজনীয়তা সহজেই পরিচালনা করুন।",
+      //   color: "from-green-500/10 to-green-500/5",
+      //   hoverColor: "from-green-500/20 to-green-500/10"
+      // },
       {
         id: 3,
         icon: <FaCreditCard className="text-3xl" />,
@@ -59,14 +59,14 @@ const AboutPage = () => {
         color: "from-red-500/10 to-red-500/5",
         hoverColor: "from-red-500/20 to-red-500/10"
       },
-      {
-        id: 6,
-        icon: <FaClipboardList className="text-3xl" />,
-        title: "মজুদ ব্যবস্থাপনা",
-        description: "উপকরণ ট্র্যাকিং, স্বয়ংক্রিয় ক্রয় আদেশ, এবং খাদ্য অপচয় হ্রাস করার জন্য আধুনিক সমাধান।",
-        color: "from-cyan-500/10 to-cyan-500/5",
-        hoverColor: "from-cyan-500/20 to-cyan-500/10"
-      },
+      // {
+      //   id: 6,
+      //   icon: <FaClipboardList className="text-3xl" />,
+      //   title: "মজুদ ব্যবস্থাপনা",
+      //   description: "উপকরণ ট্র্যাকিং, স্বয়ংক্রিয় ক্রয় আদেশ, এবং খাদ্য অপচয় হ্রাস করার জন্য আধুনিক সমাধান।",
+      //   color: "from-cyan-500/10 to-cyan-500/5",
+      //   hoverColor: "from-cyan-500/20 to-cyan-500/10"
+      // },
       {
         id: 7,
         icon: <FaBell className="text-3xl" />,
@@ -75,14 +75,14 @@ const AboutPage = () => {
         color: "from-pink-500/10 to-pink-500/5",
         hoverColor: "from-pink-500/20 to-pink-500/10"
       },
-      {
-        id: 8,
-        icon: <FaMapMarkedAlt className="text-3xl" />,
-        title: "মাল্টি-লোকেশন ম্যানেজমেন্ট",
-        description: "একটি ড্যাশবোর্ড থেকে একাধিক মেসের অবস্থান পরিচালনা করুন, কেন্দ্রীয় নিয়ন্ত্রণসহ।",
-        color: "from-indigo-500/10 to-indigo-500/5",
-        hoverColor: "from-indigo-500/20 to-indigo-500/10"
-      }
+      // {
+      //   id: 8,
+      //   icon: <FaMapMarkedAlt className="text-3xl" />,
+      //   title: "মাল্টি-লোকেশন ম্যানেজমেন্ট",
+      //   description: "একটি ড্যাশবোর্ড থেকে একাধিক মেসের অবস্থান পরিচালনা করুন, কেন্দ্রীয় নিয়ন্ত্রণসহ।",
+      //   color: "from-indigo-500/10 to-indigo-500/5",
+      //   hoverColor: "from-indigo-500/20 to-indigo-500/10"
+      // }
     ];
   
     const featureDetails = {
@@ -277,7 +277,8 @@ const AboutPage = () => {
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-4xl font-bold mb-4">
-            Powerful Mess Management <span className="text-amber-500">Features</span>
+          
+          শক্তিশালী মেস ব্যবস্থাপনা <span className="text-amber-500">ফিচারসমূহ</span>
           </h2>
           <div className="w-20 h-1 bg-amber-500 mx-auto mb-6"></div>
           <p className="text-gray-400 max-w-3xl mx-auto">
