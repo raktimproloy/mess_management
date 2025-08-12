@@ -169,6 +169,14 @@ export default function student() {
               <p className="text-gray-400 text-xs">
                 Need help? Contact your administrator
               </p>
+              
+              {/* Home Redirect Button */}
+              <button
+                onClick={() => router.push('/')}
+                className="mt-4 w-full bg-white/10 hover:bg-white/20 text-white font-medium py-3 px-4 rounded-xl border border-white/20 transition-all duration-300 hover:border-white/30"
+              >
+                🏠 Back to Home
+              </button>
             </div>
           </div>
   

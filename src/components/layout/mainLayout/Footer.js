@@ -188,7 +188,7 @@ const Footer = () => {
               {/* Google Maps iframe */}
               <div className="rounded-xl overflow-hidden border border-gray-700 shadow-lg">
                 <iframe
-                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3502.134063518543!2d77.2063103150826!3d28.62870018241874!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x390cfd5b347eb62d%3A0x52c2b7494e204dce!2sNew%20Delhi%2C%20Delhi!5e0!3m2!1sen!2sin!4v1658322345678!5m2!1sen!2sin"
+                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d330.6657034261761!2d88.63957760105643!3d24.362000720809316!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x39fbf025dd4339d5%3A0xcfab41648bffd897!2sPalace%20desire!5e0!3m2!1sen!2sbd!4v1755018806316!5m2!1sen!2sbd"
                   width="100%"
                   height="250"
                   style={{ border: 0 }}
