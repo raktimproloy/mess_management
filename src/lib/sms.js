@@ -201,6 +201,7 @@ Dear ${studentName},
 📞 For any queries, contact us:
 📱 Phone: ${CONFIG.SUPPORT.PHONE}
 📧 Email: ${CONFIG.SUPPORT.EMAIL}
+🔗 Website: ${CONFIG.SUPPORT.WEBSITE}
 
 🏠 We hope you have a wonderful stay with us!
 

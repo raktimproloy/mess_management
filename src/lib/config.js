@@ -9,13 +9,14 @@ export const CONFIG = {
   // Support contact information
   SUPPORT: {
     PHONE: process.env.SUPPORT_PHONE || '01303644935',
-    EMAIL: process.env.SUPPORT_EMAIL || 'info@avilashpalace.com'
+    EMAIL: process.env.SUPPORT_EMAIL || 'info@avilashpalace.com',
+    WEBSITE: process.env.SUPPORT_WEBSITE || 'https://avilash-palace.vercel.app/'
   },
   
   // Payment information
   PAYMENT: {
     BIKASH_NUMBER: process.env.BIKASH_NUMBER || '01303644935',
-    PAYMENT_REQUEST_URL: process.env.PAYMENT_REQUEST_URL || 'https://avilashpalace.com/payment-request'
+    PAYMENT_REQUEST_URL: process.env.PAYMENT_REQUEST_URL || 'https://avilash-palace.vercel.app/student/payment-requests'
   },
   
   // SMS configuration
