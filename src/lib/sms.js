@@ -190,23 +190,7 @@ export async function sendBulkSMSWithGenerator(recipients, messageGenerator) {
 export function generateWelcomeMessage(studentName, categoryTitle, rentAmount) {
   const formattedAmount = new Intl.NumberFormat('en-IN').format(rentAmount);
   
-  return `🎓 Welcome to Avilash Palace!
-
-Dear ${studentName},
-
-✅ Your registration has been completed successfully!
-📋 Category: ${categoryTitle}
-💰 Monthly Rent: ৳${formattedAmount}
-
-📞 For any queries, contact us:
-📱 Phone: ${CONFIG.SUPPORT.PHONE}
-📧 Email: ${CONFIG.SUPPORT.EMAIL}
-🔗 Website: ${CONFIG.SUPPORT.WEBSITE}
-
-🏠 We hope you have a wonderful stay with us!
-
-Best regards,
-Avilash Palace`;
+  return `Welcome ${studentName}! Rent:৳${formattedAmount}. Call:${CONFIG.SUPPORT.PHONE}`;
 }
 
 /**
@@ -219,21 +203,7 @@ Avilash Palace`;
 export function generatePaymentConfirmationMessage(studentName, amount, paymentMethod) {
   const formattedAmount = new Intl.NumberFormat('en-IN').format(amount);
   
-  return `💳 Payment Confirmation
-
-Dear ${studentName},
-
-✅ Your payment has been received successfully!
-💰 Amount: ৳${formattedAmount}
-💳 Method: ${paymentMethod}
-📅 Date: ${new Date().toLocaleDateString('en-IN')}
-
-📊 Payment Status: CONFIRMED
-
-Thank you for your payment!
-
-Best regards,
-Avilash Palace`;
+  return `Payment confirmed ${studentName}. Amount:৳${formattedAmount}. Method:${paymentMethod}`;
 }
 
 /**
@@ -265,27 +235,7 @@ export function generateRentReminderMessage(studentName, rentDue, externalDue, a
     breakdownText += `\n• Previous Due: ৳${formattedPrevious}`;
   }
   
-  return `⏰ Rent Reminder
-
-Dear ${studentName},
-
-📅 Your rent is due on: ${dueDate}
-💰 Total Due Amount: ৳${formattedTotal}
-
-${breakdownText}
-
-💳 Payment Methods:
-• Cash
-• Mobile Banking (Bkash/Nagad)
-
-📱 Online Payment:
-Bkash: ${bikashNumber}
-🔗 Payment Request: ${CONFIG.PAYMENT.PAYMENT_REQUEST_URL}
-
-📞 For assistance: ${CONFIG.SUPPORT.PHONE}
-
-Best regards,
-Avilash Palace`;
+  return `Rent due ${studentName}. Total:৳${formattedTotal}. Due:${dueDate}. Bkash:${bikashNumber}`;
 }
 
 /**
@@ -310,20 +260,7 @@ export function generateComplaintStatusMessage(studentName, complaintTitle, stat
     'canceled': 'Canceled'
   };
   
-  return `📝 Complaint Status Update
-
-Dear ${studentName},
-
-${statusEmoji[status]} Your complaint has been updated:
-📋 Title: ${complaintTitle}
-🔄 Status: ${statusText[status]}
-
-We are working to resolve your issue as soon as possible.
-
-📞 For urgent matters: ${CONFIG.SUPPORT.PHONE}
-
-Best regards,
-Avilash Palace`;
+  return `Complaint ${complaintTitle} ${statusText[status]}. Call:${CONFIG.SUPPORT.PHONE}`;
 }
 
 /**
@@ -380,26 +317,7 @@ export function generateRentPaymentConfirmationMessage(studentName, paymentDetai
   const statusEmoji = newStatus === 'paid' ? '✅' : '💰';
   const statusText = newStatus === 'paid' ? 'FULLY PAID' : 'PARTIALLY PAID';
 
-  return `💳 Rent Payment Confirmation
-
-Dear ${studentName},
-
-${statusEmoji} Your payment has been received successfully!
-💰 Total Amount: ৳${formattedTotal}
-💳 Payment Method: ${paymentType}
-📅 Date: ${new Date().toLocaleDateString('en-IN')} ${new Date().toLocaleTimeString('en-IN')}
-🔄 Status: ${statusText}
-
-📋 Payment Breakdown:
-${breakdownText}
-📊 Total Paid: ৳${formattedTotal}
-
-Thank you for your payment!
-
-📞 For any queries: ${CONFIG.SUPPORT.PHONE}
-
-Best regards,
-Avilash Palace`;
+  return `Payment received ${studentName}. Amount:৳${formattedTotal}. Status:${statusText}`;
 }
 
 /**
@@ -424,22 +342,7 @@ export function generatePaymentRequestOwnerNotification(studentName, studentPhon
 🆔 Transaction ID: ${trxId}`;
   }
 
-  return `💰 New Payment Request
-
-Dear Owner,
-
-📋 A new payment request has been submitted:
-👤 Student: ${studentName}
-📱 Phone: ${studentPhone}
-🏠 Category: ${categoryTitle}
-💰 Amount: ৳${formattedAmount}
-💳 Method: ${paymentType}
-⏰ Submitted: ${new Date().toLocaleDateString('en-IN')} ${new Date().toLocaleTimeString('en-IN')}${onlineDetails}
-
-Please review and take necessary action.
-
-Best regards,
-Avilash Palace`;
+  return `New payment request ${studentName}. Amount:৳${formattedAmount}. Method:${paymentType}`;
 }
 
 /**
@@ -492,27 +395,7 @@ export function generatePaymentRequestStatusMessage(studentName, requestDetails)
 🆔 Transaction ID: ${trxId}`;
   }
 
-  return `📋 Payment Request Status Update
-
-Dear ${studentName},
-
-${statusEmoji[newStatus]} Your payment request has been ${statusText[newStatus].toLowerCase()}:
-💰 Total Amount: ৳${formattedTotal}
-💳 Payment Method: ${paymentMethod}
-📅 Updated: ${new Date().toLocaleDateString('en-IN')} ${new Date().toLocaleTimeString('en-IN')}${onlineDetails}
-
-📋 Request Breakdown:
-${breakdownText}
-📊 Total Requested: ৳${formattedTotal}
-
-${newStatus === 'approved' ? '✅ Your payment has been approved and processed successfully!' : 
- newStatus === 'rejected' ? '❌ Your payment request has been rejected. Please contact us for more information.' :
- '⏳ Your payment request is still pending review.'}
-
-📞 For queries: ${CONFIG.SUPPORT.PHONE}
-
-Best regards,
-Avilash Palace`;
+  return `Payment request ${newStatus} ${studentName}. Amount:৳${formattedTotal}`;
 }
 
 /**
@@ -522,24 +405,7 @@ Avilash Palace`;
  * @returns {string} - Formatted leave notification message
  */
 export function generateStudentLeaveMessage(studentName, categoryTitle) {
-  return `👋 Goodbye Notification
-
-Dear ${studentName},
-
-📋 Your account has been deactivated:
-🏠 Category: ${categoryTitle}
-📅 Date: ${new Date().toLocaleDateString('en-IN')} ${new Date().toLocaleTimeString('en-IN')}
-
-✅ Your account status has been set to 'Leave'
-
-📞 For any queries or to reactivate your account:
-📱 Contact: ${CONFIG.SUPPORT.PHONE}
-📧 Email: ${CONFIG.SUPPORT.EMAIL}
-
-Thank you for being part of Avilash Palace!
-
-Best regards,
-Avilash Palace`;
+  return `Account deactivated ${studentName}. Call:${CONFIG.SUPPORT.PHONE}`;
 }
 
 /**
@@ -554,23 +420,38 @@ Avilash Palace`;
 export function generateComplaintOwnerNotification(studentName, complaintTitle, complainFor, details, studentPhone) {
   const complainType = complainFor === 'mess' ? 'Mess' : 'Room';
   
-  return `📝 New Complaint Alert
+  return `New complaint ${studentName}. ${complainType}:${complaintTitle}`;
+}
 
-Dear Owner,
+/**
+ * Generate cron job success notification message for owner
+ * @param {Object} cronResult - Result object from cron job execution
+ * @returns {string} - Formatted cron success notification message for owner
+ */
+export function generateCronSuccessNotification(cronResult) {
+  const {
+    totalStudents = 0,
+    createdRents = 0,
+    skippedStudents = 0,
+    errorStudents = 0,
+    smsStats = {}
+  } = cronResult;
 
-🚨 A new complaint has been submitted:
-👤 Student: ${studentName}
-📱 Phone: ${studentPhone}
-📋 Title: ${complaintTitle}
-🏠 Type: ${complainType}
-📝 Details: ${details}
+  const timestamp = new Date().toLocaleString('en-US', {
+    timeZone: 'Asia/Dhaka',
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
 
-⏰ Submitted: ${new Date().toLocaleDateString('en-IN')} ${new Date().toLocaleTimeString('en-IN')}
+  let smsStatus = '❌ Failed';
+  if (smsStats.bulkSmsSuccess) {
+    smsStatus = `✅ Success (${smsStats.totalRecipients} recipients)`;
+  }
 
-Please review and take necessary action.
-
-Best regards,
-Avilash Palace`;
+  return `Cron job success. Students:${totalStudents}, Rents:${createdRents}, SMS:${smsStatus}`;
 }
 
 /**
@@ -598,25 +479,7 @@ export function generateComplaintStatusUpdateMessage(studentName, complaintTitle
 
   const complainType = complainFor === 'mess' ? 'Mess' : 'Room';
   
-  return `📝 Complaint Status Update
-
-Dear ${studentName},
-
-${statusEmoji[status]} Your complaint has been updated:
-📋 Title: ${complaintTitle}
-🏠 Type: ${complainType}
-🔄 Status: ${statusText[status]}
-📅 Updated: ${new Date().toLocaleDateString('en-IN')} ${new Date().toLocaleTimeString('en-IN')}
-
-${status === 'solved' ? '✅ Your issue has been resolved. Thank you for your patience!' : 
- status === 'checking' ? '🔍 We are currently investigating your complaint. We will update you soon.' :
- status === 'canceled' ? '❌ Your complaint has been canceled. Please contact us if you need assistance.' :
- '⏳ Your complaint is pending review. We will process it soon.'}
-
-📞 For urgent matters: ${CONFIG.SUPPORT.PHONE}
-
-Best regards,
-Avilash Palace`;
+  return `Complaint ${complaintTitle} ${statusText[status]}. Call:${CONFIG.SUPPORT.PHONE}`;
 }
 
 /**
@@ -636,14 +499,5 @@ export function generateContactNotificationMessage(contactName, contactPhone, co
     minute: '2-digit'
   });
   
-  return `📞 NEW CONTACT MESSAGE
-
-From: ${contactName}
-Phone: ${contactPhone}
-Time: ${timestamp}
-
-Message:
-${contactMessage}
-
-Please respond within 24 hours.`;
+  return `New contact ${contactName}. Phone:${contactPhone}. ${contactMessage.substring(0, 20)}...`;
 }

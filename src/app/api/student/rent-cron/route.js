@@ -1,5 +1,5 @@
 import { PrismaClient } from '@prisma/client';
-import { sendSMS, sendBulkSMSWithGenerator, generateRentReminderMessage } from '../../../../lib/sms';
+import { sendSMS, sendBulkSMSWithGenerator, generateRentReminderMessage, generateCronSuccessNotification } from '../../../../lib/sms';
 import { CONFIG } from '../../../../lib/config.js';
 
 const prisma = new PrismaClient();
@@ -349,6 +349,41 @@ export async function POST(request) {
       }
     }
 
+    // 11. Send success notification to owner
+    let ownerNotificationResult = null;
+    try {
+      console.log(`📱 Sending cron success notification to owner`);
+      
+      const cronSummary = {
+        totalStudents: students.length,
+        createdRents: createdRents.length,
+        skippedStudents: skippedStudents.length,
+        errorStudents: errorStudents.length,
+        smsStats: {
+          totalRecipients: smsRecipients.length,
+          bulkSmsSuccess: bulkSmsResult?.success || false,
+          bulkSmsMessage: bulkSmsResult?.message || 'No SMS sent'
+        }
+      };
+      
+      const ownerMessage = generateCronSuccessNotification(cronSummary);
+      
+      ownerNotificationResult = await sendSMS(
+        CONFIG.OWNER.PHONE,
+        ownerMessage
+      );
+      
+      console.log(`📱 Owner notification result: ${ownerNotificationResult.success ? '✅ Success' : '❌ Failed'}`);
+      
+    } catch (ownerError) {
+      console.error(`❌ Owner notification error:`, ownerError);
+      ownerNotificationResult = {
+        success: false,
+        message: 'Owner notification failed',
+        error: ownerError.message
+      };
+    }
+
     if (skippedStudents.length > 0) {
       skippedStudents.forEach(skip => {
         console.log(`  - ${skip.studentName} (ID: ${skip.studentId}): ${skip.reason}`);
@@ -368,6 +403,12 @@ export async function POST(request) {
       bulkSmsMessage: bulkSmsResult?.message || 'No SMS sent'
     };
 
+    // Calculate owner notification statistics
+    const ownerNotificationStats = {
+      success: ownerNotificationResult?.success || false,
+      message: ownerNotificationResult?.message || 'Owner notification not sent'
+    };
+
     return new Response(JSON.stringify({ 
       message: 'Rent generation completed successfully', 
       summary: {
@@ -375,13 +416,15 @@ export async function POST(request) {
         createdRents: createdRents.length,
         skippedStudents: skippedStudents.length,
         errorStudents: errorStudents.length,
-        smsStats
+        smsStats,
+        ownerNotificationStats
       },
       createdRents,
       skippedStudents,
       errorStudents,
       smsRecipients,
-      bulkSmsResult
+      bulkSmsResult,
+      ownerNotificationResult
     }), { 
       status: 200,
       headers: { 'Content-Type': 'application/json' }
