@@ -1,5 +1,6 @@
 'use client'
 import Link from 'next/link';
+import Image from 'next/image';
 import { useState } from 'react';
 import {  FaWifi, FaTshirt, FaParking, FaShieldAlt, FaStar, FaHandHoldingWater, FaHandsWash } from 'react-icons/fa';
 import { IoIosArrowForward, IoIosArrowBack } from 'react-icons/io';
@@ -16,7 +17,7 @@ export default function Home() {
     {
       icon: <FaWifi className="text-3xl text-amber-500" />,
       title: "High-Speed WiFi",
-      description: "পড়াশোনা আর বিনোদনের জন্য নিরবিচারে দ্রুতগতির ইন্টারনেট সারাদিনই।"
+      description: "পড়াশোনা আর বিনোদনের জন্য নিরবিচারে দ্রুতগতির ইন্টারনেট সারাদিনই।"
     },
     {
       icon: <FaHandsWash className="text-3xl text-amber-500" />,
@@ -26,12 +27,12 @@ export default function Home() {
     {
       icon: <FaParking className="text-3xl text-amber-500" />,
       title: "Free WiFi",
-      description: "পড়াশোনা হোক বা বিনোদন, এখন থাকুন সবসময় কানেক্টেড — কোনো অতিরিক্ত খরচ ছাড়াই।"
+      description: "পড়াশোনা হোক বা বিনোদন, এখন থাকুন সবসময় কানেক্টেড — কোনো অতিরিক্ত খরচ ছাড়াই।"
     },
     {
       icon: <FaShieldAlt className="text-3xl text-amber-500" />,
       title: "24/7 Security",
-      description: "আপনার নিরাপত্তায় সারাক্ষণ সিসিটিভি নজরদারি থাকে।"
+      description: "আপনার নিরাপত্তায় সারাক্ষণ সিসিটিভি নজরদারি থাকে।"
     }
   ];
 
@@ -57,11 +58,7 @@ export default function Home() {
   ];
 
   const gallery = [
-    "/mess-dining.jpg",
-    "/mess-food.jpg",
-    "/mess-room.jpg",
-    "/mess-study.jpg",
-    "/mess-kitchen.jpg"
+    '/images/main.JPG'
   ];
 
   const nextSlide = () => {
@@ -100,7 +97,13 @@ export default function Home() {
                   <div className="absolute inset-0 flex transition-transform duration-500 ease-in-out" style={{ transform: `translateX(-${activeSlide * 100}%)` }}>
                     {gallery.map((img, index) => (
                       <div key={index} className="w-full flex-shrink-0">
-                        <div className="bg-gray-200 border-2 border-dashed rounded-xl w-full h-80 md:h-96" />
+                        <Image
+                          src={img}
+                          alt="Mess facility"
+                          width={400}
+                          height={400}
+                          className="w-full h-80 md:h-96 object-cover rounded-xl"
+                        />
                       </div>
                     ))}
                   </div>

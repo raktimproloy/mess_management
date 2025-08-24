@@ -1,5 +1,6 @@
 'use client'
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { 
   FaUtensils, 
   FaBed, 
@@ -32,25 +33,15 @@ const PhotosPage = () => {
 
   const albums = [
     { id: 'all', name: 'All Photos', icon: <FaStar /> },
-    // { id: 'dining', name: 'Dining Area', icon: <FaUtensils /> },
     { id: 'rooms', name: 'Rooms', icon: <FaBed /> },
-    { id: 'common', name: 'Common Areas', icon: <FaUsers /> },
-    { id: 'events', name: 'Events', icon: <FaBook /> },
+    // { id: 'dining', name: 'Dining Area', icon: <FaUtensils /> },
+    // { id: 'common', name: 'Common Areas', icon: <FaUsers /> },
+    // { id: 'events', name: 'Events', icon: <FaBook /> },
   ];
 
   const photos = [
-    { id: 1, album: 'dining', title: 'Modern Dining Hall', likes: 42 },
-    { id: 2, album: 'dining', title: 'Breakfast Buffet', likes: 38 },
-    { id: 3, album: 'dining', title: 'Evening Dinner Setup', likes: 56 },
-    { id: 4, album: 'rooms', title: 'Standard Room', likes: 67 },
-    { id: 5, album: 'rooms', title: 'Premium Room', likes: 89 },
-    { id: 6, album: 'rooms', title: 'Study Desk Area', likes: 45 },
-    { id: 7, album: 'common', title: 'Recreation Room', likes: 52 },
-    { id: 8, album: 'common', title: 'Study Lounge', likes: 61 },
-    { id: 9, album: 'common', title: 'Outdoor Seating', likes: 47 },
-    { id: 10, album: 'events', title: 'Cultural Night', likes: 78 },
-    { id: 11, album: 'events', title: 'Birthday Celebration', likes: 65 },
-    { id: 12, album: 'events', title: 'Festival Dinner', likes: 71 },
+    { id: 4, album: 'rooms', title: 'Standard Room', image: '/images/sit_1.JPG' },
+    { id: 5, album: 'rooms', title: 'Premium Room', image: '/images/sit_2.JPG' },
   ];
 
   const filteredPhotos = activeAlbum === 'all' 
@@ -81,9 +72,15 @@ const PhotosPage = () => {
         <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/80 to-transparent z-10"></div>
         <div className="absolute inset-0 flex transition-transform duration-500 ease-in-out" 
              style={{ transform: `translateX(-${currentSlide * 100}%)` }}>
-          {filteredPhotos.map((_, index) => (
+          {filteredPhotos.map((photo, index) => (
             <div key={index} className="w-full flex-shrink-0">
-              <div className="bg-gray-800 border-2 border-dashed rounded-xl w-full h-96 md:h-[500px]" />
+              <Image
+                src={photo.image}
+                alt={photo.title}
+                width={800}
+                height={500}
+                className="w-full h-96 md:h-[500px] object-cover"
+              />
             </div>
           ))}
         </div>
@@ -167,29 +164,21 @@ const PhotosPage = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3, delay: index * 0.05 }}
-                className="group relative overflow-hidden rounded-xl bg-gray-800 border border-gray-700 hover:border-amber-500 transition-all duration-300"
+                className="group relative overflow-hidden rounded-xl bg-gray-800 border border-gray-700 hover:border-amber-500 transition-all duration-300 cursor-pointer"
                 onClick={() => openLightbox(index)}
               >
                 <div className="aspect-square bg-gray-700 relative">
-                  <div className="bg-gray-200 border-2 border-dashed rounded-xl w-full h-full" />
+                  <Image
+                    src={photo.image}
+                    alt={photo.title}
+                    width={400}
+                    height={400}
+                    className="w-full h-full object-cover"
+                  />
                   
-                  {/* Overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4">
-                    <h3 className="text-lg font-bold">{photo.title}</h3>
-                    <div className="flex items-center mt-2">
-                      <FaHeart className="text-amber-500 mr-1" />
-                      <span>{photo.likes}</span>
-                    </div>
-                  </div>
-                  
-                  {/* Quick Actions */}
-                  <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    <button className="bg-black/50 hover:bg-amber-500 p-2 rounded-full transition duration-300">
-                      <FaHeart />
-                    </button>
-                    <button className="bg-black/50 hover:bg-amber-500 p-2 rounded-full transition duration-300">
-                      <FaShareAlt />
-                    </button>
+                  {/* Simple title overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4">
+                    <h3 className="text-lg font-bold text-white">{photo.title}</h3>
                   </div>
                 </div>
               </motion.div>
@@ -239,7 +228,15 @@ const PhotosPage = () => {
                 className="bg-gray-900 border border-gray-700 rounded-xl overflow-hidden hover:border-amber-500 transition-all duration-300"
               >
                 <div className="h-48 relative">
-                  <div className="bg-gray-200 border-2 border-dashed rounded-xl w-full h-full" />
+                  {photos.filter(p => p.album === album.id).length > 0 && (
+                    <Image
+                      src={photos.filter(p => p.album === album.id)[0].image}
+                      alt={album.name}
+                      width={400}
+                      height={200}
+                      className="w-full h-full object-cover"
+                    />
+                  )}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex items-end p-6">
                     <div className="flex items-center">
                       <div className="bg-amber-500 text-gray-900 p-3 rounded-lg mr-4">
@@ -256,7 +253,13 @@ const PhotosPage = () => {
                       .slice(0, 3)
                       .map(photo => (
                         <div key={photo.id} className="aspect-square bg-gray-700 rounded-lg overflow-hidden">
-                          <div className="bg-gray-200 border-2 border-dashed rounded-xl w-full h-full" />
+                          <Image
+                            src={photo.image}
+                            alt={photo.title}
+                            width={100}
+                            height={100}
+                            className="w-full h-full object-cover"
+                          />
                         </div>
                       ))}
                   </div>
@@ -292,22 +295,18 @@ const PhotosPage = () => {
             </button>
             
             <div className="relative max-w-6xl w-full max-h-[90vh]" onClick={e => e.stopPropagation()}>
-              <div className="bg-gray-200 border-2 border-dashed rounded-xl w-full aspect-[4/3] md:aspect-video" />
+              <Image
+                src={activePhoto.image}
+                alt={activePhoto.title}
+                width={1200}
+                height={800}
+                className="w-full h-auto max-h-[90vh] object-contain"
+              />
               
               <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black to-transparent p-6">
                 <h3 className="text-xl md:text-2xl font-bold text-white">
                   {activePhoto.title}
                 </h3>
-                <div className="flex items-center mt-4">
-                  <button className="flex items-center mr-6 text-white hover:text-amber-500 transition-colors">
-                    <FaHeart className="mr-2" />
-                    <span>{activePhoto.likes}</span>
-                  </button>
-                  <button className="flex items-center text-white hover:text-amber-500 transition-colors">
-                    <FaShareAlt className="mr-2" />
-                    <span>Share</span>
-                  </button>
-                </div>
               </div>
               
               <button 
