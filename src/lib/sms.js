@@ -190,7 +190,7 @@ export async function sendBulkSMSWithGenerator(recipients, messageGenerator) {
 export function generateWelcomeMessage(studentName, categoryTitle, rentAmount) {
   const formattedAmount = new Intl.NumberFormat('en-IN').format(rentAmount);
   
-  return `Welcome ${studentName}! Rent:৳${formattedAmount}. Call:${CONFIG.SUPPORT.PHONE}`;
+  return `Welcome ${studentName}! Rent:৳${formattedAmount}. Type:${categoryTitle}`;
 }
 
 /**
@@ -235,7 +235,7 @@ export function generateRentReminderMessage(studentName, rentDue, externalDue, a
     breakdownText += `\n• Previous Due: ৳${formattedPrevious}`;
   }
   
-  return `Rent due ${studentName}. Total:৳${formattedTotal}. Due:${dueDate}. Bkash:${bikashNumber}`;
+  return `Rent due: Total:৳${formattedTotal}. Due:${dueDate}. Bkash:${bikashNumber}`;
 }
 
 /**
@@ -317,7 +317,7 @@ export function generateRentPaymentConfirmationMessage(studentName, paymentDetai
   const statusEmoji = newStatus === 'paid' ? '✅' : '💰';
   const statusText = newStatus === 'paid' ? 'FULLY PAID' : 'PARTIALLY PAID';
 
-  return `Payment received ${studentName}. Amount:৳${formattedTotal}. Status:${statusText}`;
+  return `Payment received: Amount:৳${formattedTotal}. Status:${statusText}`;
 }
 
 /**
@@ -342,7 +342,7 @@ export function generatePaymentRequestOwnerNotification(studentName, studentPhon
 🆔 Transaction ID: ${trxId}`;
   }
 
-  return `New payment request ${studentName}. Amount:৳${formattedAmount}. Method:${paymentType}`;
+  return `Payment request ${studentName}. Amount:৳${formattedAmount}. Method:${paymentType}`;
 }
 
 /**
@@ -405,7 +405,7 @@ export function generatePaymentRequestStatusMessage(studentName, requestDetails)
  * @returns {string} - Formatted leave notification message
  */
 export function generateStudentLeaveMessage(studentName, categoryTitle) {
-  return `Account deactivated ${studentName}. Call:${CONFIG.SUPPORT.PHONE}`;
+  return `Hi ${studentName}, we'll meet again!`;
 }
 
 /**
@@ -479,7 +479,7 @@ export function generateComplaintStatusUpdateMessage(studentName, complaintTitle
 
   const complainType = complainFor === 'mess' ? 'Mess' : 'Room';
   
-  return `Complaint ${complaintTitle} ${statusText[status]}. Call:${CONFIG.SUPPORT.PHONE}`;
+  return `Complaint ${complaintTitle} ${statusText[status]}.`;
 }
 
 /**
