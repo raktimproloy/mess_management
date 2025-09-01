@@ -10,7 +10,8 @@ import {
   FaHeart, 
   FaShareAlt,
   FaArrowLeft,
-  FaArrowRight
+  FaArrowRight,
+  FaHome
 } from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -34,12 +35,17 @@ const PhotosPage = () => {
   const albums = [
     { id: 'all', name: 'All Photos', icon: <FaStar /> },
     { id: 'rooms', name: 'Rooms', icon: <FaBed /> },
+    { id: 'house', name: 'House', icon: <FaHome /> },
     // { id: 'dining', name: 'Dining Area', icon: <FaUtensils /> },
     // { id: 'common', name: 'Common Areas', icon: <FaUsers /> },
     // { id: 'events', name: 'Events', icon: <FaBook /> },
   ];
 
   const photos = [
+    { id: 1, album: 'house', title: 'House', image: '/images/main.JPG' },
+    { id: 2, album: 'house', title: 'House', image: '/images/main2.JPG' },
+    { id: 3, album: 'house', title: 'House', image: '/images/main3.JPG' },
+    { id: 6, album: 'house', title: 'House', image: '/images/main4.JPG' },
     { id: 4, album: 'rooms', title: 'Standard Room', image: '/images/sit_1.JPG' },
     { id: 5, album: 'rooms', title: 'Premium Room', image: '/images/sit_2.JPG' },
   ];

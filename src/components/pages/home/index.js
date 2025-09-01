@@ -58,7 +58,10 @@ export default function Home() {
   ];
 
   const gallery = [
-    '/images/main.JPG'
+    '/images/main.JPG',
+    '/images/main2.JPG',
+    '/images/main3.JPG',
+    '/images/main4.JPG'
   ];
 
   const nextSlide = () => {
