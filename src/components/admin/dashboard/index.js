@@ -76,6 +76,17 @@ export default function index() {
         day: 'numeric'
       });
     };
+
+    const handleAddMonthRent = async () => {
+      const response = await fetch('/api/student/rent-cron', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`,
+          'Content-Type': 'application/json'
+        },
+      });
+      console.log(response);
+    };
   
     const getStatusColor = (status) => {
       switch (status) {
@@ -122,8 +133,9 @@ export default function index() {
                 <p className="text-gray-300 text-xs sm:text-sm mt-1 line-clamp-2">Welcome back! Here's what's happening in your mess management system.</p>
               </div>
               <div className="flex items-center space-x-2 sm:space-x-3 ml-3">
-                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-purple-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-lg flex-shrink-0">
-                  <span className="text-white text-base sm:text-lg font-bold">👨‍💼</span>
+                <div className="px-3 py-2 bg-gradient-to-br from-purple-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-lg flex-shrink-0">
+                  <button className='btn btn-xs btn-outline' onClick={() => handleAddMonthRent()} >Add Month Rent</button>
+                  {/* <span className="text-white text-base sm:text-lg font-bold">👨‍💼</span> */}
                 </div>
               </div>
             </div>
